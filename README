@@ -1,0 +1,22 @@
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+# Author: Richard A (rical).
+#
+# This software is something that I have developed on my free time. Its purpose 
+# is mainly to help me manage my own servers in an efficient way.
+#
+# The software is free of charge and you may copy it and redistribute it in
+# any way you feel appropriate (please credit me if you do).
+#
+
+# Coding style
+o Spaces not tabs
+o A line should never be longer then 100 chars
+o {} embracing are not padded (if {foo} not if { foo })
+o No one-line if's or procedures
+
+# Defined bad return values (1-100 is reserved by the framework)
+2 - User error
+3 - Fatal result
+
+5 - Fatal user result
+6 - Fatal internal error
