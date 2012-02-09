@@ -16,4 +16,3 @@ o No one-line if's or procedures
 
 # Defined bad return values (1-10 is reserved by the framework)
 2 - Fatal wrapper trigger
-3 - Fatal result

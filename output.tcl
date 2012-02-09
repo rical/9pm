@@ -55,16 +55,15 @@ proc result {type msg} {
      switch -regexp -- $type {
         OK {
             int::out RESULT "$type - $msg" GREEN
+            return TRUE
         }
         FAIL {
             int::out RESULT "$type - $msg" RED
-        }
-        FATAL  {
-            int::out RESULT "$type - $msg" RED
-            exit 3
+            return FALSE
         }
         default {
             int::error "There is no \"$type\" result type" USER-FATAL
+            return FALSE
         }
     }
 }
