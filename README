@@ -14,9 +14,6 @@ o A line should never be longer then 100 chars
 o {} embracing are not padded (if {foo} not if { foo })
 o No one-line if's or procedures
 
-# Defined bad return values (1-100 is reserved by the framework)
-2 - User error
+# Defined bad return values (1-10 is reserved by the framework)
+2 - Fatal wrapper trigger
 3 - Fatal result
-
-5 - Fatal user result
-6 - Fatal internal error
