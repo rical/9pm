@@ -37,7 +37,7 @@ proc int::out {type msg {color ""}} {
 
 proc fatal {args} {
     if {![{*}$args]} {
-        exit
+        exit 2
     }
 }
 
