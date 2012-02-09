@@ -10,19 +10,14 @@ proc get_unix_time {} {
     return [clock format [clock seconds] -format {%s}]
 }
 
-# Generate and return a checksum
-proc get_checksum {} {
-    return "9pm[expr int(rand()*1000000)]"
-}
-
 # Return a random number between 0 and <max>
 proc get_rand_int {max} {
-    return [expr int(rand()*100)]
+    return [expr int(rand()*$max)]
 }
 
 # Return a random string with length <length>
-proc get_rand_str {max} {
-    return [subst [string repeat {[format %c [expr {97 + int(rand() * 26)}]]} $max]]
+proc get_rand_str {length} {
+    return [subst [string repeat {[format %c [expr {97 + int(rand() * 26)}]]} $length]]
 }
 
 # This gets the path of the running script
