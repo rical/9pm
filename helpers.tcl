@@ -11,6 +11,16 @@ proc get_checksum {} {
     return "9pm[expr int(rand()*1000000)]"
 }
 
+# Return a random number between 0 and <max>
+proc get_rand_int {max} {
+    return [expr int(rand()*100)]
+}
+
+# Return a random string with length <length>
+proc get_rand_str {max} {
+    return [subst [string repeat {[format %c [expr {97 + int(rand() * 26)}]]} $max]]
+}
+
 # This gets the path of the running script
 proc get_running_script_path {} {
     return [file dirname [info script]]
