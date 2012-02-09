@@ -35,23 +35,20 @@ proc int::out {type msg {color ""}} {
     puts $msg
 }
 
-proc int::error {msg {type ""}} {
-     switch -exact -- $type {
-        USER {
-            int::out ERROR "USER ERROR:: $msg" RED
-        }
-        USER-FATAL {
-            int::out ERROR "FATAL USER ERROR:: $msg" RED
-            exit 5
-        }
-        FATAL {
-            int::out ERROR "FATAL ERROR:: $msg" RED
-            exit 6
-        }
-        default {
-            int::out ERROR "ERROR:: $msg" RED
-        }
+proc fatal {args} {
+    if {![{*}$args]} {
+        exit
     }
+}
+
+proc int::error {msg} {
+    int::out ERROR "ERROR:: $msg" RED
+    return FALSE
+}
+
+proc int::user_error {msg} {
+    int::out ERROR "USER ERROR:: $msg" RED
+    return FALSE
 }
 
 proc result {type msg} {
