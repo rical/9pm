@@ -31,7 +31,12 @@ for {set i 0} {$i < $MAX_SHELLS} {incr i} {
     shell $i
     open_and_close_shell $i
 }
-for {set i 0} {$i < $MAX_SHELLS} {incr i} {
-    close_shell $i
-}
 result OK "Reusing all $MAX_SHELLS shells"
+
+output INFO "Trying to swap back to all $MAX_SHELLS open shells again"
+for {set i 0} {$i < $MAX_SHELLS} {incr i} {
+    shell $i
+    open_and_close_shell $i
+}
+result OK "Swapping back to all $MAX_SHELLS open shells"
+
