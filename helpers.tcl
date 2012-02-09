@@ -1,9 +1,13 @@
 package provide 9pm::helpers 1.0
 
-# Get and return the current time in human readlable form
+# Get and return the current time in human readable form
 proc get_time {} {
-    set ctime [clock seconds]
-    return [clock format $ctime -format {%Y %m %d - %H:%M:%S}]
+    return [clock format [clock seconds] -format {%Y %m %d - %H:%M:%S}]
+}
+
+# Get and return the current unix time-stamp
+proc get_unix_time {} {
+    return [clock format [clock seconds] -format {%s}]
 }
 
 # Generate and return a checksum
