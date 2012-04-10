@@ -2,7 +2,7 @@
 package require 9pm
 
 # Write a checksum (as INFO) to the logfile
-set checksum [get_checksum]
+set checksum [get_rand_str 20]
 output INFO $checksum
 
 # Here is the logfiles and links we want to check
