@@ -2,22 +2,30 @@ package provide 9pm::execute 1.0
 
 proc execute {cmd args} {
     set out [list]
-    set checksum "[get_rand_str 10][get_rand_int 1000]"
+    set checksum(start) "[get_rand_str 10][get_rand_int 1000]"
+    set checksum(end) "[get_rand_str 10][get_rand_int 1000]"
+    set active FALSE
 
     output DEBUG "Executing \"$cmd\" $args"
-    send "$cmd; echo $checksum \$?\n"
 
+    expect *
+    send "echo $checksum(start); $cmd; echo $checksum(end) \$?\n"
     expect {
-        -re {[^\r\n]+} {
+        -re {\r\n([^\r\n]+)} {
             set line $expect_out(0,string)
-            output DEBUG "Got line: \"$line\""
+            set content $expect_out(1,string)
 
-            if [regexp "$checksum (\[0-9]+)" $line unused code] {
+            if [regexp "\r\n$checksum(end) (\[0-9]+)" $line unused code] {
                 output DEBUG "Got $code as returncode for \"$cmd\""
-            } elseif [string match "*echo $checksum*" $line] {
+            } elseif [regexp "\r\n$checksum(start)" $line unused] {
+                output DEBUG "Activating for \"$content\""
+                set active TRUE
                 exp_continue -continue_timer
             } else {
-                lappend out $line
+                if {$active} {
+                    output DEBUG "Got: \"$content\""
+                    lappend out $content
+                }
                 exp_continue -continue_timer
             }
         }
