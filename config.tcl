@@ -6,7 +6,7 @@ proc int::parse_config {filename} {
 
     # Check that configuration file exists
     if {![file exists $filename]} {
-        int::error "Can't parse configuration \"$filename\" (file not found)" FATAL-USER
+        fatal int::user_error "Can't parse configuration \"$filename\" (file not found)"
     }
 
     set fp [open $filename r]

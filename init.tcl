@@ -4,7 +4,7 @@ package provide 9pm::init 1.0
 
 # Parse command line
 set options {
-    {c.arg "./config.yaml" "Configuration file"}
+    {c.arg "" "Configuration file"}
     {l.arg "./log" "Logging base path"}
     {d "" "Output debug info and write exp_internal logfile"}
 }
@@ -53,10 +53,10 @@ if {$int::cmdl(d)} {
 }
 
 # Read config file
-if {[file exists $int::cmdl(c)]} {
+if {$int::cmdl(c) != ""} {
     output DEBUG "Using configuration: $int::cmdl(c)"
     set int::config [int::parse_config $int::cmdl(c)]
 } else {
-    output DEBUG "No configuration file found"
+    output DEBUG "Running without configuration"
 }
 
