@@ -13,15 +13,15 @@ proc int::parse_config {filename} {
     set config_data [read $fp]
     close $fp
 
-    set config [::yaml::yaml2dict $config_data]
-    return $config
+    set ::int::config [::yaml::yaml2dict $config_data]
+    return $int::config
 }
 
 proc get_req_node_info {node what} {
     set info [get_node_info $node $what]
 
     if {$info == ""} {
-        int::error "Required configuration data \"$what\" for node \"$node\" missing" FATAL
+        fatal int::error "Required configuration data \"$what\" for node \"$node\" missing"
     } else {
         return $info
     }
@@ -30,10 +30,10 @@ proc get_req_node_info {node what} {
 proc get_node_info {node what} {
 
     # Extract info about the node
-    if {[dict exists $int::config $node]} {
-        set node_info [dict get $int::config $node]
+    if {[dict exists $::int::config $node]} {
+        set node_info [dict get $::int::config $node]
     } else {
-        int::error "No configuration data found for node \"$node\"" FATAL
+        fatal int::error "No configuration data found for node \"$node\""
     }
 
     # Try to return the info we want for this node
