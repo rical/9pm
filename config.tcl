@@ -28,6 +28,9 @@ proc get_req_node_info {node what} {
 }
 
 proc get_node_info {node what} {
+    if {![info exists ::int::config]} {
+        fatal result FAIL "\"[info level -2]\" requires an configuration"
+    }
 
     # Extract info about the node
     if {[dict exists $::int::config $node]} {
