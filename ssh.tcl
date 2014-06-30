@@ -1,11 +1,12 @@
 package provide 9pm::ssh 1.0
 
 proc ssh {node args} {
-    set IP     [get_req_node_info $node SSH_IP]
-    set PROMPT [get_req_node_info $node PROMPT]
-    set PORT   [get_node_info $node SSH_PORT]
-    set USER   [get_node_info $node SSH_USER]
-    set PASS   [get_node_info $node SSH_PASS]
+    set IP      [get_req_node_info $node SSH_IP]
+    set PROMPT  [get_req_node_info $node PROMPT]
+    set PORT    [get_node_info $node SSH_PORT]
+    set USER    [get_node_info $node SSH_USER]
+    set PASS    [get_node_info $node SSH_PASS]
+    set KEYFILE [get_node_info $node SSH_KEYFILE]
 
     set opts "-o StrictHostKeyChecking=no"
 
@@ -15,6 +16,12 @@ proc ssh {node args} {
     }
     if {$PORT != ""} {
         append ssh_cmd " -p $PORT"
+    }
+    if {$KEYFILE != ""} {
+        append ssh_cmd " -i $KEYFILE"
+    }
+    if {$args != ""} {
+        append ssh_cmd " $args"
     }
 
     output DEBUG "Connecting to \"$IP\" (as \"$USER\")"
