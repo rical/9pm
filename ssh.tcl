@@ -20,6 +20,9 @@ proc ssh {node args} {
     if {$KEYFILE != ""} {
         append ssh_cmd " -i $KEYFILE"
     }
+    if {$args != ""} {
+        append ssh_cmd " $args"
+    }
 
     output DEBUG "Connecting to \"$IP\" (as \"$USER\")"
 
