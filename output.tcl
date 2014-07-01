@@ -61,6 +61,10 @@ proc int::user_error {msg} {
 
 proc result {type msg} {
      switch -regexp -- $type {
+        PLAN {
+            int::out RESULT "1..$msg" GREEN
+            return TRUE
+        }
         OK {
             int::out RESULT "ok - $msg" GREEN
             return TRUE
@@ -68,6 +72,10 @@ proc result {type msg} {
         FAIL {
             int::out RESULT "not ok - $msg" RED
             return FALSE
+        }
+        SKIP {
+            int::out RESULT "ok - # skip $msg" YELLOW
+            return TRUE
         }
         default {
             int::error "There is no \"$type\" result type" USER-FATAL
