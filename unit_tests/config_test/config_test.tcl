@@ -3,7 +3,7 @@ package require yaml
 package require 9pm
 
 if {![info exists int::config]} {
-    int::error "Can't test configurations, no configuration given" FATAL
+    fatal int::error "Can't test configurations, no configuration given"
 }
 
 set fp [open $int::cmdl(c) r]

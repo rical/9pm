@@ -11,15 +11,14 @@ set outputs {
 set results {
     OK GREEN
     FAIL RED
-    FATAL RED
 }
 
 puts "This is a normal puts (no timestamp)"
 
 puts "\nThis is some non fatal errors"
 int::error "This is a RED error"
-int::error "This is a RED user error" USER
-#int::error "This is a RED fatal user error" USER-FATAL
+int::user_error "This is a RED user error"
+#fatal int::error "This is a RED fatal user error"
 
 puts "\nIterating outputs"
 foreach {out color} $outputs {

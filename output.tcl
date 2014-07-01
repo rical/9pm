@@ -83,7 +83,7 @@ proc result {type msg} {
             return TRUE
         }
         default {
-            int::error "There is no \"$type\" result type" USER-FATAL
+            fatal int::user_error "There is no \"$type\" result type"
             return FALSE
         }
     }
@@ -110,7 +110,7 @@ proc output {level msg} {
             }
         }
         default {
-            int::error "There is no \"$level\" output level" FATAL-USER
+            fatal int::user_error "There is no \"$level\" output level"
         }
     }
 }
