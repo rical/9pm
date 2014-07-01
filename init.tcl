@@ -6,7 +6,7 @@ package provide 9pm::init 1.0
 set options {
     {c.arg "" "Configuration file"}
     {l.arg "./log" "Logging base path"}
-    {d "" "Output debug info and write exp_internal logfile"}
+    {d "Output debug info and write exp_internal logfile"}
 }
 array set int::cmdl [ ::cmdline::getoptions argv $options "Options:" ]
 
