@@ -6,7 +6,8 @@ package provide 9pm::init 1.0
 set options {
     {c.arg "" "Configuration file"}
     {l.arg "./log" "Logging base path"}
-    {d "" "Output debug info and write exp_internal logfile"}
+    {d "Output debug info and write exp_internal logfile"}
+    {t "Output TAP"}
 }
 array set int::cmdl [ ::cmdline::getoptions argv $options "Options:" ]
 
@@ -50,6 +51,14 @@ if {$int::cmdl(d)} {
     exp_internal -f "$int::log_path/exp_internal.log" 0
 } else {
     set int::print_debug FALSE
+}
+
+# TAP Output on/off, print output in TAP format?
+if {$int::cmdl(t)} {
+    output DEBUG "TAP output switched on"
+    set int::output_tap TRUE
+} else {
+    set int::output_tap FALSE
 }
 
 # Read config file

@@ -1,6 +1,8 @@
 package require 9pm::setup
 package provide 9pm::output 1.0
 
+set int::testnum 1
+
 proc int::add_bash_color {color msg} {
     set colors(GRAY)    "\033\[90m"
     set colors(RED)     "\033\[91m"
@@ -11,6 +13,11 @@ proc int::add_bash_color {color msg} {
     set colors(CYAN)    "\033\[96m"
     set colors(ENDC)    "\033\[0m"
 
+    # No colors for TAP output
+    if {$int::output_tap} {
+        return $msg
+    }
+
     if {[info exists colors($color)]} {
         return "$colors($color)${msg}$colors(ENDC)"
     } else {
@@ -19,8 +26,11 @@ proc int::add_bash_color {color msg} {
 }
 
 proc int::out {type msg {color ""}} {
-    # Add a timestamp
-    set msg "[get_time] - $msg"
+
+    if {!$int::output_tap} {
+        # Add a timestamp
+        set msg "[get_time] - $msg"
+    }
 
     # Log it to generic out.log file
     set fd [open $int::log_path/run.log a]
@@ -53,13 +63,24 @@ proc int::user_error {msg} {
 
 proc result {type msg} {
      switch -regexp -- $type {
+        PLAN {
+            int::out RESULT "1..$msg" GREEN
+            return TRUE
+        }
         OK {
-            int::out RESULT "$type - $msg" GREEN
+            int::out RESULT "ok $int::testnum - $msg" GREEN
+            incr int::testnum
             return TRUE
         }
         FAIL {
-            int::out RESULT "$type - $msg" RED
+            int::out RESULT "not ok $int::testnum - $msg" RED
+            incr int::testnum
             return FALSE
+        }
+        SKIP {
+            int::out RESULT "ok $int::testnum - # skip $msg" YELLOW
+            incr int::testnum
+            return TRUE
         }
         default {
             int::error "There is no \"$type\" result type" USER-FATAL
@@ -71,21 +92,21 @@ proc result {type msg} {
 proc output {level msg} {
     switch -exact $level {
         WARNING {
-            int::out OUTPUT "$level - $msg" YELLOW
+            int::out OUTPUT "# $level - $msg" YELLOW
         }
         DEBUG {
             if {$int::print_debug} {
-                int::out OUTPUT "$level - $msg" GRAY
+                int::out OUTPUT "# $level - $msg" GRAY
             }
         }
         INFO {
             if {$int::print_info} {
-                int::out OUTPUT "$level - $msg" BLUE
+                int::out OUTPUT "# $level - $msg" BLUE
             }
         }
         NOTE {
             if {$int::print_note} {
-                int::out OUTPUT "$level - $msg" CYAN
+                int::out OUTPUT "# $level - $msg" CYAN
             }
         }
         default {
