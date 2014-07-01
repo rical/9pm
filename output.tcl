@@ -11,6 +11,11 @@ proc int::add_bash_color {color msg} {
     set colors(CYAN)    "\033\[96m"
     set colors(ENDC)    "\033\[0m"
 
+    # No colors for TAP output
+    if {$int::output_tap} {
+        return $msg
+    }
+
     if {[info exists colors($color)]} {
         return "$colors($color)${msg}$colors(ENDC)"
     } else {
@@ -19,8 +24,11 @@ proc int::add_bash_color {color msg} {
 }
 
 proc int::out {type msg {color ""}} {
-    # Add a timestamp
-    set msg "[get_time] - $msg"
+
+    if {!$int::output_tap} {
+        # Add a timestamp
+        set msg "[get_time] - $msg"
+    }
 
     # Log it to generic out.log file
     set fd [open $int::log_path/run.log a]
