@@ -1,6 +1,8 @@
 package require 9pm::setup
 package provide 9pm::output 1.0
 
+set int::testnum 1
+
 proc int::add_bash_color {color msg} {
     set colors(GRAY)    "\033\[90m"
     set colors(RED)     "\033\[91m"
@@ -66,15 +68,18 @@ proc result {type msg} {
             return TRUE
         }
         OK {
-            int::out RESULT "ok - $msg" GREEN
+            int::out RESULT "ok $int::testnum - $msg" GREEN
+            incr int::testnum
             return TRUE
         }
         FAIL {
-            int::out RESULT "not ok - $msg" RED
+            int::out RESULT "not ok $int::testnum - $msg" RED
+            incr int::testnum
             return FALSE
         }
         SKIP {
-            int::out RESULT "ok - # skip $msg" YELLOW
+            int::out RESULT "ok $int::testnum - # skip $msg" YELLOW
+            incr int::testnum
             return TRUE
         }
         default {
