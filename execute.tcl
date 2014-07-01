@@ -11,13 +11,13 @@ proc execute {cmd args} {
     expect *
     send "echo $checksum(start); $cmd; echo $checksum(end) \$?\n"
     expect {
-        -re {\r\n([^\r\n]+)} {
+        -re {([^\r\n]+)\r\n} {
             set line $expect_out(0,string)
             set content $expect_out(1,string)
 
-            if [regexp "\r\n$checksum(end) (\[0-9]+)" $line unused code] {
+            if [regexp "$checksum(end) (\[0-9]+)\r\n" $line unused code] {
                 output DEBUG "Got $code as returncode for \"$cmd\""
-            } elseif [regexp "\r\n$checksum(start)" $line unused] {
+            } elseif [regexp "$checksum(start)\r\n" $line unused] {
                 output DEBUG "Activating for \"$content\""
                 set active TRUE
                 exp_continue -continue_timer
