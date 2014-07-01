@@ -62,11 +62,11 @@ proc int::user_error {msg} {
 proc result {type msg} {
      switch -regexp -- $type {
         OK {
-            int::out RESULT "$type - $msg" GREEN
+            int::out RESULT "ok - $msg" GREEN
             return TRUE
         }
         FAIL {
-            int::out RESULT "$type - $msg" RED
+            int::out RESULT "not ok - $msg" RED
             return FALSE
         }
         default {
@@ -79,21 +79,21 @@ proc result {type msg} {
 proc output {level msg} {
     switch -exact $level {
         WARNING {
-            int::out OUTPUT "$level - $msg" YELLOW
+            int::out OUTPUT "# $level - $msg" YELLOW
         }
         DEBUG {
             if {$int::print_debug} {
-                int::out OUTPUT "$level - $msg" GRAY
+                int::out OUTPUT "# $level - $msg" GRAY
             }
         }
         INFO {
             if {$int::print_info} {
-                int::out OUTPUT "$level - $msg" BLUE
+                int::out OUTPUT "# $level - $msg" BLUE
             }
         }
         NOTE {
             if {$int::print_note} {
-                int::out OUTPUT "$level - $msg" CYAN
+                int::out OUTPUT "# $level - $msg" CYAN
             }
         }
         default {
