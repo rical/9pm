@@ -46,9 +46,20 @@ proc int::out {type msg {color ""}} {
 }
 
 proc fatal {args} {
-    if {![{*}$args]} {
-        exit 2
+    # Store a copy of the passed args in the callers variable scope as "int::fatal_args" to be able
+    # to access it in the uplevel below.
+    upvar 1 int::fatal_args tmp
+    set tmp $args
+
+    # Upevel to caller scope and execute from there. This means that the call chain for things we
+    # run will be the same as they would without the fatal wrap. I.e. upvar and uplevel will work
+    # as expected.
+    uplevel 1 {
+        if {![{*}$int::fatal_args]} {
+            exit 2
+        }
     }
+    unset tmp
 }
 
 proc int::error {msg} {
