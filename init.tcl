@@ -55,8 +55,8 @@ if {$int::cmdl(d)} {
 
 # TAP Output on/off, print output in TAP format?
 if {$int::cmdl(t)} {
-    output DEBUG "TAP output switched on"
     set int::output_tap TRUE
+    output DEBUG "TAP output switched on"
 } else {
     set int::output_tap FALSE
 }
