@@ -6,6 +6,8 @@ proc execute {cmd args} {
     set checksum(end) "[get_rand_str 10][get_rand_int 1000]"
     set active FALSE
 
+    upvar ? "code"
+
     output DEBUG "Executing \"$cmd\" $args"
 
     expect *

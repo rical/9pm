@@ -29,3 +29,13 @@ if {[llength $lines] == $count} {
 set lines [execute "ls /" 0]
 result OK "Got zero return for \"ls /\""
 
+
+execute "true"
+if {${?} != 0} {
+    fatal result FAIL "\$? not set to 0 for command \"true\""
+}
+execute "false"
+if {${?} == 0} {
+    fatal result FAIL "\$? set to 0 for command \"false\""
+}
+result OK "Execute return code variable \$? has sane values"
