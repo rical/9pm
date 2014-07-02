@@ -9,7 +9,10 @@ set options {
     {d "Output debug info and write exp_internal logfile"}
     {t "Output TAP"}
 }
-array set int::cmdl [ ::cmdline::getoptions argv $options "Options:" ]
+if {[catch {array set int::cmdl [ ::cmdline::getoptions argv $options]}]} {
+    puts [cmdline::usage $options "- usage:"]
+    exit 1
+}
 
 set log_base $int::cmdl(l)
 file mkdir $log_base
