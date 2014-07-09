@@ -110,6 +110,11 @@ proc output {level msg} {
                 int::out OUTPUT "# $level - $msg" GRAY
             }
         }
+        DEBUG2 {
+            if {$int::print_debug2} {
+                int::out OUTPUT "# $level - $msg" GRAY
+            }
+        }
         INFO {
             if {$int::print_info} {
                 int::out OUTPUT "# $level - $msg" BLUE

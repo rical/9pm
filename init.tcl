@@ -7,6 +7,7 @@ set options {
     {c.arg "" "Configuration file"}
     {l.arg "./log" "Logging base path"}
     {d "Output debug info and write exp_internal logfile"}
+    {dd "Output debug2 info"}
     {t "Output TAP"}
 }
 if {[catch {array set int::cmdl [ ::cmdline::getoptions argv $options]}]} {
@@ -49,11 +50,18 @@ set int::log_path [get_full_path "$log_base/$script_name/$run_suffix"]
 
 
 # Debug on/off, generate exp_internal?
-if {$int::cmdl(d)} {
+if {$int::cmdl(d) || $int::cmdl(dd)} {
+    puts "Printing debug"
     set int::print_debug TRUE
     exp_internal -f "$int::log_path/exp_internal.log" 0
 } else {
     set int::print_debug FALSE
+}
+
+if {$int::cmdl(dd)} {
+    set int::print_debug2 TRUE
+} else {
+    set int::print_debug2 FALSE
 }
 
 # TAP Output on/off, print output in TAP format?
