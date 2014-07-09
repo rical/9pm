@@ -40,3 +40,17 @@ proc close_shell {alias} {
     log_file
 }
 
+proc push_shell {alias} {
+    lappend int::shellstack $int::active_shell
+    return [shell $alias]
+}
+
+proc pop_shell { } {
+    if {[llength $int::shellstack] == 0} {
+        fatal int::user_error "Can not pop shell stack, it is empty!"
+    }
+    set alias [lindex $int::shellstack end]
+    set int::shellstack [lreplace $int::shellstack [set int::shellstack end] end]
+    return [shell $alias]
+}
+
