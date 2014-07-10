@@ -15,7 +15,7 @@ proc start {cmd} {
     expect *
     send "echo $checksum(start); $cmd; echo $checksum(end) \$?\n"
     expect {
-        -timeout 1
+        -timeout 10
         -re "\r\n$checksum(start)\r\n" {
             output DEBUG2 "\"$cmd\" started"
             output DEBUG2 "\"$cmd\" start checksum $checksum(start)"
