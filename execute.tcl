@@ -34,7 +34,7 @@ proc capture {} {
     set out [list]
 
     if {![info exists int::active_shell]} {
-        fatal int::user_error "You need a spawn to caputre output"
+        fatal int::user_error "You need a spawn to capture output"
     }
     if {![dict exists $int::shell($int::active_shell) "running"]} {
         fatal int::user_error "Can't capture output, nothing running on this shell"
@@ -59,7 +59,7 @@ proc capture {} {
             expect {
                 -re {[^\r\n]+\r\n} { }
                 default {
-                    fatal int::error "Something went wrong when flusing output from the exp buffer"
+                    fatal int::error "Something went wrong when flushing output from the exp buffer"
                 }
             }
 
@@ -92,7 +92,7 @@ proc finish {} {
             set code $expect_out(1,string)
         }
         timeout {
-            fatal result FAIL "Timeout waitning for return code for \"$cmd\""
+            fatal result FAIL "Timeout waiting for return code for \"$cmd\""
         }
         eof {
             fatal result FAIL "Got eof while wating for return code for \"$cmd\""
