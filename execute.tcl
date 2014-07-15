@@ -25,7 +25,7 @@ proc start {cmd} {
             fatal result FAIL "Timeout starting \"$cmd\""
         }
         eof {
-            fatal result FAIL "Got EOF when starting \"$cmd\""
+            fatal result FAIL "Got EOF while starting \"$cmd\""
         }
     }
 }
@@ -71,7 +71,7 @@ proc capture {} {
             fatal result FAIL "Timeout while capturing output for \"$cmd\""
         }
         eof {
-            fatal result FAIL "Got eof while wating for return code for \"$cmd\""
+            fatal result FAIL "Got EOF while waiting on return code for \"$cmd\""
         }
     }
 }
