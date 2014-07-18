@@ -2,11 +2,14 @@ package require yaml
 package require 9pm::output
 package provide 9pm::config 1.0
 
+# We can't call other procedures in the int:: namespace here
+# as this might be running early.
 proc int::parse_config {filename} {
 
     # Check that configuration file exists
     if {![file exists $filename]} {
-        fatal int::user_error "Can't parse configuration \"$filename\" (file not found)"
+        puts "ERROR:: Can't parse configuration \"$filename\" (file not found)"
+        exit 2
     }
 
     set fp [open $filename r]
