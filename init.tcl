@@ -43,6 +43,8 @@ if {[file exists "$log_base/$script_name/last"]} {
 }
 exec ln -s -f $run_suffix "$log_base/$script_name/last"
 
+set int::root_path [file normalize [get_running_script_path]]
+
 # Store the log path for later use
 set int::log_base [file normalize $log_base]
 set int::log_script [file normalize "$log_base/$script_name"]
