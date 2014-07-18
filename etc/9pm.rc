@@ -1,0 +1,7 @@
+# This is a default running config for 9pm.
+#
+# If you wish to have your own configuration you can copy this to
+# ~/.9pm.rc and modify the values as you see fit.
+
+# Default ssh options passed to ssh
+SSH_OPTS: "-o StrictHostKeyChecking=no"

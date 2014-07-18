@@ -81,3 +81,24 @@ if {$int::cmdl(c) != ""} {
     output DEBUG "Running without configuration"
 }
 
+# Only keys in this dict are allowed in the 9pm rc. The values here are default values.
+dict set int::rc "ssh_opts" ""
+
+if {[file exists "~/.9pm.rc"]} {
+    set rc [int::parse_config "~/.9pm.rc"]
+} else {
+    set rc [int::parse_config "$int::root_path/etc/9pm.rc"]
+}
+
+foreach {key val} $rc {
+    set key [string tolower $key]
+
+    if {[lsearch -exact [dict keys $int::rc] $key] < 0} {
+        puts "ERROR:: Invalid 9pm.rc option \"$key\""
+        exit 2
+    }
+    dict set int::rc $key $val
+}
+# We should probably wrap the whole init code inside an init namespace to avoid accidentally
+# polluting the global scope. For now we manually unset what we set.
+unset rc
