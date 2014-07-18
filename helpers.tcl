@@ -46,15 +46,6 @@ proc get_script_name {} {
     return [lindex [split $argv0 "/"] [expr [llength [split $argv0 "/"]] -1]]
 }
 
-# Get full path (from a relative path)
-proc get_full_path {path} {
-    set old_pwd [pwd]
-    cd $path
-    set full_path [pwd]
-    cd $old_pwd
-    return $full_path
-}
-
 # This will prepend a path to a list of files
 proc prepend_path {path filelist} {
     foreach elem $filelist {

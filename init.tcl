@@ -44,10 +44,9 @@ if {[file exists "$log_base/$script_name/last"]} {
 exec ln -s -f $run_suffix "$log_base/$script_name/last"
 
 # Store the log path for later use
-set int::log_base [get_full_path $log_base]
-set int::log_script [get_full_path "$log_base/$script_name"]
-set int::log_path [get_full_path "$log_base/$script_name/$run_suffix"]
-
+set int::log_base [file normalize $log_base]
+set int::log_script [file normalize "$log_base/$script_name"]
+set int::log_path [file normalize "$log_base/$script_name/$run_suffix"]
 
 # Debug on/off, generate exp_internal?
 if {$int::cmdl(d) || $int::cmdl(dd)} {
