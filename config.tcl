@@ -13,8 +13,7 @@ proc int::parse_config {filename} {
     set config_data [read $fp]
     close $fp
 
-    set ::int::config [::yaml::yaml2dict $config_data]
-    return $int::config
+    return [::yaml::yaml2dict $config_data]
 }
 
 proc get_req_node_info {node what} {
