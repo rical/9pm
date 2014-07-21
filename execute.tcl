@@ -28,6 +28,26 @@ proc start {cmd} {
             fatal result FAIL "Got EOF while starting \"$cmd\""
         }
     }
+
+    # Register expect after handler that will match the end checksum and break any expect block
+    # upon command completion (after first handling the users expect blocks hence, "after").
+    # This is what a users expect code might look like:
+    #
+    # start "command"
+    # expect {
+    #   "foo*" { lappend out $expect_out(0,string) }
+    #   default { result FAIL "Got eof or timeout" }
+    # }
+    # output INFO "Got $out before command completion"
+    # finish
+    expect_after {
+        -notransfer -re "$checksum(end) (\[0-9]+)\r\n" {
+            # It's important to note that we are in the caller scope here,
+            # so we need to be careful not to corrupt or pollute.
+            output DEBUG "Got $expect_out(1,string) as return code for\
+                \"[dict get $int::shell($int::active_shell) "running"]\""
+        }
+    }
 }
 
 proc capture {} {
@@ -99,7 +119,6 @@ proc finish {} {
         }
 
     }
-    output DEBUG "Got $code as returncode for \"$cmd\""
     dict unset int::shell($int::active_shell) "running"
     dict unset int::shell($int::active_shell) "checksum"
     return $code
