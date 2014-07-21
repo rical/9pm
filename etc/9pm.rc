@@ -3,5 +3,5 @@
 # If you wish to have your own configuration you can copy this to
 # ~/.9pm.rc and modify the values as you see fit.
 
-# Default ssh options passed to ssh
+# Default ssh options passed to ssh and scp
 SSH_OPTS: "-o StrictHostKeyChecking=no"
