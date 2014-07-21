@@ -16,7 +16,6 @@ proc shell {alias} {
 
         if {$pid == 0} {
             fatal int::error "Failed to spawn shell \"$alias\""
-            return FALSE
         }
 
         set int::active_shell $alias
@@ -28,8 +27,7 @@ proc shell {alias} {
 
 proc close_shell {alias} {
     if {![info exists int::shell($alias)]} {
-        int::user_error "Trying to close shell \"$alias\" that doesn't exist"
-        return FALSE
+        fatal int::user_error "Trying to close shell \"$alias\" that doesn't exist"
     }
 
     output DEBUG "Closing shell: $alias"
