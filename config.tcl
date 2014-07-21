@@ -45,7 +45,7 @@ proc get_node_info {node what} {
     if {[dict exists $node_info $what]} {
         return [dict get $node_info $what]
     } else {
-        output DEBUG "Configuration data \"$what\" not found for node \"$node\""
+        output DEBUG2 "Configuration data \"$what\" not found for node \"$node\""
         return ""
     }
 }
