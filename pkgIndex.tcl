@@ -4,9 +4,6 @@ if {![package vsatisfies [package provide Tcl] 8.5]} {
     return
 }
 
-# Wee need Expect TODO: Check if it exists (gracefull error-out)
-package require Expect
-
 # Library namespaces
 namespace eval ::lib {namespace export *}
 

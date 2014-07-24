@@ -1,5 +1,8 @@
 package provide 9pm::execute 1.0
 
+# Wee need Expect TODO: Check if it exists (gracefull error-out)
+package require Expect
+
 proc start {cmd} {
     if {![info exists int::active_shell]} {
         fatal int::user_error "You need a spawn to start \"$cmd\""

@@ -1,5 +1,8 @@
 package provide 9pm::ssh 1.0
 
+# Wee need Expect TODO: Check if it exists (gracefull error-out)
+package require Expect
+
 proc ssh {node args} {
     set IP      [get_req_node_info $node SSH_IP]
     set PROMPT  [get_req_node_info $node PROMPT]
