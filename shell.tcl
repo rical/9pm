@@ -62,6 +62,9 @@ proc close_shell {alias} {
 }
 
 proc push_shell {alias} {
+    if {![info exists int::active_shell]} {
+        fatal int::user_error "You need to have a shell in order to push it"
+    }
     lappend int::shellstack $int::active_shell
     return [shell $alias]
 }
