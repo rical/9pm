@@ -13,6 +13,7 @@ o Spaces not tabs
 o A line should never be longer then 100 chars
 o {} embracing are not padded (if {foo} not if { foo })
 o No one-line if's or procedures
+o Bool return values are "FALE" or "TRUE"
 
 # Defined bad return values (1-10 is reserved by the framework)
 2 - Fatal wrapper trigger
