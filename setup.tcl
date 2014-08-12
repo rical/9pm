@@ -18,6 +18,8 @@
 
 package provide 9pm::setup 1.0
 
+package require Expect
+
 # Expect settings
 log_user 0
 
