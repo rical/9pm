@@ -36,10 +36,11 @@ proc shell {alias} {
             fatal int::error "Failed to spawn shell \"$alias\""
         }
 
-        set int::active_shell $alias
         dict append int::shell($alias) "spawn_id" $spawn_id
         dict append int::shell($alias) "pid" $pid
     }
+
+    set int::active_shell $alias
     return TRUE
 }
 
@@ -53,10 +54,17 @@ proc close_shell {alias} {
 
     # Remove it from internal data structure and stop logging
     unset int::shell($alias)
+    if {$alias == $int::active_shell} {
+        output DEBUG "Closing active shell, have no new active shell"
+        unset int::active_shell
+    }
     log_file
 }
 
 proc push_shell {alias} {
+    if {![info exists int::active_shell]} {
+        fatal int::user_error "You need to have a shell in order to push it"
+    }
     lappend int::shellstack $int::active_shell
     return [shell $alias]
 }
