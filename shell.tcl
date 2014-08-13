@@ -54,9 +54,12 @@ proc close_shell {alias} {
 
     # Remove it from internal data structure and stop logging
     unset int::shell($alias)
-    if {$alias == $int::active_shell} {
-        output DEBUG "Closing active shell, have no new active shell"
-        unset int::active_shell
+    # Unset active shell if that is the one we are closing
+    if {[info exists int::active_shell]} {
+        if {$alias == $int::active_shell} {
+            output DEBUG "Closing active shell, have no new active shell"
+            unset int::active_shell
+        }
     }
     log_file
 }
