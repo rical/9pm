@@ -18,66 +18,78 @@
 
 package provide 9pm::shell 1.0
 
-proc shell {alias} {
-    global spawn_id
+namespace eval ::9pm::shell {
+    proc open {alias} {
+        global spawn_id
+        variable data
+        variable active
 
-    # Write console output to logfile
-    log_file ;#Stop any old logging
-    log_file -a "$int::log_path/${alias}_console.log"
+        # Write console output to logfile
+        log_file ;#Stop any old logging
+        log_file -a "$::9pm::output::log_path/${alias}_console.log"
 
-    if {[info exists int::shell($alias)]} {
-        output DEBUG "Now looking at shell: $alias"
-        set spawn_id [dict get $int::shell($alias) "spawn_id"]
-    } else {
-        output DEBUG "Spawning new shell: \"$alias\""
-        set pid [spawn "/bin/bash"]
+        if {[info exists data($alias)]} {
+            ::9pm::output::debug "Now looking at shell: $alias"
+            set spawn_id [dict get $data($alias) "spawn_id"]
+        } else {
+            ::9pm::output::debug "Spawning new shell: \"$alias\""
+            set pid [spawn "/bin/bash"]
 
-        if {$pid == 0} {
-            fatal int::error "Failed to spawn shell \"$alias\""
+            if {$pid == 0} {
+                ::9pm::fatal ::9pm::output::error "Failed to spawn shell \"$alias\""
+            }
+
+            dict append data($alias) "spawn_id" $spawn_id
+            dict append data($alias) "pid" $pid
         }
 
-        dict append int::shell($alias) "spawn_id" $spawn_id
-        dict append int::shell($alias) "pid" $pid
+        set active $alias
+        return TRUE
     }
 
-    set int::active_shell $alias
-    return TRUE
-}
+    proc close {alias} {
+        variable data
+        variable active
 
-proc close_shell {alias} {
-    if {![info exists int::shell($alias)]} {
-        fatal int::user_error "Trying to close shell \"$alias\" that doesn't exist"
-    }
-
-    output DEBUG "Closing shell: $alias"
-    close -i [dict get $int::shell($alias) "spawn_id"]
-
-    # Remove it from internal data structure and stop logging
-    unset int::shell($alias)
-    # Unset active shell if that is the one we are closing
-    if {[info exists int::active_shell]} {
-        if {$alias == $int::active_shell} {
-            output DEBUG "Closing active shell, have no new active shell"
-            unset int::active_shell
+        if {![info exists data($alias)]} {
+            ::9pm::fatal ::9pm::output::user_error "Trying to close shell \"$alias\" that doesn't exist"
         }
-    }
-    log_file
-}
 
-proc push_shell {alias} {
-    if {![info exists int::active_shell]} {
-        fatal int::user_error "You need to have a shell in order to push it"
-    }
-    lappend int::shellstack $int::active_shell
-    return [shell $alias]
-}
+        # Unset active shell if that is the one we are closing
+        if {[info exists active] && ($active == $alias)} {
+            ::9pm::output::debug "Closing active shell: $alias"
+            unset active
+        } else {
+            ::9pm::output::debug "Closing shell: $alias"
+        }
 
-proc pop_shell { } {
-    if {[llength $int::shellstack] == 0} {
-        fatal int::user_error "Can not pop shell stack, it is empty!"
-    }
-    set alias [lindex $int::shellstack end]
-    set int::shellstack [lreplace $int::shellstack [set int::shellstack end] end]
-    return [shell $alias]
-}
+        ::close -i [dict get $data($alias) "spawn_id"]
 
+        # Remove it from internal data structure and stop logging
+        unset data($alias)
+        log_file
+    }
+
+    proc push {alias} {
+        variable active
+        variable stack
+
+        if {![info exists active]} {
+            ::9pm::fatal ::9pm::output::user_error "You need to have a shell in order to push it"
+        }
+        lappend stack $active
+        return [::9pm::shell::open $alias]
+    }
+
+    proc pop { } {
+        variable active
+        variable stack
+
+        if {[llength $stack] == 0} {
+            ::9pm::fatal ::9pm::output::user_error "Can't pop shell, stack is empty"
+        }
+        set alias [lindex $stack end]
+        set stack [lreplace $stack [set stack end] end]
+        return [::9pm::shell::open $alias]
+    }
+}

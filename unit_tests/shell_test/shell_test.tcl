@@ -19,43 +19,44 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 package require 9pm
+namespace path ::9pm
 
-set MAX_SHELLS 256
+set MAX_SHELLS 10
 
-proc open_and_close_shell {alias} {
+proc check_pid {alias} {
     expect *
     send "echo \$\$\n"
 
     expect {
         -re {\r\n([0-9]+)\r\n} {
-           if {![dict get $int::shell($int::active_shell) "pid"] == $expect_out(0,string)} {
-                fatal result FAIL "Got different pid from shell then 9pm thinks it has" }
+           if {[dict get $9pm::shell::data($alias) "pid"] != $expect_out(1,string)} {
+                fatal output::fail "Got different pid from shell then 9pm thinks it has" }
            }
-        default { fatal result FAIL "Did not see any pid from shell" }
+        default { fatal output::fail "Did not see any pid from shell" }
     }
 }
 
-output INFO "Creating $MAX_SHELLS shells before closing them"
+output::info "Creating $MAX_SHELLS shells before closing them"
 for {set i 0} {$i < $MAX_SHELLS} {incr i} {
-    shell $i
-    open_and_close_shell $i
+    shell::open $i
+    check_pid $i
 }
 for {set i 0} {$i < $MAX_SHELLS} {incr i} {
-    close_shell $i
+    shell::close $i
 }
-result OK "Having $MAX_SHELLS shells open at one time"
+output::ok "Having $MAX_SHELLS shells open at one time"
 
-output INFO "Creating $MAX_SHELLS again, reusing the old names"
+output::info "Creating $MAX_SHELLS again, reusing the old names"
 for {set i 0} {$i < $MAX_SHELLS} {incr i} {
-    shell $i
-    open_and_close_shell $i
+    shell::open $i
+    check_pid $i
 }
-result OK "Reusing all $MAX_SHELLS shells"
+output::ok "Reusing all $MAX_SHELLS shells"
 
-output INFO "Trying to swap back to all $MAX_SHELLS open shells again"
+output::info "Trying to swap back to all $MAX_SHELLS open shells again"
 for {set i 0} {$i < $MAX_SHELLS} {incr i} {
-    shell $i
-    open_and_close_shell $i
+    shell::open $i
+    check_pid $i
 }
-result OK "Swapping back to all $MAX_SHELLS open shells"
+output::ok "Swapping back to all $MAX_SHELLS open shells"
 

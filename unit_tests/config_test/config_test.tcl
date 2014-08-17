@@ -20,12 +20,13 @@
 
 package require yaml
 package require 9pm
+namespace path ::9pm
 
-if {![info exists int::config]} {
-    fatal int::error "Can't test configurations, no configuration given"
+if {![info exists ::9pm::conf::data]} {
+    fatal output::error "Can't test configurations, no configuration given"
 }
 
-set fp [open $int::cmdl(c) r]
+set fp [open $::9pm::core::cmdl(c) r]
 set config_data [read $fp]
 close $fp
 
@@ -33,17 +34,17 @@ close $fp
 set config [::yaml::yaml2dict $config_data]
 
 set msg "Checking the integrity for the parsed configuration"
-if {$int::config == $config} {
-    result OK $msg
+if {$::9pm::conf::data == $config} {
+    output::ok $msg
 } else {
-    result FATAL $msg
+    output::fatal $msg
 }
 
 # Test the get_node info functions
 set fail FALSE
 foreach elem [dict keys $config] {
     foreach {dkey dval} [dict get $config $elem] {
-        set node_info [get_node_info $elem $dkey]
+        set node_info [conf::get $elem $dkey]
         if {$node_info != $dval} {
             set fail TRUE
         }
@@ -51,15 +52,15 @@ foreach elem [dict keys $config] {
 }
 set msg "Iterating all node configurations and testing: get_node_info"
 if {$fail} {
-    result FAIL $msg
+    output::fail $msg
 } else {
-    result OK $msg
+    output::ok $msg
 }
 
 # Test the get_req_node info functions (note: this is a fatal proc)
 foreach elem [dict keys $config] {
     foreach {dkey dval} [dict get $config $elem] {
-        get_req_node_info $elem $dkey
+        conf::get_req $elem $dkey
     }
 }
-result OK "Iterating all node configurations and testing: get_req_node_info"
+output::ok "Iterating all node configurations and testing: get_req_node_info"

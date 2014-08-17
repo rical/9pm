@@ -24,6 +24,17 @@ o {} embracing are not padded (if {foo} not if { foo })
 o No one-line if's or procedures
 o Bool return values are "FALE" or "TRUE"
 
+NAMESPACE AND SCOPE
+-------------------
+o Top level namespace (::9pm) should be empty ("fatal" is a current exception).
+o Second level namespace names should be unique i.e. not collide with
+  anything in TCL/Expect/tcllib.
+o Users should be able to use "namespace path ::9pm" to recursively import all
+  second level namespaces and there childes.
+o Procedures should strive to use variables inside there own namespace.
+o All internal references outside of own namespace should be absolute from
+  global (::9pm::foo::bar).
+
 RETURN VALUES
 -------------
 Defined bad return values (1-10 is reserved by the framework)

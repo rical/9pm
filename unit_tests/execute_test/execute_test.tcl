@@ -19,42 +19,43 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 package require 9pm
+namespace path ::9pm
 
-shell "localhost"
+shell::open "localhost"
 
 # Manually get the number of files in /
-set checksum [get_rand_str 10]
+set checksum [misc::get::rand_str 10]
 send "echo \"$checksum \$(ls -1 / | wc -l)\"\n"
 expect {
     -re "$checksum (\[0-9]+)\r\n" {
         set count $expect_out(1,string)
     }
     default {
-        fatal result FAIL "Didn't get return code"
+        fatal output::fail "Didn't get return code"
     }
 }
 
 # Get all the files into a list using execute
-set lines [execute "ls -1 /"]
+set lines [cmd::execute "ls -1 /"]
 
 set msg "Capturing execute output"
 if {[llength $lines] == $count} {
-    result OK $msg
+    output::ok $msg
 } else {
-    result FAIL $msg
+    output::fail $msg
 }
 
 # Do a "manual" return code check
-set lines [execute "ls /" 0]
-result OK "Got zero return for \"ls /\""
+set lines [cmd::execute "ls /" 0]
+output::ok "Got zero return for \"ls /\""
 
 
-execute "true"
+cmd::execute "true"
 if {${?} != 0} {
-    fatal result FAIL "\$? not set to 0 for command \"true\""
+    fatal output::fail "\$? not set to 0 for command \"true\""
 }
-execute "false"
+cmd::execute "false"
 if {${?} == 0} {
-    fatal result FAIL "\$? set to 0 for command \"false\""
+    fatal output::fail "\$? set to 0 for command \"false\""
 }
-result OK "Execute return code variable \$? has sane values"
+output::ok "Execute return code variable \$? has sane values"

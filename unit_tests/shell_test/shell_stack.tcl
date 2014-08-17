@@ -1,28 +1,32 @@
 #!/usr/bin/tclsh
 package require 9pm
+namespace path ::9pm
 
 proc check_name {expected} {
-    if {$expected == [execute "echo \$name" 0]} {
-        result OK "Base check for $expected"
+    if {$expected == [cmd::execute "echo \$name" 0]} {
+        output::ok "Base check for $expected"
     } else {
-        result FAIL "Base check failed for $expected"
+        output::fail "Base check failed for $expected"
     }
 }
 
 proc inject {base depth} {
     set name "$base$depth"
-    push_shell $name
-    execute "export name=$name" 0
+    shell::push $name
+    cmd::execute "export name=$name" 0
     if { $depth > 0 } {
         inject $base [expr $depth - 1]
     }
     check_name $name
-    pop_shell
+    shell::pop
 }
 
-shell "base"
-execute "export name=base" 0
+shell::open "base"
+cmd::execute "export name=base" 0
 
 check_name "base"
-inject "subshell" 10
+# TODO: investigate why larger values here breaks the TCL interpreter on some machines
+# alloc: invalid block: 0x1d630f0: 70 1
+# Aborted
+inject "subshell" 5
 check_name "base"

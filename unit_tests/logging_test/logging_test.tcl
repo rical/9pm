@@ -19,15 +19,16 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 package require 9pm
+namespace path ::9pm
 
 # Write a checksum (as INFO) to the logfile
-set checksum [get_rand_str 20]
-output INFO $checksum
+set checksum [misc::get::rand_str 20]
+output::info $checksum
 
 # Here is the logfiles and links we want to check
-lappend files "$int::log_path/run.log"
-lappend files "$int::log_base/last/run.log"
-lappend files "$int::log_script/last/run.log"
+lappend files "$::9pm::output::log_path/run.log"
+lappend files "$::9pm::output::log_base/last/run.log"
+lappend files "$::9pm::output::log_script/last/run.log"
 
 # Now check that the info we wrote is in the logfile(s)
 foreach f $files {
@@ -43,9 +44,9 @@ foreach f $files {
     }
 
     if {$result} {
-        result OK "Logifile: $f"
+        output::ok "Logifile: $f"
     } else {
-        result FAIL "Logifile $f"
+        output::fail "Logifile $f"
     }
 }
 

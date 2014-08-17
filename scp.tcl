@@ -21,57 +21,67 @@ package provide 9pm::scp 1.0
 # Wee need Expect TODO: Check if it exists (gracefull error-out)
 package require Expect
 
-proc scp {direction node files dest args} {
-    set IP      [get_req_node_info $node SSH_IP]
-    set PROMPT  [get_req_node_info $node PROMPT]
-    set PORT    [get_node_info $node SSH_PORT]
-    set USER    [get_node_info $node SSH_USER]
-    set KEYFILE [get_node_info $node SSH_KEYFILE]
-
-    set opts [dict get $int::rc "ssh_opts"]
-    set cmd "scp $opts"
-
-    if {$PORT != ""} {
-        append cmd " -P $PORT"
-    }
-    if {$KEYFILE != ""} {
-        append cmd " -i $KEYFILE"
-    }
-    if {$args != ""} {
-        append cmd " $args"
+namespace eval ::9pm::scp {
+    proc put {node files dest args} {
+        transfer "to" $node $files $dest {*}$args
     }
 
-    set host [expr {($USER != "") ? "$USER@$IP" : "$IP"}]
-
-    if {$direction == "from"} {
-        append cmd " $host:\"$files\" $dest"
-    } elseif {$direction == "to"} {
-        append cmd " $files $host:$dest"
-    } else {
-        fatal int::user_error "Unsupported scp direction \"$direction\""
+    proc get {node files dest args} {
+        transfer "from" $node $files $dest {*}$args
     }
 
-    output DEBUG "Scp \"$files\" $direction $host"
+    proc transfer {direction node files dest args} {
+        set IP      [::9pm::conf::get_req $node SSH_IP]
+        set PROMPT  [::9pm::conf::get_req $node PROMPT]
+        set PORT    [::9pm::conf::get $node SSH_PORT]
+        set USER    [::9pm::conf::get $node SSH_USER]
+        set KEYFILE [::9pm::conf::get $node SSH_KEYFILE]
 
-    start "$cmd"
-    expect {
-        -nocase "password" {
-            send "[get_req_node_info $node SSH_PASS]\n"
-            exp_continue
+        set opts [dict get $::9pm::core::rc "ssh_opts"]
+        set cmd "scp $opts"
+
+        if {$PORT != ""} {
+            append cmd " -P $PORT"
         }
-        -re {(\S+)\s+100%} {
-            output DEBUG "File \"$expect_out(1,string)\" transfered $direction $host"
-            exp_continue -continue_timer
+        if {$KEYFILE != ""} {
+            append cmd " -i $KEYFILE"
         }
-        timeout {
-            fatal result FAIL "Scp transfer of \"$files\" $direction $host (timeout)"
+        if {$args != ""} {
+            append cmd " $args"
         }
-        eof {
-            fatal result FAIL "Scp transfer of \"$files\" $direction $host (eof)"
+
+        set host [expr {($USER != "") ? "$USER@$IP" : "$IP"}]
+
+        if {$direction == "from"} {
+            append cmd " $host:\"$files\" $dest"
+        } elseif {$direction == "to"} {
+            append cmd " $files $host:$dest"
+        } else {
+            ::9pm::fatal ::9pm::output::user_error "Unsupported scp direction \"$direction\""
         }
-    }
-    set code [finish]
-    if {$code != 0} {
-        fatal result FAIL "Scp transfer $direction $IP (got non-zero return code ($code))"
+
+        ::9pm::output::debug "Scp \"$files\" $direction $host"
+
+        ::9pm::cmd::start "$cmd"
+        expect {
+            -nocase "password" {
+                send "[::9pm::conf::get_req $node SSH_PASS]\n"
+                exp_continue
+            }
+            -re {(\S+)\s+100%} {
+                ::9pm::output::debug "File \"$expect_out(1,string)\" transfered $direction $host"
+                exp_continue -continue_timer
+            }
+            timeout {
+                ::9pm::fatal ::9pm::output::fail "Scp transfer of \"$files\" $direction $host (timeout)"
+            }
+            eof {
+                ::9pm::fatal ::9pm::output::fail "Scp transfer of \"$files\" $direction $host (eof)"
+            }
+        }
+        set code [::9pm::cmd::finish]
+        if {$code != 0} {
+            ::9pm::fatal ::9pm::output::fail "Scp transfer $direction $IP (got non-zero return code ($code))"
+        }
     }
 }
