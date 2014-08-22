@@ -4,7 +4,7 @@ package provide 9pm::ssh 1.0
 package require Expect
 
 namespace eval ::9pm::ssh {
-    proc con {node args} {
+    proc connect {node args} {
         set IP      [::9pm::conf::get_req $node SSH_IP]
         set PROMPT  [::9pm::conf::get_req $node PROMPT]
         set PORT    [::9pm::conf::get $node SSH_PORT]
