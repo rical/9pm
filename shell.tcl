@@ -33,6 +33,7 @@ namespace eval ::9pm::shell {
             set spawn_id [dict get $data($alias) "spawn_id"]
         } else {
             ::9pm::output::debug "Spawning new shell: \"$alias\""
+            set ::env(HISTFILE) "/dev/null"
             set pid [spawn "/bin/bash"]
 
             if {$pid == 0} {
