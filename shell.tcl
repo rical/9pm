@@ -19,7 +19,7 @@
 package provide 9pm::shell 1.0
 
 namespace eval ::9pm::shell {
-    proc open {alias} {
+    proc open {alias {shell "/bin/bash"}} {
         global spawn_id
         variable data
         variable active
@@ -34,7 +34,7 @@ namespace eval ::9pm::shell {
         } else {
             ::9pm::output::debug "Spawning new shell: \"$alias\""
             set ::env(HISTFILE) "/dev/null"
-            set pid [spawn "/bin/bash"]
+            set pid [spawn {*}$shell]
 
             if {$pid == 0} {
                 ::9pm::fatal ::9pm::output::error "Failed to spawn shell \"$alias\""
