@@ -19,14 +19,12 @@ proc inject {base depth} {
     }
     check_name $name
     shell::pop
+    shell::close $name
 }
 
 shell::open "base"
 cmd::execute "export name=base" 0
 
 check_name "base"
-# TODO: investigate why larger values here breaks the TCL interpreter on some machines
-# alloc: invalid block: 0x1d630f0: 70 1
-# Aborted
 inject "subshell" 5
 check_name "base"
