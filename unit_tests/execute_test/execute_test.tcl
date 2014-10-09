@@ -21,6 +21,8 @@
 package require 9pm
 namespace path ::9pm
 
+output::plan 3
+
 shell::open "localhost"
 
 # Manually get the number of files in /

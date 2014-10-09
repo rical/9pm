@@ -21,6 +21,8 @@
 package require 9pm
 namespace path ::9pm
 
+output::plan 3
+
 set MAX_SHELLS 10
 
 proc check_pid {alias} {

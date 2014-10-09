@@ -21,6 +21,8 @@
 package require 9pm
 namespace path ::9pm
 
+output::plan 3
+
 # Write a checksum (as INFO) to the logfile
 set checksum [misc::get::rand_str 20]
 output::info $checksum

@@ -2,6 +2,8 @@
 package require 9pm
 namespace path ::9pm
 
+output::plan 8
+
 proc check_name {expected} {
     if {$expected == [cmd::execute "echo \$name" 0]} {
         output::ok "Base check for $expected"
