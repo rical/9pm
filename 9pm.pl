@@ -3,6 +3,7 @@ use strict;
 use warnings;
 use YAML::XS qw(LoadFile);
 use TAP::Harness;
+use TAP::Harness::JUnit;
 use TAP::Parser::Aggregator;
 use TAP::Formatter::Console;
 use TAP::Formatter::Color;
@@ -17,10 +18,11 @@ $Getopt::Std::STANDARD_HELP_VERSION = 1;
 
 # Define Getopt help message
 sub HELP_MESSAGE() {
-	print "usage: $0 [-d] [-v] [-c <config>] file...\n";
+	print "usage: $0 [-d] [-v] [-c <config>] [-o <xmlfile>] file...\n";
 	print " -d           - debug\n";
 	print " -c <config>  - configuration file\n";
 	print " -v           - verbose\n";
+	print " -o <xmlfile> - JUnit markup of run\n";
 }
 
 sub is_suite {
@@ -112,7 +114,7 @@ $|++;
 
 # Parse options
 my %options=();
-exit 1 if not getopts("vdfc:", \%options);
+exit 1 if not getopts("vdfc:o:", \%options);
 
 # Always tell 9pm to output TAP
 my @opts9pm = ('-t');
@@ -145,11 +147,21 @@ foreach my $tc (@tcs) {
 }
 
 # Figure out if we want a JUnit capable harness
-my $harness = TAP::Harness->new( {
-		verbosity => $verbose,
-		color => 1,
-		test_args => \%args,
-	} );
+my $harness;
+if (defined $options{o}) {
+	$harness = TAP::Harness::JUnit->new( {
+			verbosity => $verbose,
+			color => 1,
+			test_args => \%args,
+			xmlfile => $options{o},
+		} );
+} else {
+	$harness = TAP::Harness->new( {
+			verbosity => $verbose,
+			color => 1,
+			test_args => \%args,
+		} );
+}
 
 # $ENV{TCLLIBPATH} needs to be defined for our concatenation to work
 $ENV{TCLLIBPATH} = "" if (not defined $ENV{"TCLLIBPATH"});

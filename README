@@ -45,7 +45,9 @@ HARNESS
 -------
 
 9pm.pl is a harness and test suite manager for 9pm testcases based on
-TAP::Harness.
+TAP::Harness and TAP::Harness::JUnit. The tool can optionally record the
+result of the run to a JUnit XML file that can be passed on for further
+analyses.
 
 * Basic suites
 
