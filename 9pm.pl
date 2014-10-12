@@ -52,10 +52,22 @@ sub create_name {
 	return $name;
 }
 
+sub opt_translation($$) {
+	my($opt, $path) = @_;
+	my $base = dirname($path);
+
+	$opt =~ s/<base>/$base/;
+
+	return $opt;
+}
+
 sub load_case {
 	my($scope, $ns, $path, $askname, $opts) = @_;
 	if (defined $opts) {
 		die "ERROR: case options ($opts) not in array format" if (not ref $opts eq 'ARRAY');
+		foreach my $opt (@{$opts}) {
+			$opt = opt_translation($opt, $path);
+		}
 	}
 	my $name = create_name($scope, $ns, $path, $askname);
 	return {'name' => $name, 'path' => $path, 'opts' => $opts};
