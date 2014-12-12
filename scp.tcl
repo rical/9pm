@@ -68,9 +68,18 @@ namespace eval ::9pm::scp {
                 send "[::9pm::conf::get_req $node SSH_PASS]\n"
                 exp_continue
             }
-            -re {(\S+)\s+100%} {
-                ::9pm::output::debug "File \"$expect_out(1,string)\" transfered $direction $host"
-                exp_continue -continue_timer
+            -re {(\S+)\s+(\d+)%\s+(\d+[^ ]+)\s+(\d+\.\d+)} {
+                set progress $expect_out(2,string)
+                set speed $expect_out(4,string)
+                ::9pm::output::debug2 "File \"$expect_out(1,string)\" progress $progress%"
+                if {$progress == 100} {
+                    ::9pm::output::debug "File \"$expect_out(1,string)\" transfered $direction $host"
+                    exp_continue -continue_timer
+                } elseif {$speed > 0.0} {
+                    exp_continue
+                } else {
+                    exp_continue -continue_timer
+                }
             }
             timeout {
                 ::9pm::fatal ::9pm::output::fail "Scp transfer of \"$files\" $direction $host (timeout)"
