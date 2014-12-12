@@ -22,6 +22,8 @@ package require yaml
 package require 9pm
 namespace path ::9pm
 
+output::plan 3
+
 if {![info exists ::9pm::conf::data]} {
     fatal output::error "Can't test configurations, no configuration given"
 }

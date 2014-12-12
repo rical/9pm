@@ -39,3 +39,120 @@ RETURN VALUES
 -------------
 Defined bad return values (1-10 is reserved by the framework)
 2 - Fatal wrapper trigger
+
+
+HARNESS
+-------
+
+9pm.pl is a harness and test suite manager for 9pm testcases based on
+TAP::Harness and TAP::Harness::JUnit. The tool can optionally record the
+result of the run to a JUnit XML file that can be passed on for further
+analyses.
+
+* Basic suites
+
+  Suites are YAML files pointing out testcases and/or other testsuites,
+  example:
+
+     $ cat suite.yaml
+     - path: cases/foo.tcl
+     - path: cases/bar.tcl
+
+  Here we see a suite that contains two testcases foo.tcl and bar.tcl.
+  These two testcases will be executed om sequence as they appear in the
+  suite description. It is also possible to include other suites in
+  suites, example:
+
+     $ cat nestedsuite.yaml
+     - path: cases/foo.tcl
+     - path: cases/bar.tcl
+     - path: subsuite.yaml
+     $ cat subsuite.yaml
+     - path: cases/foo.tcl
+     - path: cases/baz.tcl
+
+   Here nestedsuite.yaml includes the two testcases foo.tcl and bar.tcl,
+   it also includes the testsuite subsuite.yaml which in turn includes
+   the testcase foo.tcl (again!) and baz.tcl. A path is deemed to be a
+   testsuite if the file suffix is .yaml, all other suffixes are treated
+   as testcases.
+
+* Suite namespace
+
+  In order to keep track of who included what testcase and to generate
+  traceable output 9pm.pl run each testcase and testsuite in a
+  namespace, if we examine the namespace for suite.yaml from above
+  it looks like:
+
+     suite/foo
+     suite/bar
+
+  This is a sane execution namespace without collisions. If we examine
+  the namespace of nestedsuite.yaml that pulls in foo.tcl twice (once in
+  nestedsuite.yaml and once in subsuite.yaml) it looks like:
+
+     nestedsuite/foo
+     nestedsuite/bar
+     nestedsuite/subsuite/foo
+     nestedsuite/subsuite/baz
+
+  This is also a sane execution namespace without collisions since
+  testcase foo.tcl is included from different suites 9pm.pl can tell
+  the two invocations apart. But what if I wish to include the same
+  testcase multiple times in the same testsuite you ask? No problem,
+  9pm.pl looks for name hints in the testsuite description, example:
+
+    $ cat namedsuite.yaml
+    - path: cases/foo.tcl
+    - path: cases/foo.tcl
+    - name: foo1
+    - path: cases/foo.tcl
+    - name: foo2
+
+  Testsuite namedsuite.yaml would result in the execution namesapace:
+
+    namedsuite/foo
+    namedsuite/foo1
+    namedsuite/foo2
+
+  In this testsuite testcase foo.tcl is executed three times in a row
+  but under different names so no namespace collisions occur.
+
+  Naturally name hints works the same for testsuites!
+
+* Pass options to 9pm or direct to testcases
+
+  9pm.pl pass some options behind the scenes to all invocations of 9pm
+  scripts:
+
+    - t          - to force TAP output
+    - d          - if 9pm.pl is asked to show debug information
+    - c <config> - if a configuration is provided to 9pm.pl
+
+  But what if you also wish to parametrize a testcase or set the 9pm
+  debug flag for just a single testcase since the fault only shows in a
+  suite run? No problems, 9pm.pl allows you to pass per testcase or
+  testsuite options directly to the invocation of 9pm scripts! Say you
+  wish to debug just a single testcase in a suite:
+
+    $ cat debugsinglesuite.yaml
+    - path: cases/foo.tcl
+    - path: cases/bar.tcl
+    - opts:
+    - -d
+    - path: cases/baz.tcl
+
+  The opts parameter allows you to pass a YAML array of options to any
+  testcase invocation. This also works for testsuites (all cases in a
+  suite receive the same options:
+
+    $ cat debugeth0network.yaml
+    - path: cases/foo.tcl
+    - path: network.yaml
+    - opts:
+    - -d
+    - eth0
+    - path: cases/bar.tcl
+
+  This will pass the options '-d' and 'eth0' to all testcases included
+  from the network.yaml testsuite.

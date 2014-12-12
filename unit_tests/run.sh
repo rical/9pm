@@ -20,14 +20,13 @@
 
 #TODO: Handle arguments (like debug and log)
 
-cd $(dirname $(readlink -f $0))
+base=$(dirname $(readlink -f $0))
+tool=$base/../9pm.pl
 
-find . -mindepth 1 -maxdepth 1 -type d -name "*test" | while read DIR;
-do
-    echo "### Running tests in $DIR ###"
-    cd "$DIR"
-    "${DIR}.tcl" -d #TODO: Check return code and act appropriate
-    cd ..
-    echo ""
-done
+echo "* Running all automated test, all should be OK!"
+$tool $base/auto.yaml
 
+echo ""
+
+echo "* Running output tests, some stuff will fail"
+$tool -v $base/output_show/output_show.tcl

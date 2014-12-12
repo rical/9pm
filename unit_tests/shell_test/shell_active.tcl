@@ -2,6 +2,8 @@
 package require 9pm
 namespace path ::9pm
 
+output::plan 8
+
 proc check_active {expected} {
 
     if {$::9pm::shell::active == $expected} {

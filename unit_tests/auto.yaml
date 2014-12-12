@@ -1,0 +1,9 @@
+---
+- path: config_test/test.yaml
+  name: config
+- path: execute_test/execute.yaml
+  name: execute
+- path: logging_test/logging.yaml
+  name: logging
+- path: shell_test/shell.yaml
+  name: shell
