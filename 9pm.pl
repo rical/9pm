@@ -9,20 +9,19 @@ use TAP::Formatter::Console;
 use TAP::Formatter::Color;
 use Data::Dumper;
 use File::Basename;
-use Getopt::Std;
+use Getopt::Long qw(:config bundling ignore_case);
 use Cwd 'abs_path';
 our $VERSION = "0.1";
 
-# Do not continue to execute after Getopt help message is printed
-$Getopt::Std::STANDARD_HELP_VERSION = 1;
-
 # Define Getopt help message
-sub HELP_MESSAGE() {
-	print "usage: $0 [-d] [-v] [-c <config>] [-o <xmlfile>] file...\n";
-	print " -d           - debug\n";
-	print " -c <config>  - configuration file\n";
-	print " -v           - verbose\n";
-	print " -o <xmlfile> - JUnit markup of run\n";
+sub usage {
+	my($rval) = @_;
+	print "usage: $0 [options] file\n";
+	print " --debug             - debug\n";
+	print " --config <config>   - configuration file\n";
+	print " --verbose           - verbose\n";
+	print " --output <xmlfile>  - JUnit markup of run\n";
+	exit $rval
 }
 
 sub is_suite {
@@ -114,22 +113,23 @@ $|++;
 
 # Parse options
 my %options=();
-exit 1 if not getopts("vdfc:o:", \%options);
+usage(1) if not GetOptions(\%options, "help|?|h" => sub { usage(0) },
+	"debug|d", "config|c=s", "verbose|v", "output|o=s");
 
 # Always tell 9pm to output TAP
 my @opts9pm = ('-t');
 
 # Tell 9pm we wish to recive debug info
-push(@opts9pm, '-d') if defined $options{d};
+push(@opts9pm, '-d') if defined $options{debug};
 
 # Be verbose if -v or -d is set
 my $verbose=0;
-$verbose = 1 if (defined $options{v} or defined $options{d});
+$verbose = 1 if (defined $options{verbose} or defined $options{debug});
 
 # Tell 9pm cases were it can find it's configuration file
-if (defined $options{c}) {
-	die "ERROR: Can not find configuration file: $options{c}" if (not -f  $options{c});
-	push(@opts9pm, '-c', $options{c});
+if (defined $options{config}) {
+	die "ERROR: Can not find configuration file: $options{config}" if (not -f  $options{config});
+	push(@opts9pm, '-c', $options{config});
 }
 
 # Parse input files
@@ -148,12 +148,12 @@ foreach my $tc (@tcs) {
 
 # Figure out if we want a JUnit capable harness
 my $harness;
-if (defined $options{o}) {
+if (defined $options{output}) {
 	$harness = TAP::Harness::JUnit->new( {
 			verbosity => $verbose,
 			color => 1,
 			test_args => \%args,
-			xmlfile => $options{o},
+			xmlfile => $options{output},
 		} );
 } else {
 	$harness = TAP::Harness->new( {
