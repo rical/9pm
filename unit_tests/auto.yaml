@@ -7,3 +7,5 @@
   name: logging
 - path: shell_test/shell.yaml
   name: shell
+- path: harness/options.yaml
+  name: options

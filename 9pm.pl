@@ -21,6 +21,7 @@ sub usage {
 	print " --config <config>   - configuration file\n";
 	print " --verbose           - verbose\n";
 	print " --output <xmlfile>  - JUnit markup of run\n";
+	print " --option <value>    - User-supplied value passed to file (multiple allowed)\n";
 	exit $rval
 }
 
@@ -113,8 +114,9 @@ $|++;
 
 # Parse options
 my %options=();
+my @tcopts;
 usage(1) if not GetOptions(\%options, "help|?|h" => sub { usage(0) },
-	"debug|d", "config|c=s", "verbose|v", "output|o=s");
+	"debug|d", "config|c=s", "verbose|v", "output|o=s", "option|O=s" => \@tcopts);
 
 # Always tell 9pm to output TAP
 my @opts9pm = ('-t');
@@ -143,6 +145,8 @@ my @tests;
 my %args;
 foreach my $tc (@tcs) {
 	push(@tests, [$tc->{path}, $tc->{name}]);
+	# Put any user supplied options at the end
+	push(@{$tc->{opts}}, @tcopts);
 	$args{$tc->{name}} = $tc->{opts};
 }
 
