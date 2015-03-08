@@ -1,0 +1,4 @@
+---
+- path: options.tcl
+  opts:
+    - "suite-supplied"

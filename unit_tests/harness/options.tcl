@@ -1,6 +1,6 @@
-#!/bin/bash
+#!/usr/bin/tclsh
 #
-# Copyright (C) 2011-2014 Richard Alpe <rical@highwind.se>
+# Copyright (C) 2014 Fredrik Lindberg <fli@shapeshifter.se>
 #
 # This file is part of 9pm.
 #
@@ -18,15 +18,27 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-#TODO: Handle arguments (like debug and log)
+package require 9pm
+namespace path ::9pm
 
-base=$(dirname $(readlink -f $0))
-tool=$base/../9pm.pl
+output::plan 3
 
-echo "* Running all automated test, all should be OK!"
-$tool --option cmdl-supplied $base/auto.yaml
+output::debug "$argv"
 
-echo ""
+if {[llength $argv] == 2} {
+    output::ok "correct number of arguments"
+} else {
+    output::fail "unexpected number of arguments"
+}
 
-echo "* Running output tests, some stuff will fail"
-$tool -v $base/output_show/output_show.tcl
+if {[lindex $argv 0] == "suite-supplied"} {
+    output::ok "argument from suite"
+} else {
+    output::fail "no argument from suite"
+}
+
+if {[lindex $argv 1] == "cmdl-supplied"} {
+    output::ok "argument from command line"
+} else {
+    output::fail "no argument from command line"
+}
