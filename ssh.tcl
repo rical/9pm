@@ -34,7 +34,7 @@ namespace eval ::9pm::ssh {
         send "$ssh_cmd\n"
         expect {
             $PROMPT {
-                ::9pm::output::info "Connected to \"$IP\" (as \"$USER\")"
+                ::9pm::output::debug "Connected to \"$IP\" (as \"$USER\")"
             }
             -nocase "password" {
                 send "$PASS\n"
