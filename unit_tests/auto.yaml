@@ -9,3 +9,5 @@
   name: shell
 - path: harness/options.yaml
   name: options
+- path: helpers_test/helpers.yaml
+  name: helpers
