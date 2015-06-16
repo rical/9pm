@@ -1,2 +1,3 @@
 ---
 - path: retry_test.tcl
+- path: assert_test.tcl

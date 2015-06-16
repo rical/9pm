@@ -90,4 +90,17 @@ namespace eval ::9pm::misc {
         }
         return FALSE
     }
+
+    # Assert that a condition holds true
+    # The function specified by args if any will be called on failure
+    proc assert {condition {args ""}} {
+        if {![uplevel 1 "expr $condition"]} {
+            if {$args != ""} {
+                uplevel 1 {*}$args
+            }
+            return FALSE
+        } else {
+            return TRUE
+        }
+    }
 }
