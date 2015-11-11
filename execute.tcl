@@ -22,17 +22,50 @@ package provide 9pm::execute 1.0
 package require Expect
 
 namespace eval ::9pm::cmd {
+    # Datastructe looks like:
+    # data(<shell>) cmd {{cmd cmd1 checksum 1234} {cmd cmd2 checksum 4321}}
+    namespace eval int {
+        proc gen_checksum {} {
+            return "[::9pm::misc::get::rand_str 10][::9pm::misc::get::rand_int 1000]"
+        }
+        namespace eval cmd {
+            proc is_running {} {
+                return [dict exists $::9pm::shell::data($::9pm::shell::active) "cmd"]
+            }
+            proc get_last {} {
+                return [lindex [dict get $::9pm::shell::data($::9pm::shell::active) "cmd"] end]
+            }
+            proc cnt {} {
+                return [llength [dict get $::9pm::shell::data($::9pm::shell::active) "cmd"]]
+            }
+            proc push {cmd checksum} {
+                dict lappend ::9pm::shell::data($::9pm::shell::active) "cmd" \
+                    [dict create "cmd" $cmd "checksum" $checksum]
+            }
+            proc pop {} {
+                if {[cnt] == 1} {
+                    dict unset ::9pm::shell::data($::9pm::shell::active) "cmd"
+                } else {
+                    dict set ::9pm::shell::data($::9pm::shell::active) "cmd"\
+                        [lrange [dict get $::9pm::shell::data($::9pm::shell::active) "cmd"] 0 end-1]
+                }
+            }
+        }
+    }
     proc start {cmd} {
         if {![info exists ::9pm::shell::active]} {
             ::9pm::fatal ::9pm::output::user_error "You need a spawn to start \"$cmd\""
         }
-        if {[dict exists $::9pm::shell::data($::9pm::shell::active) "running"]} {
-            ::9pm::fatal ::9pm::output::user_error "Can't start, shell has command still running"
+        set checksum(start) [int::gen_checksum]
+        set checksum(end) [int::gen_checksum]
+
+        int::cmd::push $cmd $checksum(end)
+
+        if {[int::cmd::cnt] == 1} {
+            ::9pm::output::debug "Starting command \"$cmd\""
+        } else {
+            ::9pm::output::debug "Starting nested command \"$cmd\""
         }
-        set checksum(start) "[::9pm::misc::get::rand_str 10][::9pm::misc::get::rand_int 1000]"
-        set checksum(end) "[::9pm::misc::get::rand_str 10][::9pm::misc::get::rand_int 1000]"
-        dict set ::9pm::shell::data($::9pm::shell::active) "running" $cmd
-        dict set ::9pm::shell::data($::9pm::shell::active) "checksum" $checksum(end)
 
         expect *
         send "echo $checksum(start); $cmd; echo $checksum(end) \$?\n"
@@ -63,11 +96,12 @@ namespace eval ::9pm::cmd {
         # output::info "Got $out before command completion"
         # finish
         expect_after {
+            # It's important to note that we are in the caller scope here, so we need to be careful
+            # not to corrupt or pollute. This also means we need to use variables that are globally
+            # accessible.
             -notransfer -re "$checksum(end) (\[0-9]+)\r\n" {
-                # It's important to note that we are in the caller scope here,
-                # so we need to be careful not to corrupt or pollute.
                 ::9pm::output::debug "Got $expect_out(1,string) as return code for\
-                    \"[dict get $::9pm::shell::data($::9pm::shell::active) "running"]\""
+                    [dict get [::9pm::cmd::int::cmd::get_last] "cmd"]"
             }
         }
     }
@@ -78,12 +112,13 @@ namespace eval ::9pm::cmd {
         if {![info exists ::9pm::shell::active]} {
             ::9pm::fatal ::9pm::output::user_error "You need a spawn to capture output"
         }
-        if {![dict exists $::9pm::shell::data($::9pm::shell::active) "running"]} {
+        if {![int::cmd::is_running]} {
             ::9pm::fatal ::9pm::output::user_error "Can't capture output, nothing running on this shell"
         }
 
-        set cmd [dict get $::9pm::shell::data($::9pm::shell::active) "running"]
-        set checksum [dict get $::9pm::shell::data($::9pm::shell::active) "checksum"]
+        set cmd_data [lindex [dict get $::9pm::shell::data($::9pm::shell::active) "cmd"] end]
+        set cmd [dict get $cmd_data "cmd"]
+        set checksum [dict get $cmd_data "checksum"]
 
         ::9pm::output::debug2 "\"$cmd\" capturing output unitl checksum $checksum"
         expect {
@@ -101,7 +136,8 @@ namespace eval ::9pm::cmd {
                 expect {
                     -re {[^\r\n]+\r\n} { }
                     default {
-                        ::9pm::fatal ::9pm::output::error "Something went wrong when flushing output from the exp buffer"
+                        ::9pm::fatal ::9pm::output::error\
+                            "Something went wrong when flushing output from the exp buffer"
                     }
                 }
 
@@ -122,12 +158,13 @@ namespace eval ::9pm::cmd {
         if {![info exists ::9pm::shell::active]} {
             ::9pm::fatal ::9pm::output::user_error "Can't finish, no active spawn"
         }
-        if {![dict exists $::9pm::shell::data($::9pm::shell::active) "running"]} {
+        if {![int::cmd::is_running]} {
             ::9pm::fatal ::9pm::output::user_error "Can't finish, nothing running on this shell"
         }
 
-        set cmd [dict get $::9pm::shell::data($::9pm::shell::active) "running"]
-        set checksum [dict get $::9pm::shell::data($::9pm::shell::active) "checksum"]
+        set last [int::cmd::get_last]
+        set cmd [dict get $last "cmd"]
+        set checksum [dict get $last "checksum"]
 
         expect {
             -re "$checksum (\[0-9]+)\r\n" {
@@ -141,10 +178,9 @@ namespace eval ::9pm::cmd {
             }
 
         }
-        dict unset ::9pm::shell::data($::9pm::shell::active) "running"
-        dict unset ::9pm::shell::data($::9pm::shell::active) "checksum"
-        return $code
 
+        int::cmd::pop
+        return $code
     }
 
     proc execute {cmd args} {

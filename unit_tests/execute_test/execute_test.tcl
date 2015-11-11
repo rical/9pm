@@ -21,48 +21,63 @@
 package require 9pm
 namespace path ::9pm
 
+set TESTDATA_LINE_CNT 500
+
 output::plan 3
 
 shell::open "localhost"
 
-# Manually get the number of files in /
-set checksum [misc::get::rand_str 10]
-send "echo \"$checksum \$(ls -1 / | wc -l)\"\n"
-expect {
-    -re "$checksum (\[0-9]+)\r\n" {
-        set count $expect_out(1,string)
-    }
-    default {
-        fatal output::fail "Didn't get return code"
-    }
-}
+output::info "Checking line count for execute"
 
-# Get all the files into a list using execute
-set lines [cmd::execute "ls -1 /"]
-
-set msg "Capturing output using execute"
-if {[llength $lines] == $count} {
-    output::ok $msg
+set lines [cmd::execute "cat [misc::get::running_script_path]/testdata"]
+if {[llength $lines] == $TESTDATA_LINE_CNT} {
+    output::ok "Execute line count"
 } else {
-    output::fail $msg
+    output::fail "Execute line count"
 }
 
-# Get all the files into a list using start, capture and finish
-cmd::start "ls -1 /"
+output::info "Checking line count for start, capture and finish"
+
+cmd::start "cat [misc::get::running_script_path]/testdata"
 set lines [cmd::capture]
 cmd::finish
-
-set msg "Capturing output using start, capture and finish"
-if {[llength $lines] == $count} {
-    output::ok $msg
+if {[llength $lines] == $TESTDATA_LINE_CNT} {
+    output::ok "Start, capture and finish line count"
 } else {
-    output::fail $msg
+    output::fail "Start, capture and finish line count"
+}
+
+output::info "Testing user expect block releasing"
+
+cmd::start "cat [misc::get::running_script_path]/testdata"
+expect {
+    default {
+        fatal output::fail "User expect block did not release for inner cmd"
+    }
+}
+cmd::finish
+if {[llength $lines] == $TESTDATA_LINE_CNT} {
+    output::ok "User expect block release"
+} else {
+    output::fail "User expect block release"
+}
+
+output::info "Testing command nesting"
+
+cmd::start "/bin/bash"
+set lines [cmd::execute "cat [misc::get::running_script_path]/testdata"]
+send "exit\n"
+cmd::finish
+
+if {[llength $lines] == $TESTDATA_LINE_CNT} {
+    output::ok "Execute line count for nested command"
+} else {
+    output::fail "Execute line count for nested command"
 }
 
 # Do a "manual" return code check
 set lines [cmd::execute "ls /" 0]
 output::ok "Got zero return for \"ls /\""
-
 
 cmd::execute "true"
 if {${?} != 0} {
