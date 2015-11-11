@@ -40,7 +40,19 @@ expect {
 # Get all the files into a list using execute
 set lines [cmd::execute "ls -1 /"]
 
-set msg "Capturing execute output"
+set msg "Capturing output using execute"
+if {[llength $lines] == $count} {
+    output::ok $msg
+} else {
+    output::fail $msg
+}
+
+# Get all the files into a list using start, capture and finish
+cmd::start "ls -1 /"
+set lines [cmd::capture]
+cmd::finish
+
+set msg "Capturing output using start, capture and finish"
 if {[llength $lines] == $count} {
     output::ok $msg
 } else {
