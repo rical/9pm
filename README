@@ -19,10 +19,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 CODING STYLE
 ------------
 o Spaces not tabs
-o A line should never be longer then 100 chars
+o A line should not be longer than 100 chars
 o {} embracing are not padded (if {foo} not if { foo })
-o No one-line if's or procedures
-o Bool return values are "FALE" or "TRUE"
+o No one-line if statements or procedures
+o Bool return values are "FALSE" or "TRUE"
 
 NAMESPACE AND SCOPE
 -------------------
@@ -48,7 +48,6 @@ variable. Something like "export TCLLIBPATH='/usr/share/tcltk/ ~/code/9pm'"
 
 HARNESS
 -------
-
 9pm.pl is a harness and test suite manager for 9pm testcases based on
 TAP::Harness and TAP::Harness::JUnit. The tool can optionally record the
 result of the run to a JUnit XML file that can be passed on for further
