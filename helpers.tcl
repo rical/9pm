@@ -75,4 +75,16 @@ namespace eval ::9pm::misc {
         }
         return $result
     }
+
+    # Retry 'body' until it evaulates to true, but maximum 'times' number of
+    # times with 'delay' seconds between attempts.
+    # The function specified by args if any will be called on failure
+    proc retry {times delay body} {
+        for {} {$times > 0} {incr times -1; sleep $delay} {
+            if {[uplevel 1 $body]} {
+                return TRUE
+            }
+        }
+        return FALSE
+    }
 }
