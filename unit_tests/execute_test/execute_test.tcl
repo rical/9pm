@@ -88,3 +88,10 @@ if {${?} == 0} {
     fatal output::fail "\$? set to 0 for command \"false\""
 }
 output::ok "Execute return code variable \$? has sane values"
+
+output::info "Testing command abort"
+cmd::start "sleep 1337"
+cmd::abort
+# Check that shell still works
+cmd::execute "true" 0
+output::ok "Sleep command aborted"

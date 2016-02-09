@@ -183,6 +183,33 @@ namespace eval ::9pm::cmd {
         return $code
     }
 
+    # Abort a running command by sending a ctrl key "key" and expecting a termination string "out"
+    proc abort {{key "\003"} {out {\^C}}} {
+        if {![info exists ::9pm::shell::active]} {
+            ::9pm::fatal ::9pm::output::user_error "Can't abort, no active spawn"
+        }
+        if {![int::cmd::is_running]} {
+            ::9pm::fatal ::9pm::output::user_error "Can't abort, nothing running on this shell"
+        }
+        set last [int::cmd::get_last]
+        set cmd [dict get $last "cmd"]
+        set checksum [dict get $last "checksum"]
+
+        ::9pm::output::debug "Aborting \"$cmd\" (discarding $checksum)"
+
+        send $key
+        expect {
+            $out {
+                ::9pm::output::debug "Successfully aborted \"$cmd\" (got \"$out\")"
+            }
+            default {
+                ::9pm::fatal ::9pm::output::fail \
+                    "Unable to abort \"$cmd\", didn't see \"$out\""
+            }
+        }
+        int::cmd::pop
+    }
+
     proc execute {cmd args} {
         upvar ? "code"
 
