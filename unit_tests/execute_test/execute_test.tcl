@@ -64,7 +64,7 @@ if {[llength $lines] == $TESTDATA_LINE_CNT} {
 
 output::info "Testing command nesting"
 
-cmd::start "/bin/bash"
+cmd::start "/bin/bash -norc"
 set lines [cmd::execute "cat [misc::get::running_script_path]/testdata"]
 send "exit\n"
 cmd::finish
