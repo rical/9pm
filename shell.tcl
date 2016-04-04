@@ -19,7 +19,7 @@
 package provide 9pm::shell 1.0
 
 namespace eval ::9pm::shell {
-    proc open {alias {shell "/bin/bash"}} {
+    proc open {alias {shell "/bin/bash -norc"}} {
         global spawn_id
         variable data
         variable active
