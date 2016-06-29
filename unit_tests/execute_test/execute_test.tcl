@@ -95,3 +95,21 @@ cmd::abort
 # Check that shell still works
 cmd::execute "true" 0
 output::ok "Sleep command aborted"
+
+# We use the existing shell to start a command that self terminates.
+# This is to test that the expect_after is unregistered when swapping spawn,
+# if not, the second spawn will see the return from the first and terminate.
+
+output::info "Testing simultaneous commands that terminates"
+cmd::start "echo \"ASTRING\""
+
+shell::open "localhost2"
+cmd::execute "ls /" 0
+
+shell::open "localhost"
+set output [cmd::capture]
+if {$output != "ASTRING"} {
+    fatal output::fail "Didn't see output of previously started command"
+}
+cmd::finish
+output::ok "Simultaneous commands on different shells (expect_after)"

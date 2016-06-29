@@ -28,6 +28,41 @@ namespace eval ::9pm::cmd {
         proc gen_checksum {} {
             return "[::9pm::misc::get::rand_str 10][::9pm::misc::get::rand_int 1000]"
         }
+
+        proc unreg_exp_after {} {
+            if {![info exists ::9pm::shell::active]} {
+                return
+            }
+            # Unregister any existing expect_after clause for the current shell (spawn)
+            expect_after
+        }
+
+        proc reg_exp_after {} {
+            if {![cmd::is_running]} {
+                return
+            }
+            set checksum [dict get [cmd::get_last] "checksum"]
+            # Register expect after handler that will match the end checksum and break any expect
+            # block upon command completion (after first handling the users expect blocks hence,
+            # "after"). This is what a users expect code might look like:
+            #
+            # start "command"
+            # expect {
+            #   "foo*" { lappend out $expect_out(0,string) }
+            #   default { ::9pm::output::fail "Got eof or timeout" }
+            # }
+            # output::info "Got $out before command completion"
+            # finish
+            expect_after {
+                # It's important to note that we are in the caller scope here, so we need to be
+                # careful not to corrupt or pollute. This also means we need to use variables that
+                # are globally accessible.
+                -notransfer -re "$checksum (\[0-9]+)\r\n" {
+                    ::9pm::output::debug "Got $expect_out(1,string) as return code for\
+                        [dict get [::9pm::cmd::int::cmd::get_last] "cmd"]"
+                }
+            }
+        }
         namespace eval cmd {
             proc is_running {} {
                 return [dict exists $::9pm::shell::data($::9pm::shell::active) "cmd"]
@@ -84,26 +119,7 @@ namespace eval ::9pm::cmd {
             }
         }
 
-        # Register expect after handler that will match the end checksum and break any expect block
-        # upon command completion (after first handling the users expect blocks hence, "after").
-        # This is what a users expect code might look like:
-        #
-        # start "command"
-        # expect {
-        #   "foo*" { lappend out $expect_out(0,string) }
-        #   default { ::9pm::output::fail "Got eof or timeout" }
-        # }
-        # output::info "Got $out before command completion"
-        # finish
-        expect_after {
-            # It's important to note that we are in the caller scope here, so we need to be careful
-            # not to corrupt or pollute. This also means we need to use variables that are globally
-            # accessible.
-            -notransfer -re "$checksum(end) (\[0-9]+)\r\n" {
-                ::9pm::output::debug "Got $expect_out(1,string) as return code for\
-                    [dict get [::9pm::cmd::int::cmd::get_last] "cmd"]"
-            }
-        }
+        int::reg_exp_after
     }
 
     proc capture {} {

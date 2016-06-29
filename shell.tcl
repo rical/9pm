@@ -28,6 +28,9 @@ namespace eval ::9pm::shell {
         log_file ;#Stop any old logging
         log_file -a "$::9pm::output::log_path/${alias}_console.log"
 
+        # Unregister any running command catchers for the previous spawn
+        ::9pm::cmd::int::unreg_exp_after
+
         if {[info exists data($alias)]} {
             ::9pm::output::debug "Now looking at shell: $alias"
             set spawn_id [dict get $data($alias) "spawn_id"]
@@ -45,6 +48,7 @@ namespace eval ::9pm::shell {
         }
 
         set active $alias
+        ::9pm::cmd::int::reg_exp_after
         return TRUE
     }
 
