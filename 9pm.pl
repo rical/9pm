@@ -109,6 +109,8 @@ sub load_path {
 	return load_case($scope, $ns, $path, $name, $opts);
 }
 
+print "Warning, this test executor is DEPRECATED, please migrate to 9pm.py\n";
+
 # Disable linebuffering
 $|++;
 

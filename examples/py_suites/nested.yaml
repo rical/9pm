@@ -1,0 +1,8 @@
+---
+- suite: "nested2.yaml"
+- case: "../test_ok.tcl"
+  name: "suite2-test1"
+- case: "../test_ok.tcl"
+  name: "suite2-test2"
+- case: "../test_ok.tcl"
+  name: "suite2-test3"

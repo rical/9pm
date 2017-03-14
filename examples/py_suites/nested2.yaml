@@ -1,0 +1,4 @@
+---
+- case: "../test_ok.tcl"
+- case: "../test_ok.tcl"
+- case: "../test_fail.tcl"

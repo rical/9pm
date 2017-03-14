@@ -1,0 +1,8 @@
+---
+- case: "../test_ok.tcl"
+  name: "suite1-test1"
+- case: "../test_ok.tcl"
+  name: "suite1-test2"
+- suite: "nested.yaml"
+- case: "../test_ok.tcl"
+# Not that name is not required
