@@ -16,6 +16,48 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+WHY 9PM
+-------
+9pm is designed to address the complexity of interactively managing different
+systems simultaneously.
+
+Consider this setup
+ ___________    _______    _____
+|           |  |       |  |     |
+| localhost |--| encom |--| clu |
+|___________|  |_______|  |_____|
+                   |
+                ___|___
+               |       |
+               | flynn |
+               |_______|
+
+You're running on localhost and you want to start a server on clu and connect
+to it from flynn. Then you want to make sure that the client (on flynn) succeeds
+and that the hostname of flynn are shown in in the server output on clu.
+
+This is how you could do that with 9pm.
+
+shell "server"
+ssh "encom"
+ssh "clu"
+start "./server"
+
+shell "client"
+ssh "encom"
+ssh "flynn"
+set hostname [execute "hostname" 0]
+execute "./client" 0
+
+shell "server"
+expect {
+	"$hostname connected" {
+		result OK "$hostname connected to server"
+	}
+}
+set rc [finish]
+output INFO "Server returned $rc"
+
 CODING STYLE
 ------------
 o Spaces not tabs
