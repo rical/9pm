@@ -25,8 +25,3 @@ tool=$base/../9pm.py
 
 echo "* Running all automated test, all should be OK!"
 $tool --option cmdl-supplied $base/auto.yaml
-
-echo ""
-
-echo "* Running output tests, some stuff will fail"
-$tool $base/output_show/output_show.tcl
