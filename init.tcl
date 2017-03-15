@@ -20,6 +20,9 @@ package require yaml
 package require cmdline
 package provide 9pm::init 1.0
 
+namespace eval ::9pm {
+    set root_path [file normalize [file dirname [info script]]]
+}
 # We can't call other procedures in the 9pm:: namespace here
 # as this is running early.
 namespace eval ::9pm::core {
@@ -38,7 +41,6 @@ namespace eval ::9pm::core {
         return [::yaml::yaml2dict $data]
     }
 
-    set root_path [file normalize [file dirname [info script]]]
 
 
     # Parse command line
@@ -60,7 +62,7 @@ namespace eval ::9pm::core {
     if {[file exists "~/.9pm.rc"]} {
         set rc [parse_yaml "~/.9pm.rc"]
     } else {
-        set rc [parse_yaml "$root_path/etc/9pm.rc"]
+        set rc [parse_yaml "$::9pm::root_path/etc/9pm.rc"]
     }
 
     foreach {key val} $rc {
