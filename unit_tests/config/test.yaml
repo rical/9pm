@@ -1,5 +1,5 @@
 ---
-- case: "config_test.tcl"
+- case: "config.tcl"
   opts:
         - "-c"
         - "<base>/config.yaml"

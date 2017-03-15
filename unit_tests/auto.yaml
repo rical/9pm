@@ -1,13 +1,13 @@
 ---
-- suite: config_test/test.yaml
-  name: config
-- suite: execute_test/execute.yaml
-  name: execute
-- suite: logging_test/logging.yaml
-  name: logging
-- suite: shell_test/shell.yaml
-  name: shell
-- suite: harness/options.yaml
-  name: options
-- suite: helpers_test/helpers.yaml
-  name: helpers
+- suite: "config/test.yaml"
+  name: "config"
+- suite: "execute/execute.yaml"
+  name: "execute"
+- suite: "logging/logging.yaml"
+  name: "logging"
+- suite: "shell/shell.yaml"
+  name: "shell"
+- suite: "harness/options.yaml"
+  name: "options"
+- suite: "helpers/helpers.yaml"
+  name: "helpers"
