@@ -28,6 +28,7 @@ import pprint
 
 TEST_CNT=0
 ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
+DEBUG = False
 
 if "TCLLIBPATH" in os.environ:
     os.environ["TCLLIBPATH"] = os.environ["TCLLIBPATH"] + " " + ROOT_PATH
@@ -51,8 +52,14 @@ def help():
     exit(1)
 
 def run_test(test):
+    args = ["-t"]
+
+    if DEBUG:
+        args.append("-d")
+    args.append("--")
+
     print pcolor.blue + "\nStarting test", test['name'] + pcolor.reset
-    proc = subprocess.Popen([test['case'], "-t"],stdout=subprocess.PIPE)
+    proc = subprocess.Popen([test['case']] + args, stdout=subprocess.PIPE)
     err = False
 
     while True:
@@ -182,11 +189,11 @@ def run_suite(data, depth):
 print(pcolor.yellow + "9PM - Simplicity is the ultimate sophistication"
       + pcolor.reset);
 
-options, remainder = getopt.getopt(sys.argv[1:], 'dh', ['debug', 'help'])
+options, remainder = getopt.getopt(sys.argv[1:], 'dho:', ['debug', 'option', 'help'])
 for opt, arg in options:
     if opt in ('-d', '--debug'):
-        print('Debug switched on');
-        debug = True
+        print "Debug switched on"
+        DEBUG = True
     elif opt in ('-h', '--help'):
         help()
 
