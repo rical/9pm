@@ -29,6 +29,7 @@ import pprint
 TEST_CNT=0
 ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
 DEBUG = False
+CMDL_OPTIONS = []
 
 if "TCLLIBPATH" in os.environ:
     os.environ["TCLLIBPATH"] = os.environ["TCLLIBPATH"] + " " + ROOT_PATH
@@ -47,6 +48,7 @@ def help():
     print "Usage: ", sys.argv[0], "[ OPTIONS ] TEST | SUITE"
     print "\nOptions"
     print "-d --debug\t output debug info"
+    print "-o --option\t option that will be passed to all tests"
     print "-h --help\t print help (this message)"
 
     exit(1)
@@ -57,6 +59,10 @@ def run_test(test):
     if DEBUG:
         args.append("-d")
     args.append("--")
+
+    if 'options' in test:
+        args.extend(test['options'])
+    args.extend(CMDL_OPTIONS)
 
     print pcolor.blue + "\nStarting test", test['name'] + pcolor.reset
     proc = subprocess.Popen([test['case']] + args, stdout=subprocess.PIPE)
@@ -119,14 +125,22 @@ def parse(fpath):
             fpath = os.path.join(cur, entry['suite'])
             suite['suite'].append(parse(fpath))
         elif 'case' in entry:
-            fpath = os.path.join(cur, entry['case'])
+            case = {}
+            pprint.pprint(entry)
+
             if 'name' in entry:
                 name = entry['name']
             else:
                 name = os.path.basename(entry['case'])
-            suite['suite'].append({"case": fpath, "name": prefix_name(name)})
+
+            if 'opts' in entry:
+                case['options'] = entry['opts']
+
+            case['case'] = os.path.join(cur, entry['case'])
+            case['name'] = prefix_name(name)
+            suite['suite'].append(case)
         else:
-            print "error, missing suite/case in suite"
+            print "error, missing suite/case in suite", suite['name']
             exit(1)
     return suite
 
@@ -189,11 +203,13 @@ def run_suite(data, depth):
 print(pcolor.yellow + "9PM - Simplicity is the ultimate sophistication"
       + pcolor.reset);
 
-options, remainder = getopt.getopt(sys.argv[1:], 'dho:', ['debug', 'option', 'help'])
+options, remainder = getopt.getopt(sys.argv[1:], 'dho:', ['debug', 'option=', 'help'])
 for opt, arg in options:
     if opt in ('-d', '--debug'):
         print "Debug switched on"
         DEBUG = True
+    elif opt in ('-o', '--option'):
+        CMDL_OPTIONS.append(arg)
     elif opt in ('-h', '--help'):
         help()
 
