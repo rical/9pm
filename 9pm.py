@@ -30,6 +30,7 @@ TEST_CNT=0
 ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
 DEBUG = False
 CMDL_OPTIONS = []
+CONFIG = ""
 
 if "TCLLIBPATH" in os.environ:
     os.environ["TCLLIBPATH"] = os.environ["TCLLIBPATH"] + " " + ROOT_PATH
@@ -58,6 +59,9 @@ def run_test(test):
 
     if DEBUG:
         args.append("-d")
+    if CONFIG:
+        args.append("-c")
+        args.append(CONFIG)
     args.append("--")
 
     if 'options' in test:
@@ -203,13 +207,16 @@ def run_suite(data, depth):
 print(pcolor.yellow + "9PM - Simplicity is the ultimate sophistication"
       + pcolor.reset);
 
-options, remainder = getopt.getopt(sys.argv[1:], 'dho:', ['debug', 'option=', 'help'])
+options, remainder = getopt.getopt(sys.argv[1:], 'dho:c:',
+                                   ['debug', 'option=', 'config=', 'help'])
 for opt, arg in options:
     if opt in ('-d', '--debug'):
         print "Debug switched on"
         DEBUG = True
     elif opt in ('-o', '--option'):
         CMDL_OPTIONS.append(arg)
+    elif opt in ('-c', '--config'):
+        CONFIG = arg;
     elif opt in ('-h', '--help'):
         help()
 
