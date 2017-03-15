@@ -21,7 +21,7 @@
 #TODO: Handle arguments (like debug and log)
 
 base=$(dirname $(readlink -f $0))
-tool=$base/../9pm.pl
+tool=$base/../9pm.py
 
 echo "* Running all automated test, all should be OK!"
 $tool --option cmdl-supplied $base/auto.yaml
@@ -29,4 +29,4 @@ $tool --option cmdl-supplied $base/auto.yaml
 echo ""
 
 echo "* Running output tests, some stuff will fail"
-$tool -v $base/output_show/output_show.tcl
+$tool $base/output_show/output_show.tcl

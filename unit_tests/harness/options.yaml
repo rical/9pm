@@ -1,4 +1,4 @@
 ---
-- path: options.tcl
+- case: "options.tcl"
   opts:
     - "suite-supplied"

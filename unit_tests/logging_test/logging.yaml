@@ -1,2 +1,2 @@
 ---
-- path: logging_test.tcl
+- case: "logging_test.tcl"

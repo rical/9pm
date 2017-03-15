@@ -1,2 +1,2 @@
 ---
-- path: retry_test.tcl
+- case: "retry_test.tcl"

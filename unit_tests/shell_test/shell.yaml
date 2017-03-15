@@ -1,4 +1,4 @@
 ---
-- path: shell_active.tcl
-- path: shell_stack.tcl
-- path: shell_test.tcl
+- case: shell_active.tcl
+- case: shell_stack.tcl
+- case: shell_test.tcl

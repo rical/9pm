@@ -23,6 +23,7 @@ namespace path ::9pm
 
 output::plan 3
 
+puts "args: $argv"
 output::debug "$argv"
 
 if {[llength $argv] == 2} {

@@ -1,6 +1,6 @@
 ---
-- path: config_test.tcl
+- case: "config_test.tcl"
   opts:
-        - -c
-        - <base>/config.yaml
+        - "-c"
+        - "<base>/config.yaml"
 

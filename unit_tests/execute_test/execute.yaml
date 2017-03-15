@@ -1,2 +1,2 @@
 ---
-- path: execute_test.tcl
+- case: "execute_test.tcl"
