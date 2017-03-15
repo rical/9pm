@@ -30,7 +30,7 @@ TEST_CNT=0
 ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
 
 if "TCLLIBPATH" in os.environ:
-    os.environ["TCLLIBPATH"] = os.environ["TCLLIBPATH"], ROOT_PATH
+    os.environ["TCLLIBPATH"] = os.environ["TCLLIBPATH"] + " " + ROOT_PATH
 else:
     os.environ["TCLLIBPATH"] = ROOT_PATH
 
