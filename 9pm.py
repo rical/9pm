@@ -62,7 +62,6 @@ def run_test(test):
     if CONFIG:
         args.append("-c")
         args.append(CONFIG)
-    args.append("--")
 
     if 'options' in test:
         args.extend(test['options'])
@@ -138,7 +137,7 @@ def parse(fpath):
                 name = os.path.basename(entry['case'])
 
             if 'opts' in entry:
-                case['options'] = entry['opts']
+                case['options'] = [o.replace('<base>', cur) for o in entry['opts']]
 
             case['case'] = os.path.join(cur, entry['case'])
             case['name'] = prefix_name(name)
