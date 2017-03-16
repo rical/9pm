@@ -22,7 +22,7 @@ package require yaml
 package require 9pm
 namespace path ::9pm
 
-output::plan 3
+output::plan 2
 
 if {![info exists ::9pm::conf::data]} {
     fatal output::error "Can't test configurations, no configuration given"
@@ -58,11 +58,3 @@ if {$fail} {
 } else {
     output::ok $msg
 }
-
-# Test the get_req_node info functions (note: this is a fatal proc)
-foreach elem [dict keys $config] {
-    foreach {dkey dval} [dict get $config $elem] {
-        conf::get_req $elem $dkey
-    }
-}
-output::ok "Iterating all node configurations and testing: get_req_node_info"
