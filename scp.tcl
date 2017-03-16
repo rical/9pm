@@ -31,12 +31,11 @@ namespace eval ::9pm::scp {
     }
 
     proc transfer {direction node files dest args} {
-        set IP      [::9pm::conf::get_req $node SSH_IP]
-        set PROMPT  [::9pm::conf::get_req $node PROMPT]
-        set PORT    [::9pm::conf::get $node SSH_PORT]
-        set USER    [::9pm::conf::get $node SSH_USER]
-        set PASS    [::9pm::conf::get $node SSH_PASS]
-        set KEYFILE [::9pm::conf::get $node SSH_KEYFILE]
+        set IP      [::9pm::misc::dict::require $node hostname]
+        set PORT    [::9pm::misc::dict::get $node port]
+        set USER    [::9pm::misc::dict::get $node username]
+        set PASS    [::9pm::misc::dict::get $node password]
+        set KEYFILE [::9pm::misc::dict::get $node keyfile]
 
         set opts [dict get $::9pm::core::rc "ssh_opts"]
         set cmd "scp $opts"
