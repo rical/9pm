@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 
 # Copyright (C) 2011-2017 Richard Alpe <rical@highwind.se>
 #
