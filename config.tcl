@@ -43,8 +43,7 @@ namespace eval ::9pm::conf {
         variable data
 
         if {![info exists data]} {
-            # TODO: this will return wrong proc if wrapped (like with get_req)
-            ::9pm::fatal ::9pm::output::fail "\"[info level -2]\" requires an configuration"
+            ::9pm::fatal ::9pm::output::fail "Requires an configuration"
         }
 
         # Extract info about the node
