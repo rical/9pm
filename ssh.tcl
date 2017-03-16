@@ -37,6 +37,10 @@ namespace eval ::9pm::ssh {
                 ::9pm::output::debug "Connected to \"$IP\" (as \"$USER\")"
             }
             -nocase "password" {
+                if {$PASS == ""} {
+                    ::9pm::fatal ::9pm::output::fail \
+                        "SSH got password prompt but no password is provided in config"
+                }
                 send "$PASS\n"
                 exp_continue -continue_timer
             }

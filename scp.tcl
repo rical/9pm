@@ -35,6 +35,7 @@ namespace eval ::9pm::scp {
         set PROMPT  [::9pm::conf::get_req $node PROMPT]
         set PORT    [::9pm::conf::get $node SSH_PORT]
         set USER    [::9pm::conf::get $node SSH_USER]
+        set PASS    [::9pm::conf::get $node SSH_PASS]
         set KEYFILE [::9pm::conf::get $node SSH_KEYFILE]
 
         set opts [dict get $::9pm::core::rc "ssh_opts"]
@@ -65,7 +66,11 @@ namespace eval ::9pm::scp {
         ::9pm::cmd::start "$cmd"
         expect {
             -nocase "password" {
-                send "[::9pm::conf::get_req $node SSH_PASS]\n"
+                if {$PASS == ""} {
+                    ::9pm::fatal ::9pm::output::fail \
+                        "SSH got password prompt but no password is provided in config"
+                }
+                send "$PASS\n"
                 exp_continue
             }
             -re {(\S+)\s+(\d+)%\s+(\d+[^ ]+)\s+(\d+\.\d+)} {
