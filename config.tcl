@@ -58,18 +58,8 @@ namespace eval ::9pm::conf {
         if {[dict exists $node_info $what]} {
             return [expand [dict get $node_info $what]]
         } else {
-            ::9pm::output::debug2 "Configuration data \"$what\" not found for node \"$node\""
+            ::9pm::fatal ::9pm::output::error "Configuration data \"$what\" not found for node \"$node\""
             return ""
-        }
-    }
-
-    proc get_req {node what} {
-        set info [get $node $what]
-
-        if {$info == ""} {
-            ::9pm::fatal ::9pm::output::error "Required configuration data \"$what\" for node \"$node\" missing"
-        } else {
-            return $info
         }
     }
 }
