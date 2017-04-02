@@ -20,6 +20,28 @@ package provide 9pm::helpers 1.0
 
 namespace eval ::9pm::misc {
 
+    namespace eval dict {
+        proc get {data name} {
+            # Try to return the info we want for this node
+            if {[dict exists $data $name]} {
+                return [dict get $data $name]
+            } else {
+                ::9pm::output::debug2 "Dictionary key \"$name\" not found in data \"$data\""
+                return ""
+            }
+        }
+
+        proc require {data name} {
+            set info [get $data $name]
+
+            if {$info == ""} {
+                ::9pm::fatal ::9pm::output::error "Required dictionary key \"$name\" not found in data \"$data\""
+            } else {
+                return $info
+            }
+        }
+    }
+
     namespace eval get {
         # Get and return the current time in human readable form
         proc time {} {

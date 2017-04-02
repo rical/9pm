@@ -39,37 +39,21 @@ namespace eval ::9pm::conf {
         return $var
     }
 
-    proc get {node what} {
+    proc get {args} {
         variable data
 
         if {![info exists data]} {
-            # TODO: this will return wrong proc if wrapped (like with get_req)
-            ::9pm::fatal ::9pm::output::fail "\"[info level -2]\" requires an configuration"
+            ::9pm::fatal ::9pm::output::fail "Requires an configuration"
         }
 
-        # Extract info about the node
-        if {[dict exists $data $node]} {
-            set node_info [dict get $data $node]
-        } else {
-            ::9pm::fatal ::9pm::output::error "No configuration data found for node \"$node\""
+        set node $data
+        foreach arg $args {
+            if {[dict exists $node $arg]} {
+                set node [dict get $node $arg]
+            } else {
+                ::9pm::fatal ::9pm::output::error "No configuration data found for node \"$arg\""
+            }
         }
-
-        # Try to return the info we want for this node
-        if {[dict exists $node_info $what]} {
-            return [expand [dict get $node_info $what]]
-        } else {
-            ::9pm::output::debug2 "Configuration data \"$what\" not found for node \"$node\""
-            return ""
-        }
-    }
-
-    proc get_req {node what} {
-        set info [get $node $what]
-
-        if {$info == ""} {
-            ::9pm::fatal ::9pm::output::error "Required configuration data \"$what\" for node \"$node\" missing"
-        } else {
-            return $info
-        }
+        return $node
     }
 }
