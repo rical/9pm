@@ -27,6 +27,7 @@ import time
 import pprint
 import tempfile
 import shutil
+import re
 
 TEST_CNT=0
 ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -88,17 +89,34 @@ def run_test(test):
         string = line.rstrip()
         stamp = time.strftime("%Y-%m-%d %H:%M")
 
-        if string.startswith("ok"):
+        plan = re.search('^(\d+)..(\d+)$', string)
+        ok = re.search('^ok (\d+) -', string)
+        not_ok = re.search('^not ok (\d+) -', string)
+
+        if plan:
+            print pcolor.purple + stamp, string +  pcolor.reset
+            test['plan'] = plan.group(2)
+        elif ok:
             print pcolor.green + stamp, string +  pcolor.reset
-        elif string.startswith("not ok"):
+            test['executed'] = ok.group(1)
+        elif not_ok:
             print pcolor.red + stamp, string +  pcolor.reset
             err = True
+            test['executed'] = not_ok.group(1)
         else:
             print stamp, string
+
+        if (ok or not_ok) and not 'plan' in test:
+            print "test error, test started before plan"
+            err = True
+
     out, error = proc.communicate()
     exitcode = proc.returncode
 
     if exitcode != 0:
+        err = True
+    elif test['plan'] != test['executed']:
+        print "test error, not conforming to plan (" + test['executed'] + "/" + test['plan'] + ")"
         err = True
 
     return err

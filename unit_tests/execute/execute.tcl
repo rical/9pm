@@ -23,7 +23,7 @@ namespace path ::9pm
 
 set TESTDATA_LINE_CNT 500
 
-output::plan 4
+output::plan 9
 
 shell::open "localhost"
 
