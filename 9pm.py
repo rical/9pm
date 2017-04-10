@@ -18,11 +18,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import argparse
 import os
 import yaml
 import subprocess
 import sys
-import getopt
 import time
 import pprint
 import tempfile
@@ -49,15 +49,6 @@ class pcolor:
     yellow = '\033[93m'
     red = '\033[91m'
     reset = '\033[0m'
-
-def help():
-    print "Usage: ", sys.argv[0], "[ OPTIONS ] TEST | SUITE"
-    print "\nOptions"
-    print "-d --debug\t output debug info"
-    print "-o --option\t option that will be passed to all tests"
-    print "-h --help\t print help (this message)"
-
-    sys.exit(1)
 
 def run_test(test):
     args = ["-t"]
@@ -227,6 +218,24 @@ def run_suite(data, depth):
 
     return err
 
+def parse_cmdline():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c', '--config', metavar='FILE', action='store',
+            help='Use config file')
+    parser.add_argument('-d', '--debug', action='store_true',
+            help='Enable debug mode')
+    parser.add_argument('-o', '--option', action='append', default=[],
+            help='Option to pass to tests and suites (use multiple -o for multiple options)')
+    parser.add_argument('suites', nargs='+', metavar='TEST|SUITE',
+            help='Test or suite to run')
+    if len(sys.argv) == 1:
+        # Normally, argparse does not display the help message if the user
+        # didn't explicitly invoke '-h' but we also want it shown if the user
+        # didn't specify any arguments at all.
+        parser.print_help()
+        sys.exit(1)
+    return parser.parse_args()
+
 def main():
     global CMDL_OPTIONS
     global CONFIG
@@ -235,18 +244,10 @@ def main():
     print(pcolor.yellow + "9PM - Simplicity is the ultimate sophistication"
       + pcolor.reset);
 
-    options, remainder = getopt.getopt(sys.argv[1:], 'dho:c:',
-                                       ['debug', 'option=', 'config=', 'help'])
-    for opt, arg in options:
-        if opt in ('-d', '--debug'):
-            print "Debug switched on"
-            DEBUG = True
-        elif opt in ('-o', '--option'):
-            CMDL_OPTIONS.append(arg)
-        elif opt in ('-c', '--config'):
-            CONFIG = arg;
-        elif opt in ('-h', '--help'):
-            help()
+    args = parse_cmdline()
+    DEBUG = args.debug
+    CONFIG = args.config
+    CMDL_OPTIONS = args.option
 
     temp = tempfile.NamedTemporaryFile(suffix='_dict_db', prefix='9pm_',
                                        dir='/tmp')
@@ -255,7 +256,7 @@ def main():
     DATABASE = temp.name
 
     cmdl = {'name': 'cmdl', 'suite': []}
-    for filename in remainder:
+    for filename in args.suites:
         fpath = os.path.join(os.getcwd(), filename)
         if filename.endswith('.yaml'):
             cmdl['suite'].append(parse(fpath))
