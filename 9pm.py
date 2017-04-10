@@ -68,6 +68,8 @@ def run_test(test):
     args.extend(CMDL_OPTIONS)
 
     print pcolor.blue + "\nStarting test", test['name'] + pcolor.reset
+    if DEBUG:
+        print "Executing:", [test['case']] + args
     proc = subprocess.Popen([test['case']] + args, stdout=subprocess.PIPE)
     err = False
 
@@ -129,7 +131,6 @@ def parse(fpath):
             suite['suite'].append(parse(fpath))
         elif 'case' in entry:
             case = {}
-            pprint.pprint(entry)
 
             if 'name' in entry:
                 name = entry['name']
