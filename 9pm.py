@@ -248,7 +248,7 @@ for opt, arg in options:
 temp = tempfile.NamedTemporaryFile(suffix='_dict_db', prefix='9pm_',
                                    dir='/tmp')
 if DEBUG:
-    print "Created databsefile:", temp.name
+    print "Created databasefile:", temp.name
 DATABASE = temp.name
 
 cmdl = {'name': 'cmdl', 'suite': []}
