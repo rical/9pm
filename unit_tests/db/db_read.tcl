@@ -1,4 +1,6 @@
-# Copyright (C) 2011-2014 Richard Alpe <rical@highwind.se>
+#!/usr/bin/tclsh
+#
+# Copyright (C) 2011-2017 Richard Alpe <rical@highwind.se>
 #
 # This file is part of 9pm.
 #
@@ -16,15 +18,20 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-package require 9pm::output 1.0
+package require 9pm
+namespace path ::9pm
 
-package require 9pm::helpers 1.0
-package require 9pm::config 1.0
-package require 9pm::init 1.0
-package require 9pm::db 1.0
-package require 9pm::shell 1.0
-package require 9pm::execute 1.0
-package require 9pm::ssh 1.0
-package require 9pm::scp 1.0
+output::plan 2
 
-package provide 9pm 1.0
+output::info "Checking database content"
+if {[dict get $9pm::db::dict "spoon"] == "There is no spoon"} {
+    output::ok "Database content: There is no spoon"
+} else {
+    output::fail "Database content: There is no spoon"
+}
+
+if {[dict get $9pm::db::dict "pill"] == "Take the red pill"} {
+    output::ok "Database content: Take the red pill"
+} else {
+    output::fail "Database content: Take the red pill"
+}

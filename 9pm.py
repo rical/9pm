@@ -25,12 +25,16 @@ import sys
 import getopt
 import time
 import pprint
+import tempfile
+import shutil
 
 TEST_CNT=0
 ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
 DEBUG = False
 CMDL_OPTIONS = []
+# TODO: proper argument strucutre
 CONFIG = ""
+DATABASE = ""
 
 if "TCLLIBPATH" in os.environ:
     os.environ["TCLLIBPATH"] = os.environ["TCLLIBPATH"] + " " + ROOT_PATH
@@ -59,6 +63,9 @@ def run_test(test):
 
     if DEBUG:
         args.append("-d")
+    if DATABASE:
+        args.append("-b")
+        args.append(DATABASE)
     if CONFIG:
         args.append("-c")
         args.append(CONFIG)
@@ -220,6 +227,12 @@ for opt, arg in options:
     elif opt in ('-h', '--help'):
         help()
 
+temp = tempfile.NamedTemporaryFile(suffix='_dict_db', prefix='9pm_',
+                                   dir='/tmp')
+if DEBUG:
+    print "Created databsefile:", temp.name
+DATABASE = temp.name
+
 cmdl = {'name': 'cmdl', 'suite': []}
 for filename in remainder:
     fpath = os.path.join(os.getcwd(), filename)
@@ -235,4 +248,5 @@ else:
     print pcolor.green + "\no Execution" + pcolor.reset
 print_tree(cmdl, "", 0)
 
+temp.close()
 exit(err)

@@ -11,3 +11,5 @@
   name: "options"
 - suite: "helpers/helpers.yaml"
   name: "helpers"
+- suite: "db/db.yaml"
+  name: "database"

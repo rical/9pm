@@ -45,6 +45,7 @@ namespace eval ::9pm::core {
 
     # Parse command line
     set options {
+        {b.arg "" "Runtime database path"}
         {c.arg "" "Configuration file"}
         {l.arg "./log" "Logging base path"}
         {d "Output debug info and write exp_internal logfile"}
