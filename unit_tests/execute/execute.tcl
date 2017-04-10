@@ -23,7 +23,7 @@ namespace path ::9pm
 
 set TESTDATA_LINE_CNT 500
 
-output::plan 3
+output::plan 4
 
 shell::open "localhost"
 
@@ -95,6 +95,13 @@ cmd::abort
 # Check that shell still works
 cmd::execute "true" 0
 output::ok "Sleep command aborted"
+
+output::info "Testing command discard"
+cmd::start "true"
+cmd::discard
+# Check that shell still works
+cmd::execute "true" 0
+output::ok "Started command discarded"
 
 # We use the existing shell to start a command that self terminates.
 # This is to test that the expect_after is unregistered when swapping spawn,

@@ -199,6 +199,16 @@ namespace eval ::9pm::cmd {
         return $code
     }
 
+    # Discard a running command, usefull when for example rebooting
+    proc discard {} {
+        set last [int::cmd::get_last]
+        set cmd [dict get $last "cmd"]
+        set checksum [dict get $last "checksum"]
+
+        ::9pm::output::debug "Discarding start of \"$cmd\" ($checksum)"
+        int::cmd::pop
+    }
+
     # Abort a running command by sending a ctrl key "key" and expecting a termination string "out"
     proc abort {{key "\003"} {out {\^C}}} {
         if {![info exists ::9pm::shell::active]} {
