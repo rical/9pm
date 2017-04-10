@@ -90,6 +90,22 @@ namespace eval ::9pm::misc {
         }
     }
 
+    proc slurp_file {file} {
+        set data {}
+        if {[file exists $file]} {
+            set fd [open $file r]
+            set data [read $fd]
+            close $fd
+        }
+        return $data
+    }
+
+    proc write_file {data file} {
+        set fd [open $file w]
+        puts -nonewline $fd $data
+        close $fd
+    }
+
     # This will prepend a path to a list of files
     proc prepend_path {path filelist} {
         foreach elem $filelist {
