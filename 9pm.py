@@ -31,10 +31,7 @@ import re
 
 TEST_CNT=0
 ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
-DEBUG = False
-CMDL_OPTIONS = []
 # TODO: proper argument strucutre
-CONFIG = ""
 DATABASE = ""
 
 if "TCLLIBPATH" in os.environ:
@@ -50,25 +47,24 @@ class pcolor:
     red = '\033[91m'
     reset = '\033[0m'
 
-def run_test(test):
+def run_test(cmdline, test):
     args = ["-t"]
 
-    if DEBUG:
+    if cmdline.debug:
         args.append("-d")
 
-    args.append("-b")
-    args.append(DATABASE)
+    args.extend(["-b", DATABASE])
 
-    if CONFIG:
-        args.append("-c")
-        args.append(CONFIG)
+
+    if cmdline.config:
+        args.extend(["-c", cmdline.config])
 
     if 'options' in test:
         args.extend(test['options'])
-    args.extend(CMDL_OPTIONS)
+    args.extend(cmdline.option)
 
     print pcolor.blue + "\nStarting test", test['name'] + pcolor.reset
-    if DEBUG:
+    if cmdline.debug:
         print "Executing:", [test['case']] + args
     proc = subprocess.Popen([test['case']] + args, stdout=subprocess.PIPE)
     err = False
@@ -190,12 +186,12 @@ def print_tree(data, base, depth):
             print_tree(test, nextbase, depth + 1)
         i += 1
 
-def run_suite(data, depth):
+def run_suite(cmdline, data, depth):
     err = False
 
     for test in data['suite']:
         if 'suite' in test:
-            if run_suite(test, depth + 2):
+            if run_suite(cmdline, test, depth + 2):
                 err = True
 
         elif 'case' in test:
@@ -206,7 +202,7 @@ def run_suite(data, depth):
                 print "error, test case not executable ", test['case']
                 sys.exit(1)
 
-            if run_test(test):
+            if run_test(cmdline, test):
                 test['result'] = "fail";
                 err = True
             else:
@@ -238,21 +234,15 @@ def parse_cmdline():
     return parser.parse_args()
 
 def main():
-    global CMDL_OPTIONS
-    global CONFIG
     global DATABASE
-    global DEBUG
     print(pcolor.yellow + "9PM - Simplicity is the ultimate sophistication"
       + pcolor.reset);
 
     args = parse_cmdline()
-    DEBUG = args.debug
-    CONFIG = args.config
-    CMDL_OPTIONS = args.option
 
     temp = tempfile.NamedTemporaryFile(suffix='_dict_db', prefix='9pm_',
                                        dir='/tmp')
-    if DEBUG:
+    if args.debug:
         print "Created databasefile:", temp.name
     DATABASE = temp.name
 
@@ -264,7 +254,7 @@ def main():
         else:
             cmdl['suite'].append({"case": fpath, "name": gen_name(filename)})
 
-    err = run_suite(cmdl, 0)
+    err = run_suite(args, cmdl, 0)
     if err:
         print pcolor.red + "\nx Execution" + pcolor.reset
     else:
