@@ -88,7 +88,7 @@ def run_test(test):
             break
 
         string = line.rstrip()
-        stamp = time.strftime("%Y-%m-%d %H:%M")
+        stamp = time.strftime("%Y-%m-%d %H:%M:%S")
 
         plan = re.search('^(\d+)..(\d+)$', string)
         ok = re.search('^ok (\d+) -', string)
