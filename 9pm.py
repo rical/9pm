@@ -55,9 +55,10 @@ def run_test(test):
 
     if DEBUG:
         args.append("-d")
-    if DATABASE:
-        args.append("-b")
-        args.append(DATABASE)
+
+    args.append("-b")
+    args.append(DATABASE)
+
     if CONFIG:
         args.append("-c")
         args.append(CONFIG)
