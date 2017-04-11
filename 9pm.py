@@ -53,6 +53,7 @@ class pcolor:
 def help():
     print "Usage: ", sys.argv[0], "[ OPTIONS ] TEST | SUITE"
     print "\nOptions"
+    print "-c --config\t configuration file that will be passed to all tests"
     print "-d --debug\t output debug info"
     print "-o --option\t option that will be passed to all tests"
     print "-h --help\t print help (this message)"
