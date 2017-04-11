@@ -227,44 +227,50 @@ def run_suite(data, depth):
 
     return err
 
-# MAIN
-
-print(pcolor.yellow + "9PM - Simplicity is the ultimate sophistication"
+def main():
+    global CMDL_OPTIONS
+    global CONFIG
+    global DATABASE
+    global DEBUG
+    print(pcolor.yellow + "9PM - Simplicity is the ultimate sophistication"
       + pcolor.reset);
 
-options, remainder = getopt.getopt(sys.argv[1:], 'dho:c:',
-                                   ['debug', 'option=', 'config=', 'help'])
-for opt, arg in options:
-    if opt in ('-d', '--debug'):
-        print "Debug switched on"
-        DEBUG = True
-    elif opt in ('-o', '--option'):
-        CMDL_OPTIONS.append(arg)
-    elif opt in ('-c', '--config'):
-        CONFIG = arg;
-    elif opt in ('-h', '--help'):
-        help()
+    options, remainder = getopt.getopt(sys.argv[1:], 'dho:c:',
+                                       ['debug', 'option=', 'config=', 'help'])
+    for opt, arg in options:
+        if opt in ('-d', '--debug'):
+            print "Debug switched on"
+            DEBUG = True
+        elif opt in ('-o', '--option'):
+            CMDL_OPTIONS.append(arg)
+        elif opt in ('-c', '--config'):
+            CONFIG = arg;
+        elif opt in ('-h', '--help'):
+            help()
 
-temp = tempfile.NamedTemporaryFile(suffix='_dict_db', prefix='9pm_',
-                                   dir='/tmp')
-if DEBUG:
-    print "Created databasefile:", temp.name
-DATABASE = temp.name
+    temp = tempfile.NamedTemporaryFile(suffix='_dict_db', prefix='9pm_',
+                                       dir='/tmp')
+    if DEBUG:
+        print "Created databasefile:", temp.name
+    DATABASE = temp.name
 
-cmdl = {'name': 'cmdl', 'suite': []}
-for filename in remainder:
-    fpath = os.path.join(os.getcwd(), filename)
-    if filename.endswith('.yaml'):
-        cmdl['suite'].append(parse(fpath))
+    cmdl = {'name': 'cmdl', 'suite': []}
+    for filename in remainder:
+        fpath = os.path.join(os.getcwd(), filename)
+        if filename.endswith('.yaml'):
+            cmdl['suite'].append(parse(fpath))
+        else:
+            cmdl['suite'].append({"case": fpath, "name": gen_name(filename)})
+
+    err = run_suite(cmdl, 0)
+    if err:
+        print pcolor.red + "\nx Execution" + pcolor.reset
     else:
-        cmdl['suite'].append({"case": fpath, "name": gen_name(filename)})
+        print pcolor.green + "\no Execution" + pcolor.reset
+    print_tree(cmdl, "", 0)
 
-err = run_suite(cmdl, 0)
-if err:
-    print pcolor.red + "\nx Execution" + pcolor.reset
-else:
-    print pcolor.green + "\no Execution" + pcolor.reset
-print_tree(cmdl, "", 0)
+    temp.close()
+    exit(err)
 
-temp.close()
-exit(err)
+if __name__ == '__main__':
+    main()

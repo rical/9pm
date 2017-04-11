@@ -52,9 +52,9 @@ proc runtime {wait times delay} {
 
 proc test_runtime {wait times delay expected} {
     if {$expected} {
-        set msg "Run $wait seconds in $times cycels and $delay second delay"
+        set msg "Run $wait seconds in $times cycles and $delay second delay"
     } else {
-        set msg "Fail to run $wait seconds in $times cycels and $delay second delay"
+        set msg "Fail to run $wait seconds in $times cycles and $delay second delay"
     }
 
     if {[runtime $wait $times $delay] != $expected} {
