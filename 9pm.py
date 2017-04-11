@@ -57,7 +57,7 @@ def help():
     print "-o --option\t option that will be passed to all tests"
     print "-h --help\t print help (this message)"
 
-    exit(1)
+    sys.exit(1)
 
 def run_test(test):
     args = ["-t"]
@@ -170,7 +170,7 @@ def parse(fpath):
             suite['suite'].append(case)
         else:
             print "error, missing suite/case in suite", suite['name']
-            exit(1)
+            sys.exit(1)
     return suite
 
 def print_tree(data, base, depth):
@@ -209,10 +209,10 @@ def run_suite(data, depth):
         elif 'case' in test:
             if not os.path.isfile(test['case']):
                 print "error, test case not found ", test['case']
-                exit(1)
+                sys.exit(1)
             if not os.access(test['case'], os.X_OK):
                 print "error, test case not executable ", test['case']
-                exit(1)
+                sys.exit(1)
 
             if run_test(test):
                 test['result'] = "fail";
@@ -270,7 +270,7 @@ def main():
     print_tree(cmdl, "", 0)
 
     temp.close()
-    exit(err)
+    sys.exit(err)
 
 if __name__ == '__main__':
     main()
