@@ -18,11 +18,11 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+import argparse
 import os
 import yaml
 import subprocess
 import sys
-import getopt
 import time
 import pprint
 import tempfile
@@ -31,10 +31,7 @@ import re
 
 TEST_CNT=0
 ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
-DEBUG = False
-CMDL_OPTIONS = []
 # TODO: proper argument strucutre
-CONFIG = ""
 DATABASE = ""
 
 if "TCLLIBPATH" in os.environ:
@@ -50,33 +47,24 @@ class pcolor:
     red = '\033[91m'
     reset = '\033[0m'
 
-def help():
-    print "Usage: ", sys.argv[0], "[ OPTIONS ] TEST | SUITE"
-    print "\nOptions"
-    print "-d --debug\t output debug info"
-    print "-o --option\t option that will be passed to all tests"
-    print "-h --help\t print help (this message)"
-
-    exit(1)
-
-def run_test(test):
+def run_test(cmdline, test):
     args = ["-t"]
 
-    if DEBUG:
+    if cmdline.debug:
         args.append("-d")
-    if DATABASE:
-        args.append("-b")
-        args.append(DATABASE)
-    if CONFIG:
-        args.append("-c")
-        args.append(CONFIG)
+
+    args.extend(["-b", DATABASE])
+
+
+    if cmdline.config:
+        args.extend(["-c", cmdline.config])
 
     if 'options' in test:
         args.extend(test['options'])
-    args.extend(CMDL_OPTIONS)
+    args.extend(cmdline.option)
 
     print pcolor.blue + "\nStarting test", test['name'] + pcolor.reset
-    if DEBUG:
+    if cmdline.debug:
         print "Executing:", [test['case']] + args
     proc = subprocess.Popen([test['case']] + args, stdout=subprocess.PIPE)
     err = False
@@ -170,7 +158,7 @@ def parse(fpath):
             suite['suite'].append(case)
         else:
             print "error, missing suite/case in suite", suite['name']
-            exit(1)
+            sys.exit(1)
     return suite
 
 def print_tree(data, base, depth):
@@ -198,23 +186,23 @@ def print_tree(data, base, depth):
             print_tree(test, nextbase, depth + 1)
         i += 1
 
-def run_suite(data, depth):
+def run_suite(cmdline, data, depth):
     err = False
 
     for test in data['suite']:
         if 'suite' in test:
-            if run_suite(test, depth + 2):
+            if run_suite(cmdline, test, depth + 2):
                 err = True
 
         elif 'case' in test:
             if not os.path.isfile(test['case']):
                 print "error, test case not found ", test['case']
-                exit(1)
+                sys.exit(1)
             if not os.access(test['case'], os.X_OK):
                 print "error, test case not executable ", test['case']
-                exit(1)
+                sys.exit(1)
 
-            if run_test(test):
+            if run_test(cmdline, test):
                 test['result'] = "fail";
                 err = True
             else:
@@ -227,42 +215,46 @@ def run_suite(data, depth):
 
     return err
 
+def parse_cmdline():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c', '--config', metavar='FILE', action='store',
+            help='Use config file')
+    parser.add_argument('-d', '--debug', action='store_true',
+            help='Enable debug mode')
+    parser.add_argument('-o', '--option', action='append', default=[],
+            help='Option to pass to tests and suites (use multiple -o for multiple options)')
+    parser.add_argument('suites', nargs='+', metavar='TEST|SUITE',
+            help='Test or suite to run')
+    if len(sys.argv) == 1:
+        # Normally, argparse does not display the help message if the user
+        # didn't explicitly invoke '-h' but we also want it shown if the user
+        # didn't specify any arguments at all.
+        parser.print_help()
+        sys.exit(1)
+    return parser.parse_args()
+
 def main():
-    global CMDL_OPTIONS
-    global CONFIG
     global DATABASE
-    global DEBUG
     print(pcolor.yellow + "9PM - Simplicity is the ultimate sophistication"
       + pcolor.reset);
 
-    options, remainder = getopt.getopt(sys.argv[1:], 'dho:c:',
-                                       ['debug', 'option=', 'config=', 'help'])
-    for opt, arg in options:
-        if opt in ('-d', '--debug'):
-            print "Debug switched on"
-            DEBUG = True
-        elif opt in ('-o', '--option'):
-            CMDL_OPTIONS.append(arg)
-        elif opt in ('-c', '--config'):
-            CONFIG = arg;
-        elif opt in ('-h', '--help'):
-            help()
+    args = parse_cmdline()
 
     temp = tempfile.NamedTemporaryFile(suffix='_dict_db', prefix='9pm_',
                                        dir='/tmp')
-    if DEBUG:
+    if args.debug:
         print "Created databasefile:", temp.name
     DATABASE = temp.name
 
     cmdl = {'name': 'cmdl', 'suite': []}
-    for filename in remainder:
+    for filename in args.suites:
         fpath = os.path.join(os.getcwd(), filename)
         if filename.endswith('.yaml'):
             cmdl['suite'].append(parse(fpath))
         else:
             cmdl['suite'].append({"case": fpath, "name": gen_name(filename)})
 
-    err = run_suite(cmdl, 0)
+    err = run_suite(args, cmdl, 0)
     if err:
         print pcolor.red + "\nx Execution" + pcolor.reset
     else:
@@ -270,7 +262,7 @@ def main():
     print_tree(cmdl, "", 0)
 
     temp.close()
-    exit(err)
+    sys.exit(err)
 
 if __name__ == '__main__':
     main()
