@@ -1,4 +1,5 @@
 #!/usr/bin/python2
+# This Python file uses the following encoding: utf-8
 
 # Copyright (C) 2011-2017 Richard Alpe <rical@highwind.se>
 #
@@ -167,17 +168,17 @@ def print_tree(data, base, depth):
 
     for test in data['suite']:
         if i < llen:
-            prefix = "|-- "
-            nextbase = base + "|   "
+            prefix = "├── "
+            nextbase = base + "│   "
         else:
-            prefix = "`-- "
+            prefix = "└── "
             nextbase = base + "    "
 
         if test['result'] == "pass":
-            sign = "o"
+            sign = "✓"
             color = pcolor.green
         else:
-            sign = "x"
+            sign = "✗"
             color = pcolor.red
 
         print base + prefix + color + sign, test['name'] + pcolor.reset
@@ -256,9 +257,9 @@ def main():
 
     err = run_suite(args, cmdl, 0)
     if err:
-        print pcolor.red + "\nx Execution" + pcolor.reset
+        print pcolor.red + "\n✗ Execution" + pcolor.reset
     else:
-        print pcolor.green + "\no Execution" + pcolor.reset
+        print pcolor.green + "\n✓ Execution" + pcolor.reset
     print_tree(cmdl, "", 0)
 
     temp.close()
