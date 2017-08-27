@@ -62,7 +62,7 @@ namespace eval ::9pm::core {
 
     if {[file exists "~/.9pm.rc"]} {
         set rc [parse_yaml "~/.9pm.rc"]
-    } else {
+    } elseif {[file exists "$::9pm::root_path/etc/9pm.rc"]} {
         set rc [parse_yaml "$::9pm::root_path/etc/9pm.rc"]
     }
 

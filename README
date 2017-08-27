@@ -16,6 +16,17 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
+INSTALLATION
+------------
+
+Check where your distribution normally installs tcl libraries by examining
+the $tcl_pkgPath . Choose a suitable directory and ensure it exists.
+
+Run
+
+./install.tcl <directory>
+
+
 WHY 9PM
 -------
 9pm is designed to address the complexity of interactively managing different
