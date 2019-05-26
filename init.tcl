@@ -26,11 +26,11 @@ namespace eval ::9pm {
 # We can't call other procedures in the 9pm:: namespace here
 # as this is running early.
 namespace eval ::9pm::core {
-    proc handle_rc {} {
+    proc parse_rc {} {
         variable rc
 
         # Only keys in this dict are allowed in the 9pm rc
-        lappend allowed "ssh_opts" "console_opts"
+        lappend allowed "ssh_opts" "console_opts" "log_path"
 
         if {[file exists "~/.9pm.rc"]} {
             set rc_raw [parse_yaml "~/.9pm.rc"]
@@ -64,13 +64,13 @@ namespace eval ::9pm::core {
         return [::yaml::yaml2dict $data]
     }
 
-
+    parse_rc
 
     # Parse command line
     set options {
         {b.arg "" "Runtime database path"}
         {c.arg "" "Configuration file"}
-        {l.arg "./log" "Logging base path"}
+        {l.arg "" "Logging base path"}
         {d "Output debug info and write exp_internal logfile"}
         {dd "Output debug2 info"}
         {t "Output TAP"}
@@ -80,7 +80,8 @@ namespace eval ::9pm::core {
         exit 1
     }
 
-    handle_rc
-
+    if {[dict exists $rc "log_path"] && $cmdl(l) == ""} {
+        array set cmdl [list "l" [dict get $rc "log_path"]]
+    }
 }
 

@@ -9,3 +9,6 @@ SSH_OPTS: "-o StrictHostKeyChecking=no"
 
 # Default console (conserver) options
 # CONSOLE_OPTS: "--example"
+
+# Default log base path
+LOG_PATH: "~/9pm_log"
