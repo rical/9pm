@@ -27,5 +27,6 @@ package require 9pm::execute 1.0
 package require 9pm::ssh 1.0
 package require 9pm::scp 1.0
 package require 9pm::console 1.0
+package require 9pm::login 1.0
 
 package provide 9pm 1.0
