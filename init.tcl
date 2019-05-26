@@ -26,6 +26,29 @@ namespace eval ::9pm {
 # We can't call other procedures in the 9pm:: namespace here
 # as this is running early.
 namespace eval ::9pm::core {
+    proc handle_rc {} {
+        variable rc
+
+        # Only keys in this dict are allowed in the 9pm rc
+        lappend allowed "ssh_opts"
+
+        if {[file exists "~/.9pm.rc"]} {
+            set rc_raw [parse_yaml "~/.9pm.rc"]
+        } else {
+            set rc_raw [parse_yaml "$::9pm::root_path/etc/9pm.rc"]
+        }
+
+        set rc {}
+        foreach {key val} $rc_raw {
+            set key [string tolower $key]
+
+            if {[lsearch -nocase $allowed $key] < 0} {
+                puts "ERROR:: Invalid 9pm.rc option \"$key\""
+                exit 2
+            }
+            dict set rc $key $val
+        }
+    }
     proc parse_yaml {filename} {
 
         # Check that configuration file exists
@@ -57,23 +80,7 @@ namespace eval ::9pm::core {
         exit 1
     }
 
-    # Only keys in this dict are allowed in the 9pm rc. The values here are default values.
-    dict set rc "ssh_opts" ""
+    handle_rc
 
-    if {[file exists "~/.9pm.rc"]} {
-        set rc [parse_yaml "~/.9pm.rc"]
-    } else {
-        set rc [parse_yaml "$::9pm::root_path/etc/9pm.rc"]
-    }
-
-    foreach {key val} $rc {
-        set key [string tolower $key]
-
-        if {[lsearch -nocase [dict keys $rc] $key] < 0} {
-            puts "ERROR:: Invalid 9pm.rc option \"$key\""
-            exit 2
-        }
-        dict set rc $key $val
-    }
 }
 
