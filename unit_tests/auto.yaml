@@ -1,5 +1,7 @@
 ---
 - case: "sanity/dummy.sh"
+- suite: "args/args.yaml"
+  name: "args"
 - suite: "config/test.yaml"
   name: "config"
 - suite: "execute/execute.yaml"

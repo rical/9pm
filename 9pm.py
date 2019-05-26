@@ -48,17 +48,17 @@ class pcolor:
     reset = '\033[0m'
 
 def run_test(cmdline, test):
-    args = ["-t"]
+    os.environ["NINEPM_TAP"] = "1"
 
     if cmdline.debug:
-        args.append("-d")
+        os.environ["NINEPM_DEBUG"] = "1"
 
-    args.extend(["-b", DATABASE])
-
+    os.environ["NINEPM_DATABASE"] = DATABASE
 
     if cmdline.config:
-        args.extend(["-c", cmdline.config])
+        os.environ["NINEPM_CONFIG"] = cmdline.config
 
+    args = []
     if 'options' in test:
         args.extend(test['options'])
     args.extend(cmdline.option)

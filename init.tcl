@@ -80,6 +80,25 @@ namespace eval ::9pm::core {
         exit 1
     }
 
+    if {[::info exists ::env(NINEPM_DATABASE)] && $cmdl(b) == ""} {
+        array set cmdl [list "b" $::env(NINEPM_DATABASE)]
+    }
+    if {[::info exists ::env(NINEPM_CONFIG)] && $cmdl(c) == ""} {
+        array set cmdl [list "c" $::env(NINEPM_CONFIG)]
+    }
+    if {[::info exists ::env(NINEPM_LOG_PATH)] && $cmdl(l) == ""} {
+        array set cmdl [list "l" $::env(NINEPM_LOG_PATH)]
+    }
+    if {[::info exists ::env(NINEPM_DEBUG)]} {
+        array set cmdl [list "d" TRUE]
+    }
+    if {[::info exists ::env(NINEPM_DEBUG2)]} {
+        array set cmdl [list "dd" TRUE]
+    }
+    if {[::info exists ::env(NINEPM_TAP)]} {
+        array set cmdl [list "t" TRUE]
+    }
+
     if {[dict exists $rc "log_path"] && $cmdl(l) == ""} {
         array set cmdl [list "l" [dict get $rc "log_path"]]
     }
