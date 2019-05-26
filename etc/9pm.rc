@@ -5,3 +5,7 @@
 
 # Default ssh options passed to ssh and scp
 SSH_OPTS: "-o StrictHostKeyChecking=no"
+
+
+# Default console (conserver) options
+# CONSOLE_OPTS: "--example"

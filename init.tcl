@@ -30,7 +30,7 @@ namespace eval ::9pm::core {
         variable rc
 
         # Only keys in this dict are allowed in the 9pm rc
-        lappend allowed "ssh_opts"
+        lappend allowed "ssh_opts" "console_opts"
 
         if {[file exists "~/.9pm.rc"]} {
             set rc_raw [parse_yaml "~/.9pm.rc"]
