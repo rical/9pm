@@ -184,15 +184,30 @@ def print_tree(data, base, depth):
         if test['result'] == "pass":
             sign = "o"
             color = pcolor.green
-        else:
+        elif test['result'] == "fail":
             sign = "x"
             color = pcolor.red
+        else:
+            sign = "?"
+            color = pcolor.yellow
 
         print base + prefix + color + sign, test['name'] + pcolor.reset
 
         if 'suite' in test:
             print_tree(test, nextbase, depth + 1)
         i += 1
+
+def probe_suite(data, depth):
+    for test in data['suite']:
+        if 'suite' in test:
+            probe_suite(test, depth + 2)
+        elif 'case' in test:
+                test['result'] = "noexec";
+        else:
+            print "error, garbage in suite"
+            sys.exit(1)
+
+    data['result'] = "noexec";
 
 def run_suite(cmdline, data, depth):
     err = False
@@ -213,6 +228,9 @@ def run_suite(cmdline, data, depth):
             if run_test(cmdline, test):
                 test['result'] = "fail";
                 err = True
+                if cmdline.abort:
+                    print "Aborting execution"
+                    break
             else:
                 test['result'] = "pass";
 
@@ -225,6 +243,8 @@ def run_suite(cmdline, data, depth):
 
 def parse_cmdline():
     parser = argparse.ArgumentParser()
+    parser.add_argument('-a', '--abort', action='store_true',
+            help='Abort suite if test failes')
     parser.add_argument('-c', '--config', metavar='FILE', action='store',
             help='Use config file')
     parser.add_argument('-d', '--debug', action='store_true',
@@ -261,6 +281,8 @@ def main():
             cmdl['suite'].append(parse(fpath))
         else:
             cmdl['suite'].append({"case": fpath, "name": gen_name(filename)})
+
+    probe_suite(cmdl, 0)
 
     err = run_suite(args, cmdl, 0)
     if err:
