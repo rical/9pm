@@ -98,6 +98,14 @@ def run_test(cmdline, test):
             print "test error, test started before plan"
             err = True
 
+    if not 'plan' in test:
+        print "test error, no plan"
+        return True
+
+    if not 'executed' in test:
+        print "test error, no tests executed"
+        return True
+
     out, error = proc.communicate()
     exitcode = proc.returncode
 
