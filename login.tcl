@@ -21,11 +21,11 @@ namespace eval ::9pm::login {
                 return TRUE
             }
             timeout {
-                ::9pm::fatal ::9pm::output::fail "Didin't see login prompt or prompt (timeout)"
+                ::9pm::fatal ::9pm::output::fail "Didn't see login prompt or prompt (timeout)"
                 return FALSE
             }
             eof {
-                ::9pm::fatal ::9pm::output::fail "Didin't see login prompt or prompt (eof)"
+                ::9pm::fatal ::9pm::output::fail "Didn't see login prompt or prompt (eof)"
                 return FALSE
             }
         }
@@ -57,10 +57,10 @@ namespace eval ::9pm::login {
                 ::9pm::output::debug "Sent username $USERNAME in resp to $expect_out(0,string))"
             }
             timeout {
-                ::9pm::fatal ::9pm::output::fail "Didin't see login prompt (timeout)"
+                ::9pm::fatal ::9pm::output::fail "Didn't see login prompt (timeout)"
             }
             eof {
-                ::9pm::fatal ::9pm::output::fail "Didin't see login prompt (eof)"
+                ::9pm::fatal ::9pm::output::fail "Didn't see login prompt (eof)"
             }
         }
 
@@ -70,10 +70,10 @@ namespace eval ::9pm::login {
                 ::9pm::output::debug "Sent password $PASSWORD in resp to $expect_out(0,string))"
             }
             timeout {
-                ::9pm::fatal ::9pm::output::fail "Didin't see password prompt (timeout)"
+                ::9pm::fatal ::9pm::output::fail "Didn't see password prompt (timeout)"
             }
             eof {
-                ::9pm::fatal ::9pm::output::fail "Didin't see password prompt (eof)"
+                ::9pm::fatal ::9pm::output::fail "Didn't see password prompt (eof)"
             }
         }
 
@@ -83,18 +83,18 @@ namespace eval ::9pm::login {
                     9pm::output::debug "Got login banner"
                 }
                 timeout {
-                    ::9pm::fatal ::9pm::output::fail "Didin't see login banner (timeout)"
+                    ::9pm::fatal ::9pm::output::fail "Didn't see login banner (timeout)"
                 }
                 eof {
-                    ::9pm::fatal ::9pm::output::fail "Didin't see login banner (eof)"
+                    ::9pm::fatal ::9pm::output::fail "Didn't see login banner (eof)"
                 }
             }
         }
 
         if {$HOSTNAME != ""} {
-            ::9pm::output::info "Now loged in to $HOSTNAME"
+            ::9pm::output::info "Now logged in to $HOSTNAME"
         } else {
-            ::9pm::output::info "Now loged in"
+            ::9pm::output::info "Now logged in"
         }
     }
 }
