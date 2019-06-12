@@ -231,12 +231,12 @@ def probe_suite(data, depth):
         if 'suite' in test:
             probe_suite(test, depth + 2)
         elif 'case' in test:
-                test['result'] = "noexec";
+                test['result'] = "noexec"
         else:
             print("error, garbage in suite")
             sys.exit(1)
 
-    data['result'] = "noexec";
+    data['result'] = "noexec"
 
 def run_suite(cmdline, data, depth):
     err = False
@@ -257,10 +257,10 @@ def run_suite(cmdline, data, depth):
             if run_test(cmdline, test):
                 if 'mask' in test and test['mask'] == "fail":
                     print("{}Test failure is masked in suite{}" . format(pcolor.red, pcolor.reset))
-                    test['result'] = "masked-fail";
+                    test['result'] = "masked-fail"
                     err = False
                 else:
-                    test['result'] = "fail";
+                    test['result'] = "fail"
                     err = True
 
                 if 'onfail' in test:
@@ -270,12 +270,12 @@ def run_suite(cmdline, data, depth):
                     print("Aborting execution")
                     break
             else:
-                test['result'] = "pass";
+                test['result'] = "pass"
 
     if err:
-        data['result'] = "fail";
+        data['result'] = "fail"
     else:
-        data['result'] = "pass";
+        data['result'] = "pass"
 
     return err
 
@@ -315,7 +315,7 @@ def main():
     global DATABASE
     global SCRATCHDIR
     print(pcolor.yellow + "9PM - Simplicity is the ultimate sophistication"
-      + pcolor.reset);
+      + pcolor.reset)
 
     args = parse_cmdline()
 
