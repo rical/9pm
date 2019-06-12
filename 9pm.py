@@ -80,7 +80,7 @@ def execute(args, test):
         else:
             print(stamp, string)
 
-        if (ok or not_ok) and not 'plan' in test:
+        if (ok or not_ok) and 'plan' not in test:
             print("test error, test started before plan")
             err = True
 
@@ -122,11 +122,11 @@ def run_test(cmdline, test):
 
     err = execute(args, test)
 
-    if not 'plan' in test:
+    if 'plan' not in test:
         print("test error, no plan")
         return True
 
-    if not 'executed' in test:
+    if 'executed' not in test:
         print("test error, no tests executed")
         return True
 
