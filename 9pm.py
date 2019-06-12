@@ -67,17 +67,17 @@ def execute(args, test):
         not_ok = re.search('^not ok (\d+) -', string)
 
         if plan:
-            print(pcolor.purple + stamp, string +  pcolor.reset)
+            print("{}{} {}{}".format(pcolor.purple, stamp, string, pcolor.reset))
             test['plan'] = plan.group(2)
         elif ok:
-            print(pcolor.green + stamp, string +  pcolor.reset)
+            print("{}{} {}{}".format(pcolor.green, stamp, string, pcolor.reset))
             test['executed'] = ok.group(1)
         elif not_ok:
-            print(pcolor.red + stamp, string +  pcolor.reset)
+            print("{}{} {}{}".format(pcolor.red, stamp, string, pcolor.reset))
             err = True
             test['executed'] = not_ok.group(1)
         else:
-            print(stamp, string)
+            print("{}{}".format(stamp, string))
 
         if (ok or not_ok) and 'plan' not in test:
             print("test error, test started before plan")
@@ -130,7 +130,7 @@ def run_test(cmdline, test):
         return True
 
     if test['plan'] != test['executed']:
-        print("test error, not conforming to plan (" + test['executed'] + "/" + test['plan'] + ")")
+        print("test error, not conforming to plan ({}/{})".format(test['executed'], test['plan']))
         err = True
 
     return err
@@ -190,7 +190,7 @@ def parse(fpath):
             case['name'] = prefix_name(name)
             suite['suite'].append(case)
         else:
-            print("error, missing suite/case in suite", suite['name'])
+            print("error, missing suite/case in suite {}".format(suite['name']))
             sys.exit(1)
     return suite
 
@@ -219,7 +219,7 @@ def print_tree(data, base, depth):
             sign = "?"
             color = pcolor.yellow
 
-        print(base + prefix + color + sign, test['name'] + pcolor.reset)
+        print("{}{}{}{} {}{}".format(base, prefix, color, sign, test['name'], pcolor.reset))
 
         if 'suite' in test:
             print_tree(test, nextbase, depth + 1)
@@ -247,10 +247,10 @@ def run_suite(cmdline, data, depth):
 
         elif 'case' in test:
             if not os.path.isfile(test['case']):
-                print("error, test case not found ", test['case'])
+                print("error, test case not found {}".format(test['case']))
                 sys.exit(1)
             if not os.access(test['case'], os.X_OK):
-                print("error, test case not executable ", test['case'])
+                print("error, test case not executable {}".format(test['case']))
                 sys.exit(1)
 
             if run_test(cmdline, test):
@@ -313,8 +313,8 @@ def setup_env(cmdline):
 def main():
     global DATABASE
     global SCRATCHDIR
-    print(pcolor.yellow + "9PM - Simplicity is the ultimate sophistication"
-      + pcolor.reset)
+    print("{}9PM - Simplicity is the ultimate sophistication{}".format(
+        pcolor.yellow, pcolor.reset))
 
     args = parse_cmdline()
 
@@ -326,7 +326,7 @@ def main():
 
     db = tempfile.NamedTemporaryFile(suffix='_db', prefix='9pm_', dir=scratch)
     if args.debug:
-        print("Created databasefile:", db.name)
+        print("Created databasefile: {}".format(db.name))
     DATABASE = db.name
 
     cmdl = {'name': 'cmdl', 'suite': []}
@@ -343,9 +343,9 @@ def main():
 
     err = run_suite(args, cmdl, 0)
     if err:
-        print(pcolor.red + "\nx Execution" + pcolor.reset)
+        print("{}\nx Execution{}".format(pcolor.red, pcolor.reset))
     else:
-        print(pcolor.green + "\no Execution" + pcolor.reset)
+        print("{}\no Execution{}".format(pcolor.green, pcolor.reset))
     print_tree(cmdl, "", 0)
 
     db.close()
