@@ -50,6 +50,11 @@ class pcolor:
     reset = '\033[0m'
     orange = '\033[33m'
 
+def cprint(color, *args, **kwargs):
+    sys.stdout.write(color)
+    print(*args, **kwargs)
+    sys.stdout.write(pcolor.reset)
+
 def execute(args, test):
     proc = subprocess.Popen([test['case']] + args, stdout=subprocess.PIPE)
     err = False
@@ -67,13 +72,13 @@ def execute(args, test):
         not_ok = re.search('^not ok (\d+) -', string)
 
         if plan:
-            print("{}{} {}{}".format(pcolor.purple, stamp, string, pcolor.reset))
+            cprint(pcolor.purple, '{} {}'.format(stamp, string))
             test['plan'] = plan.group(2)
         elif ok:
-            print("{}{} {}{}".format(pcolor.green, stamp, string, pcolor.reset))
+            cprint(pcolor.green, '{} {}'.format(stamp, string))
             test['executed'] = ok.group(1)
         elif not_ok:
-            print("{}{} {}{}".format(pcolor.red, stamp, string, pcolor.reset))
+            cprint(pcolor.red, '{} {}'.format(stamp, string))
             err = True
             test['executed'] = not_ok.group(1)
         else:
@@ -313,8 +318,7 @@ def setup_env(cmdline):
 def main():
     global DATABASE
     global SCRATCHDIR
-    print("{}9PM - Simplicity is the ultimate sophistication{}".format(
-        pcolor.yellow, pcolor.reset))
+    cprint(pcolor.yellow, "9PM - Simplicity is the ultimate sophistication")
 
     args = parse_cmdline()
 
@@ -343,9 +347,9 @@ def main():
 
     err = run_suite(args, cmdl, 0)
     if err:
-        print("{}\nx Execution{}".format(pcolor.red, pcolor.reset))
+        cprint(pcolor.red, "\nx Execution")
     else:
-        print("{}\no Execution{}".format(pcolor.green, pcolor.reset))
+        cprint(pcolor.green, "\no Execution")
     print_tree(cmdl, "", 0)
 
     db.close()
