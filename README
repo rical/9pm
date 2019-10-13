@@ -90,10 +90,9 @@ variable. Something like "export TCLLIBPATH='/usr/share/tcltk/ ~/code/9pm'"
 
 HARNESS
 -------
-9pm.pl is a harness and test suite manager for 9pm testcases based on
-TAP::Harness and TAP::Harness::JUnit. The tool can optionally record the
-result of the run to a JUnit XML file that can be passed on for further
-analyses.
+9pm.py is a harness and test suite manager for 9pm testcases.
+The tool can optionally record the result of the run to a JUnit XML file that
+can be passed on for further analyses.
 
 * Basic suites
 
@@ -126,7 +125,7 @@ analyses.
 * Suite namespace
 
   In order to keep track of who included what testcase and to generate
-  traceable output 9pm.pl run each testcase and testsuite in a
+  traceable output 9pm.py runs each testcase and testsuite in a
   namespace, if we examine the namespace for suite.yaml from above
   it looks like:
 
@@ -143,10 +142,10 @@ analyses.
      nestedsuite/subsuite/baz
 
   This is also a sane execution namespace without collisions since
-  testcase foo.tcl is included from different suites 9pm.pl can tell
+  testcase foo.tcl is included from different suites 9pm.py can tell
   the two invocations apart. But what if I wish to include the same
   testcase multiple times in the same testsuite you ask? No problem,
-  9pm.pl looks for name hints in the testsuite description, example:
+  9pm.py looks for name hints in the testsuite description, example:
 
     $ cat namedsuite.yaml
     - path: cases/foo.tcl
@@ -168,16 +167,16 @@ analyses.
 
 * Pass options to 9pm or direct to testcases
 
-  9pm.pl pass some options behind the scenes to all invocations of 9pm
+  9pm.py pass some options behind the scenes to all invocations of 9pm
   scripts:
 
     - t          - to force TAP output
-    - d          - if 9pm.pl is asked to show debug information
-    - c <config> - if a configuration is provided to 9pm.pl
+    - d          - if 9pm.py is asked to show debug information
+    - c <config> - if a configuration is provided to 9pm.py
 
   But what if you also wish to parametrize a testcase or set the 9pm
   debug flag for just a single testcase since the fault only shows in a
-  suite run? No problems, 9pm.pl allows you to pass per testcase or
+  suite run? No problems, 9pm.py allows you to pass per testcase or
   testsuite options directly to the invocation of 9pm scripts! Say you
   wish to debug just a single testcase in a suite:
 
