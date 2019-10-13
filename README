@@ -100,8 +100,8 @@ can be passed on for further analyses.
   example:
 
      $ cat suite.yaml
-     - path: cases/foo.tcl
-     - path: cases/bar.tcl
+     - case: cases/foo.tcl
+     - case: cases/bar.tcl
 
   Here we see a suite that contains two testcases foo.tcl and bar.tcl.
   These two testcases will be executed om sequence as they appear in the
@@ -109,12 +109,13 @@ can be passed on for further analyses.
   suites, example:
 
      $ cat nestedsuite.yaml
-     - path: cases/foo.tcl
-     - path: cases/bar.tcl
-     - path: subsuite.yaml
+     - case: cases/foo.tcl
+     - case: cases/bar.tcl
+     - case: subsuite.yaml
+
      $ cat subsuite.yaml
-     - path: cases/foo.tcl
-     - path: cases/baz.tcl
+     - case: cases/foo.tcl
+     - case: cases/baz.tcl
 
    Here nestedsuite.yaml includes the two testcases foo.tcl and bar.tcl,
    it also includes the testsuite subsuite.yaml which in turn includes
@@ -148,11 +149,11 @@ can be passed on for further analyses.
   9pm.py looks for name hints in the testsuite description, example:
 
     $ cat namedsuite.yaml
-    - path: cases/foo.tcl
-    - path: cases/foo.tcl
-    - name: foo1
-    - path: cases/foo.tcl
-    - name: foo2
+    - case: cases/foo.tcl
+    - case: cases/foo.tcl
+      name: foo1
+    - case: cases/foo.tcl
+      name: foo2
 
   Testsuite namedsuite.yaml would result in the execution namesapace:
 
