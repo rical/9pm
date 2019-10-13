@@ -165,39 +165,31 @@ can be passed on for further analyses.
 
   Naturally name hints works the same for testsuites!
 
-* Pass options to 9pm or direct to testcases
+* Pass options through 9pm to testcases
 
-  9pm.py pass some options behind the scenes to all invocations of 9pm
-  scripts:
+  Custom options can be passed to testcases. Either on the command line
+  when starting 9pm or through suites.
 
-    - t          - to force TAP output
-    - d          - if 9pm.py is asked to show debug information
-    - c <config> - if a configuration is provided to 9pm.py
+  9pm.py -o "opt1" -o "opt2"
 
-  But what if you also wish to parametrize a testcase or set the 9pm
-  debug flag for just a single testcase since the fault only shows in a
-  suite run? No problems, 9pm.py allows you to pass per testcase or
-  testsuite options directly to the invocation of 9pm scripts! Say you
-  wish to debug just a single testcase in a suite:
+  $ cat debugsinglesuite.yaml
+  - case: cases/foo.tcl
+  - case: cases/bar.tcl
+    opts:
+      - "suite-supplied-option1"
+      - "suite-supplied-option2"
 
-    $ cat debugsinglesuite.yaml
-    - path: cases/foo.tcl
-    - path: cases/bar.tcl
-    - opts:
-    - -d
-    - path: cases/baz.tcl
-
-  The opts parameter allows you to pass a YAML array of options to any
+  The opts parameter allows you to pass a YAML list of options to any
   testcase invocation. This also works for testsuites (all cases in a
   suite receive the same options:
 
-    $ cat debugeth0network.yaml
-    - path: cases/foo.tcl
-    - path: network.yaml
-    - opts:
-    - -d
-    - eth0
-    - path: cases/bar.tcl
+  $ cat debugeth0network.yaml
+  - case: cases/foo.tcl
+  - suite: network.yaml
+    opts:
+      - "-d"
+      - "eth0"
+  - case: cases/bar.tcl
 
   This will pass the options '-d' and 'eth0' to all testcases included
   from the network.yaml testsuite.
