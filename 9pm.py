@@ -1,4 +1,4 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 
 # Copyright (C) 2011-2017 Richard Alpe <rical@highwind.se>
 #
@@ -63,14 +63,14 @@ def run_test(cmdline, test):
         args.extend(test['options'])
     args.extend(cmdline.option)
 
-    print pcolor.blue + "\nStarting test", test['name'] + pcolor.reset
+    print(pcolor.blue + "\nStarting test", test['name'] + pcolor.reset)
     if cmdline.debug:
-        print "Executing:", [test['case']] + args
+        print("Executing:", [test['case']] + args)
     proc = subprocess.Popen([test['case']] + args, stdout=subprocess.PIPE)
     err = False
 
     while True:
-        line = proc.stdout.readline()
+        line = proc.stdout.readline().decode('utf-8')
         if line == '':
             break
 
@@ -82,28 +82,28 @@ def run_test(cmdline, test):
         not_ok = re.search('^not ok (\d+) -', string)
 
         if plan:
-            print pcolor.purple + stamp, string +  pcolor.reset
+            print(pcolor.purple + stamp, string +  pcolor.reset)
             test['plan'] = plan.group(2)
         elif ok:
-            print pcolor.green + stamp, string +  pcolor.reset
+            print(pcolor.green + stamp, string +  pcolor.reset)
             test['executed'] = ok.group(1)
         elif not_ok:
-            print pcolor.red + stamp, string +  pcolor.reset
+            print(pcolor.red + stamp, string +  pcolor.reset)
             err = True
             test['executed'] = not_ok.group(1)
         else:
-            print stamp, string
+            print(stamp, string)
 
         if (ok or not_ok) and not 'plan' in test:
-            print "test error, test started before plan"
+            print("test error, test started before plan")
             err = True
 
     if not 'plan' in test:
-        print "test error, no plan"
+        print("test error, no plan")
         return True
 
     if not 'executed' in test:
-        print "test error, no tests executed"
+        print("test error, no tests executed")
         return True
 
     out, error = proc.communicate()
@@ -112,7 +112,7 @@ def run_test(cmdline, test):
     if exitcode != 0:
         err = True
     elif test['plan'] != test['executed']:
-        print "test error, not conforming to plan (" + test['executed'] + "/" + test['plan'] + ")"
+        print("test error, not conforming to plan (" + test['executed'] + "/" + test['plan'] + ")")
         err = True
 
     return err
@@ -165,7 +165,7 @@ def parse(fpath):
             case['name'] = prefix_name(name)
             suite['suite'].append(case)
         else:
-            print "error, missing suite/case in suite", suite['name']
+            print("error, missing suite/case in suite", suite['name'])
             sys.exit(1)
     return suite
 
@@ -191,7 +191,7 @@ def print_tree(data, base, depth):
             sign = "?"
             color = pcolor.yellow
 
-        print base + prefix + color + sign, test['name'] + pcolor.reset
+        print(base + prefix + color + sign, test['name'] + pcolor.reset)
 
         if 'suite' in test:
             print_tree(test, nextbase, depth + 1)
@@ -204,7 +204,7 @@ def probe_suite(data, depth):
         elif 'case' in test:
                 test['result'] = "noexec";
         else:
-            print "error, garbage in suite"
+            print("error, garbage in suite")
             sys.exit(1)
 
     data['result'] = "noexec";
@@ -219,17 +219,17 @@ def run_suite(cmdline, data, depth):
 
         elif 'case' in test:
             if not os.path.isfile(test['case']):
-                print "error, test case not found ", test['case']
+                print("error, test case not found ", test['case'])
                 sys.exit(1)
             if not os.access(test['case'], os.X_OK):
-                print "error, test case not executable ", test['case']
+                print("error, test case not executable ", test['case'])
                 sys.exit(1)
 
             if run_test(cmdline, test):
                 test['result'] = "fail";
                 err = True
                 if cmdline.abort:
-                    print "Aborting execution"
+                    print("Aborting execution")
                     break
             else:
                 test['result'] = "pass";
@@ -271,7 +271,7 @@ def main():
     temp = tempfile.NamedTemporaryFile(suffix='_dict_db', prefix='9pm_',
                                        dir='/tmp')
     if args.debug:
-        print "Created databasefile:", temp.name
+        print("Created databasefile:", temp.name)
     DATABASE = temp.name
 
     cmdl = {'name': 'cmdl', 'suite': []}
@@ -286,9 +286,9 @@ def main():
 
     err = run_suite(args, cmdl, 0)
     if err:
-        print pcolor.red + "\nx Execution" + pcolor.reset
+        print(pcolor.red + "\nx Execution" + pcolor.reset)
     else:
-        print pcolor.green + "\no Execution" + pcolor.reset
+        print(pcolor.green + "\no Execution" + pcolor.reset)
     print_tree(cmdl, "", 0)
 
     temp.close()
