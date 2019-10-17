@@ -1,5 +1,6 @@
 ---
 - case: "sanity/dummy.sh"
+- case: "sanity/noopt.tcl"
 - suite: "args/args.yaml"
   name: "args"
 - suite: "config/test.yaml"
