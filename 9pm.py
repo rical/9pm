@@ -47,28 +47,10 @@ class pcolor:
     green = '\033[92m'
     yellow = '\033[93m'
     red = '\033[91m'
+    cyan = '\033[96m'
     reset = '\033[0m'
 
-def run_test(cmdline, test):
-    os.environ["NINEPM_TAP"] = "1"
-
-    if cmdline.debug:
-        os.environ["NINEPM_DEBUG"] = "1"
-
-    os.environ["NINEPM_DATABASE"] = DATABASE
-    os.environ["NINEPM_SCRATCHDIR"] = SCRATCHDIR
-
-    if cmdline.config:
-        os.environ["NINEPM_CONFIG"] = cmdline.config
-
-    args = []
-    if 'options' in test:
-        args.extend(test['options'])
-    args.extend(cmdline.option)
-
-    print(pcolor.blue + "\nStarting test", test['name'] + pcolor.reset)
-    if cmdline.debug:
-        print("Executing:", [test['case']] + args)
+def execute(args, test):
     proc = subprocess.Popen([test['case']] + args, stdout=subprocess.PIPE)
     err = False
 
@@ -101,6 +83,44 @@ def run_test(cmdline, test):
             print("test error, test started before plan")
             err = True
 
+    out, error = proc.communicate()
+    exitcode = proc.returncode
+
+    if exitcode != 0:
+        err = True
+
+    return err
+
+def run_onfail(cmdline, test):
+    args = []
+    if 'options' in test:
+        args.extend(test['options'])
+    args.extend(cmdline.option)
+
+    onfail = {}
+    onfail['case'] = os.path.join(test['path'], test['onfail'])
+    onfail['name'] = 'onfail'
+
+    print("\n{}Running onfail \"{}\" for test {}{}" . format(pcolor.cyan, test['onfail'],
+        test['name'], pcolor.reset))
+
+    if cmdline.debug:
+        print("Executing onfail {} for test {}" . format(onfail['case'], test['case']))
+
+    execute(args, onfail)
+
+def run_test(cmdline, test):
+    args = []
+    if 'options' in test:
+        args.extend(test['options'])
+    args.extend(cmdline.option)
+
+    print(pcolor.blue + "\nStarting test", test['name'] + pcolor.reset)
+    if cmdline.debug:
+        print("Executing:", [test['case']] + args)
+
+    err = execute(args, test)
+
     if not 'plan' in test:
         print("test error, no plan")
         return True
@@ -109,12 +129,7 @@ def run_test(cmdline, test):
         print("test error, no tests executed")
         return True
 
-    out, error = proc.communicate()
-    exitcode = proc.returncode
-
-    if exitcode != 0:
-        err = True
-    elif test['plan'] != test['executed']:
+    if test['plan'] != test['executed']:
         print("test error, not conforming to plan (" + test['executed'] + "/" + test['plan'] + ")")
         err = True
 
@@ -164,7 +179,11 @@ def parse(fpath):
             if 'opts' in entry:
                 case['options'] = [o.replace('<base>', cur) for o in entry['opts']]
 
+            if 'onfail' in entry:
+                case['onfail'] = entry['onfail']
+
             case['case'] = os.path.join(cur, entry['case'])
+            case['path'] = cur
             case['name'] = prefix_name(name)
             suite['suite'].append(case)
         else:
@@ -230,6 +249,10 @@ def run_suite(cmdline, data, depth):
 
             if run_test(cmdline, test):
                 test['result'] = "fail";
+
+                if 'onfail' in test:
+                    run_onfail(cmdline, test)
+
                 err = True
                 if cmdline.abort:
                     print("Aborting execution")
@@ -264,6 +287,18 @@ def parse_cmdline():
         sys.exit(1)
     return parser.parse_args()
 
+def setup_env(cmdline):
+    os.environ["NINEPM_TAP"] = "1"
+
+    if cmdline.debug:
+        os.environ["NINEPM_DEBUG"] = "1"
+
+    os.environ["NINEPM_DATABASE"] = DATABASE
+    os.environ["NINEPM_SCRATCHDIR"] = SCRATCHDIR
+
+    if cmdline.config:
+        os.environ["NINEPM_CONFIG"] = cmdline.config
+
 def main():
     global DATABASE
     global SCRATCHDIR
@@ -292,6 +327,8 @@ def main():
             cmdl['suite'].append({"case": fpath, "name": gen_name(filename)})
 
     probe_suite(cmdl, 0)
+
+    setup_env(args)
 
     err = run_suite(args, cmdl, 0)
     if err:

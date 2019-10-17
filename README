@@ -194,3 +194,12 @@ can be passed on for further analyses.
 
   This will pass the options '-d' and 'eth0' to all testcases included
   from the network.yaml testsuite.
+
+* Run script after test case failure (onfail)
+  $ cat suite.yaml
+  - case: cases/foo.tcl
+  - case: cases/bar.tcl
+    onfail: "cleanup.sh"
+
+  This will run the script "cleanup.sh" if the test case "bar.tcl" fails. The
+  path of "cleanup.sh" is relative to that of "bar.tcl".
