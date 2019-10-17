@@ -49,6 +49,7 @@ class pcolor:
     red = '\033[91m'
     cyan = '\033[96m'
     reset = '\033[0m'
+    orange = '\033[33m'
 
 def execute(args, test):
     proc = subprocess.Popen([test['case']] + args, stdout=subprocess.PIPE)
@@ -182,6 +183,9 @@ def parse(fpath):
             if 'onfail' in entry:
                 case['onfail'] = entry['onfail']
 
+            if 'mask' in entry:
+                case['mask'] = entry['mask']
+
             case['case'] = os.path.join(cur, entry['case'])
             case['path'] = cur
             case['name'] = prefix_name(name)
@@ -209,6 +213,9 @@ def print_tree(data, base, depth):
         elif test['result'] == "fail":
             sign = "x"
             color = pcolor.red
+        elif test['result'] == "masked-fail":
+            sign = "m"
+            color = pcolor.orange
         else:
             sign = "?"
             color = pcolor.yellow
@@ -248,13 +255,18 @@ def run_suite(cmdline, data, depth):
                 sys.exit(1)
 
             if run_test(cmdline, test):
-                test['result'] = "fail";
+                if 'mask' in test and test['mask'] == "fail":
+                    print("{}Test failure is masked in suite{}" . format(pcolor.red, pcolor.reset))
+                    test['result'] = "masked-fail";
+                    err = False
+                else:
+                    test['result'] = "fail";
+                    err = True
 
                 if 'onfail' in test:
                     run_onfail(cmdline, test)
 
-                err = True
-                if cmdline.abort:
+                if err and cmdline.abort:
                     print("Aborting execution")
                     break
             else:
