@@ -28,11 +28,13 @@ import pprint
 import tempfile
 import shutil
 import re
+import atexit
 
 TEST_CNT=0
 ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
 # TODO: proper argument strucutre
 DATABASE = ""
+SCRATCHDIR = ""
 
 if "TCLLIBPATH" in os.environ:
     os.environ["TCLLIBPATH"] = os.environ["TCLLIBPATH"] + " " + ROOT_PATH
@@ -54,6 +56,7 @@ def run_test(cmdline, test):
         os.environ["NINEPM_DEBUG"] = "1"
 
     os.environ["NINEPM_DATABASE"] = DATABASE
+    os.environ["NINEPM_SCRATCHDIR"] = SCRATCHDIR
 
     if cmdline.config:
         os.environ["NINEPM_CONFIG"] = cmdline.config
@@ -263,16 +266,22 @@ def parse_cmdline():
 
 def main():
     global DATABASE
+    global SCRATCHDIR
     print(pcolor.yellow + "9PM - Simplicity is the ultimate sophistication"
       + pcolor.reset);
 
     args = parse_cmdline()
 
-    temp = tempfile.NamedTemporaryFile(suffix='_dict_db', prefix='9pm_',
-                                       dir='/tmp')
+    scratch = tempfile.mkdtemp(suffix='', prefix='9pm_', dir='/tmp')
     if args.debug:
-        print("Created databasefile:", temp.name)
-    DATABASE = temp.name
+        print("Created scratch dir:", scratch)
+    SCRATCHDIR = scratch
+    atexit.register(shutil.rmtree, SCRATCHDIR)
+
+    db = tempfile.NamedTemporaryFile(suffix='_db', prefix='9pm_', dir=scratch)
+    if args.debug:
+        print("Created databasefile:", db.name)
+    DATABASE = db.name
 
     cmdl = {'name': 'cmdl', 'suite': []}
     for filename in args.suites:
@@ -291,7 +300,7 @@ def main():
         print(pcolor.green + "\no Execution" + pcolor.reset)
     print_tree(cmdl, "", 0)
 
-    temp.close()
+    db.close()
     sys.exit(err)
 
 if __name__ == '__main__':
