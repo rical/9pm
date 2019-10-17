@@ -24,7 +24,6 @@ import yaml
 import subprocess
 import sys
 import time
-import pprint
 import tempfile
 import shutil
 import re
