@@ -13,6 +13,8 @@
   name: "shell"
 - suite: "harness/options.yaml"
   name: "options"
+- suite: "harness/onfail.yaml"
+  name: "on-fail"
 - suite: "helpers/helpers.yaml"
   name: "helpers"
 - suite: "db/db.yaml"
