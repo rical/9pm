@@ -71,6 +71,7 @@ namespace eval ::9pm::core {
         {b.arg "" "Runtime database path"}
         {c.arg "" "Configuration file"}
         {l.arg "" "Logging base path"}
+        {s.arg "" "Scratch dir path"}
         {d "Output debug info and write exp_internal logfile"}
         {dd "Output debug2 info"}
         {t "Output TAP"}
@@ -88,6 +89,9 @@ namespace eval ::9pm::core {
     }
     if {[::info exists ::env(NINEPM_LOG_PATH)] && $cmdl(l) == ""} {
         array set cmdl [list "l" $::env(NINEPM_LOG_PATH)]
+    }
+    if {[::info exists ::env(NINEPM_SCRATCHDIR)] && $cmdl(s) == ""} {
+        array set cmdl [list "s" $::env(NINEPM_SCRATCHDIR)]
     }
     if {[::info exists ::env(NINEPM_DEBUG)]} {
         array set cmdl [list "d" TRUE]

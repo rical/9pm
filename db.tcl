@@ -50,6 +50,10 @@ namespace eval ::9pm::db {
         set int::enabled FALSE
     }
 
+    if {$::9pm::core::cmdl(s) != ""} {
+        set scratch $::9pm::core::cmdl(s)
+    }
+
     trace add variable dict read 9pm::db::int::read
     trace add variable dict write 9pm::db::int::update
 }

@@ -1,3 +1,4 @@
 ---
+- case: "db_scratch.tcl"
 - case: "db_write.tcl"
 - case: "db_read.tcl"
