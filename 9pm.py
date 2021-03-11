@@ -154,7 +154,7 @@ def gen_name(filename):
 def parse_yaml(path):
     with open(path, 'r') as stream:
         try:
-            data = yaml.load(stream)
+            data = yaml.load(stream, Loader=yaml.FullLoader)
         except yaml.YAMLError as exc:
             print(exc)
             return -1
