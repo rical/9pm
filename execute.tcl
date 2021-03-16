@@ -105,7 +105,7 @@ namespace eval ::9pm::cmd {
         }
 
         expect *
-        set sendcmd "echo $checksum(start); $cmd; echo $checksum(end) \$?\n"
+        set sendcmd "echo $checksum(start) \$\$; $cmd; echo $checksum(end) \$?\n"
         if {[dict exists $opts "-send_slow"]} {
             set send_slow [dict get $opts "-send_slow"]
             send -s $sendcmd
@@ -115,7 +115,7 @@ namespace eval ::9pm::cmd {
 
         expect {
             -timeout 10
-            -re "\r\n$checksum(start)\r\n" {
+            -re "$checksum(start) (\[0-9]+)\r\n" {
                 ::9pm::output::debug2 "\"$cmd\" started"
                 ::9pm::output::debug2 "\"$cmd\" start checksum $checksum(start)"
                 ::9pm::output::debug2 "\"$cmd\" end checksum $checksum(end)"
