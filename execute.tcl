@@ -103,10 +103,10 @@ namespace eval ::9pm::cmd {
         }
 
         expect *
-        send "echo $checksum(start); $cmd; echo $checksum(end) \$?\n"
+        send "echo $checksum(start) \$\$; $cmd; echo $checksum(end) \$?\n"
         expect {
             -timeout 10
-            -re "\r\n$checksum(start)\r\n" {
+            -re "$checksum(start) (\[0-9]+)\r\n" {
                 ::9pm::output::debug2 "\"$cmd\" started"
                 ::9pm::output::debug2 "\"$cmd\" start checksum $checksum(start)"
                 ::9pm::output::debug2 "\"$cmd\" end checksum $checksum(end)"
