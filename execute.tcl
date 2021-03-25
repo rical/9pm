@@ -87,7 +87,9 @@ namespace eval ::9pm::cmd {
             }
         }
     }
-    proc start {cmd} {
+    proc start {cmd args} {
+        set opts [9pm::misc::getopts $args]
+
         if {![info exists ::9pm::shell::active]} {
             ::9pm::fatal ::9pm::output::user_error "You need a spawn to start \"$cmd\""
         }
@@ -103,7 +105,14 @@ namespace eval ::9pm::cmd {
         }
 
         expect *
-        send "echo $checksum(start); $cmd; echo $checksum(end) \$?\n"
+        set sendcmd "echo $checksum(start); $cmd; echo $checksum(end) \$?\n"
+        if {[dict exists $opts "send_slow"]} {
+            set send_slow [dict get $opts "send_slow"]
+            send -s $sendcmd
+        } else {
+            send $sendcmd
+        }
+
         expect {
             -timeout 10
             -re "\r\n$checksum(start)\r\n" {
