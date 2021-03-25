@@ -87,12 +87,15 @@ namespace eval ::9pm::cmd {
             }
         }
     }
-    proc start {cmd} {
+    proc start {cmd args} {
+        array set options $args
+
         if {![info exists ::9pm::shell::active]} {
             ::9pm::fatal ::9pm::output::user_error "You need a spawn to start \"$cmd\""
         }
         set checksum(start) [int::gen_checksum]
         set checksum(end) [int::gen_checksum]
+
 
         int::cmd::push $cmd $checksum(end)
 
@@ -103,7 +106,14 @@ namespace eval ::9pm::cmd {
         }
 
         expect *
-        send "echo $checksum(start) \$\$; $cmd; echo $checksum(end) \$?\n"
+        set sendcmd "echo $checksum(start) \$\$; $cmd; echo $checksum(end) \$?\n"
+        if {[info exists options(-slow)]} {
+            set send_slow $options(-slow)
+            send -s $sendcmd
+        } else {
+            send $sendcmd
+        }
+
         expect {
             -timeout 10
             -re "$checksum(start) (\[0-9]+)\r\n" {
