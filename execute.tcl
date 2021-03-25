@@ -122,7 +122,7 @@ namespace eval ::9pm::cmd {
         int::reg_exp_after
     }
 
-    proc capture {} {
+    proc capture {{timeout 10}} {
         set out [list]
 
         if {![info exists ::9pm::shell::active]} {
@@ -138,6 +138,7 @@ namespace eval ::9pm::cmd {
 
         ::9pm::output::debug2 "\"$cmd\" capturing output unitl checksum $checksum"
         expect {
+            -timeout $timeout
             # We use notransfer so that we leave the checksum for "finnish"
             -notransfer -re {([^\r\n]+)\r\n} {
                 set line $expect_out(0,string)
