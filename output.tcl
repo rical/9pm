@@ -109,7 +109,7 @@ namespace eval ::9pm::output {
         variable testnum
 
         incr testnum
-        write "ok $testnum - # skip $msg" YELLOW
+        write "ok $testnum # skip $msg" YELLOW
         return TRUE
     }
 
