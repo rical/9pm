@@ -21,6 +21,9 @@ package provide 9pm::helpers 1.0
 namespace eval ::9pm::misc {
 
     namespace eval dict {
+        proc isdict {value} {
+            return [expr {[string is list $value] && ([llength $value]&1) == 0}]
+        }
         proc get {data name} {
             # Try to return the info we want for this node
             if {[dict exists $data $name]} {
@@ -112,6 +115,21 @@ namespace eval ::9pm::misc {
             lappend result [file join $path $elem]
         }
         return $result
+    }
+
+    # opts = args from fucntion (as dict)
+    # args = default arguments
+    proc getopts {opts args} {
+        if {![dict::isdict $opts]} {
+            ::9pm::fatal ::9pm::output::error "Options needs to be a dict, for bool use \"foo TURE\""
+        }
+        foreach {key val} $args {
+            if {![dict exists $opts $key]} {
+                ::9pm::output::debug2 "getopts default value for \"$key\" set to \"$val\""
+                dict set opts $key $val
+            }
+        }
+        return $opts
     }
 
     # Retry 'body' until it evaulates to true, but maximum 'times' number of
