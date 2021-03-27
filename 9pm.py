@@ -57,6 +57,7 @@ def cprint(color, *args, **kwargs):
 
 def execute(args, test):
     proc = subprocess.Popen([test['case']] + args, stdout=subprocess.PIPE)
+    skip = False
     err = False
 
     while True:
@@ -70,10 +71,15 @@ def execute(args, test):
         plan = re.search('^(\d+)..(\d+)$', string)
         ok = re.search('^ok (\d+) -', string)
         not_ok = re.search('^not ok (\d+) -', string)
+        skip = re.search('^ok (\d+) # skip', string)
 
         if plan:
             cprint(pcolor.purple, '{} {}'.format(stamp, string))
             test['plan'] = plan.group(2)
+        elif skip:
+            cprint(pcolor.yellow, '{} {}'.format(stamp, string))
+            test['executed'] = skip.group(1)
+            skip = True
         elif ok:
             cprint(pcolor.green, '{} {}'.format(stamp, string))
             test['executed'] = ok.group(1)
@@ -94,7 +100,7 @@ def execute(args, test):
     if exitcode != 0:
         err = True
 
-    return err
+    return skip, err
 
 def run_onfail(cmdline, test):
     args = []
@@ -124,21 +130,21 @@ def run_test(cmdline, test):
     if cmdline.debug:
         print("Executing:", [test['case']] + args)
 
-    err = execute(args, test)
+    skip, err = execute(args, test)
 
     if 'plan' not in test:
         print("test error, no plan")
-        return True
+        return False, True
 
     if 'executed' not in test:
         print("test error, no tests executed")
-        return True
+        return False, True
 
     if test['plan'] != test['executed']:
         print("test error, not conforming to plan ({}/{})".format(test['executed'], test['plan']))
         err = True
 
-    return err
+    return skip, err
 
 # In this function, we generate an unique name for each case and suite. Both
 # suites and cases can be passed an arbitrary amount of times and the same test
@@ -220,6 +226,9 @@ def print_tree(data, base, depth):
         elif test['result'] == "masked-fail":
             sign = "m"
             color = pcolor.orange
+        elif test['result'] == "skip":
+            sign = "s"
+            color = pcolor.yellow
         else:
             sign = "?"
             color = pcolor.yellow
@@ -243,11 +252,15 @@ def probe_suite(data, depth):
     data['result'] = "noexec"
 
 def run_suite(cmdline, data, depth):
+    skip = False
     err = False
 
     for test in data['suite']:
         if 'suite' in test:
-            if run_suite(cmdline, test, depth + 2):
+            subskip, suberr = run_suite(cmdline, test, depth + 2)
+            if subskip:
+                skip = True
+            if suberr:
                 err = True
 
         elif 'case' in test:
@@ -258,7 +271,8 @@ def run_suite(cmdline, data, depth):
                 print("error, test case not executable {}".format(test['case']))
                 sys.exit(1)
 
-            if run_test(cmdline, test):
+            subskip, suberr = run_test(cmdline, test)
+            if suberr:
                 if 'mask' in test and test['mask'] == "fail":
                     print("{}Test failure is masked in suite{}" . format(pcolor.red, pcolor.reset))
                     test['result'] = "masked-fail"
@@ -273,15 +287,20 @@ def run_suite(cmdline, data, depth):
                 if err and cmdline.abort:
                     print("Aborting execution")
                     break
+            elif subskip:
+                skip = True
+                test['result'] = "skip"
             else:
                 test['result'] = "pass"
 
     if err:
         data['result'] = "fail"
+    elif skip:
+        data['result'] = "skip"
     else:
         data['result'] = "pass"
 
-    return err
+    return skip, err
 
 def parse_cmdline():
     parser = argparse.ArgumentParser()
@@ -345,9 +364,11 @@ def main():
 
     setup_env(args)
 
-    err = run_suite(args, cmdl, 0)
+    skip, err = run_suite(args, cmdl, 0)
     if err:
         cprint(pcolor.red, "\nx Execution")
+    elif skip:
+        cprint(pcolor.yellow, "\ns Execution")
     else:
         cprint(pcolor.green, "\no Execution")
     print_tree(cmdl, "", 0)
