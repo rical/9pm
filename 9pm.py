@@ -207,7 +207,7 @@ def parse(fpath):
             sys.exit(1)
     return suite
 
-def print_tree(data, base, depth):
+def print_tree(data, base):
     i = 1
     llen = len(data['suite'])
 
@@ -241,13 +241,13 @@ def print_tree(data, base, depth):
         print("{}{}{}{} {}{}".format(base, prefix, color, sign, test['name'], pcolor.reset))
 
         if 'suite' in test:
-            print_tree(test, nextbase, depth + 1)
+            print_tree(test, nextbase)
         i += 1
 
-def probe_suite(data, depth):
+def probe_suite(data):
     for test in data['suite']:
         if 'suite' in test:
-            probe_suite(test, depth + 2)
+            probe_suite(test)
         elif 'case' in test:
                 test['result'] = "noexec"
         else:
@@ -256,13 +256,13 @@ def probe_suite(data, depth):
 
     data['result'] = "noexec"
 
-def run_suite(cmdline, data, depth):
+def run_suite(cmdline, data):
     skip = False
     err = False
 
     for test in data['suite']:
         if 'suite' in test:
-            subskip, suberr = run_suite(cmdline, test, depth + 2)
+            subskip, suberr = run_suite(cmdline, test)
             if subskip:
                 skip = True
             if suberr:
@@ -369,18 +369,18 @@ def main():
         else:
             cmdl['suite'].append({"case": fpath, "name": gen_name(filename)})
 
-    probe_suite(cmdl, 0)
+    probe_suite(cmdl)
 
     setup_env(args)
 
-    skip, err = run_suite(args, cmdl, 0)
+    skip, err = run_suite(args, cmdl)
     if err:
         cprint(pcolor.red, "\nx Execution")
     elif skip:
         cprint(pcolor.yellow, "\ns Execution")
     else:
         cprint(pcolor.green, "\no Execution")
-    print_tree(cmdl, "", 0)
+    print_tree(cmdl, "")
 
     db.close()
     sys.exit(err)
