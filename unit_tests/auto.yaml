@@ -19,3 +19,5 @@
   name: "helpers"
 - suite: "db/db.yaml"
   name: "database"
+- suite: "tap/tap.yaml"
+  name: "tap"
