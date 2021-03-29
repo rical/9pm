@@ -1,0 +1,40 @@
+---
+- case: "tap.tcl"
+  name: "ok-skip-fail"
+  opts:
+    - ok
+    - skip
+    - fail
+
+- case: "tap.tcl"
+  name: "ok-skip"
+  opts:
+    - ok
+    - skip
+
+- case: "tap.tcl"
+  name: "ok-fail"
+  opts:
+    - ok
+    - fail
+
+- case: "tap.tcl"
+  name: "skip-fail"
+  opts:
+    - skip
+    - fail
+
+- case: "tap.tcl"
+  name: "ok"
+  opts:
+    - ok
+
+- case: "tap.tcl"
+  name: "skip"
+  opts:
+    - skip
+
+- case: "tap.tcl"
+  name: "fail"
+  opts:
+    - fail

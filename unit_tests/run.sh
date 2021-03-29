@@ -25,3 +25,12 @@ tool=$base/../9pm.py
 
 echo "* Running all automated test, all should be OK!"
 $tool --option cmdl-supplied $base/auto.yaml
+
+echo "* Running TAP test on all states, should mark run as fail."
+$tool $base/tap/ok-skip-fail-states.yaml
+
+echo "* Running TAP test on ok and skip states, should mark run as skip."
+$tool $base/tap/ok-skip-states.yaml
+
+echo "* Running TAP test on ok state, should mark run as ok."
+$tool $base/tap/ok-states.yaml

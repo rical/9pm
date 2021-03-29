@@ -1,0 +1,16 @@
+---
+- case: "tap.tcl"
+  name: "ok-skip"
+  opts:
+    - ok
+    - skip
+
+- case: "tap.tcl"
+  name: "ok"
+  opts:
+    - ok
+
+- case: "tap.tcl"
+  name: "skip"
+  opts:
+    - skip
