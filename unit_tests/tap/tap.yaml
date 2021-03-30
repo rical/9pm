@@ -4,11 +4,13 @@
   opts:
     - ok
     - skip
+  mask: "skip"
 
 - case: "tap.tcl"
   name: "skip"
   opts:
     - skip
+  mask: "skip"
 
 - case: "tap.tcl"
   name: "ok"

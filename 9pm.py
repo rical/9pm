@@ -45,7 +45,9 @@ class pcolor:
     blue = '\033[94m'
     green = '\033[92m'
     yellow = '\033[93m'
+    yellow_u = '\033[4;33m'
     red = '\033[91m'
+    red_u ='\033[4;31m'
     cyan = '\033[96m'
     reset = '\033[0m'
     orange = '\033[33m'
@@ -225,7 +227,10 @@ def print_tree(data, base, depth):
             color = pcolor.red
         elif test['result'] == "masked-fail":
             sign = "m"
-            color = pcolor.orange
+            color = pcolor.red_u
+        elif test['result'] == "masked-skip":
+            sign = "m"
+            color = pcolor.yellow_u
         elif test['result'] == "skip":
             sign = "s"
             color = pcolor.yellow
@@ -288,8 +293,12 @@ def run_suite(cmdline, data, depth):
                     print("Aborting execution")
                     break
             elif subskip:
-                skip = True
-                test['result'] = "skip"
+                if 'mask' in test and test['mask'] == "skip":
+                    print("{}Test skip is masked in suite{}" . format(pcolor.orange, pcolor.reset))
+                    test['result'] = "masked-skip"
+                else:
+                    skip = True
+                    test['result'] = "skip"
             else:
                 test['result'] = "pass"
 
