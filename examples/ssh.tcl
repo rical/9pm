@@ -6,6 +6,9 @@
 # Source the 9pm library
 package require 9pm
 
+# Plan for one test
+9pm::output::plan 1
+
 # Open a shell with a name of our choice, lets call it "foobar"
 9pm::shell::open "foobar"
 
@@ -15,4 +18,4 @@ package require 9pm
 # Execute the command "hostname" on the remote machine and capture the output
 set hostname [9pm::cmd::execute "hostname" 0]
 
-puts "Hostname of remote machine: $hostname"
+9pm::output::ok "Hostname of remote machine: $hostname"
