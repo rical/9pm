@@ -266,7 +266,7 @@ namespace eval ::9pm::cmd {
                     break
                 }
                 default {
-                    ::9pm::output::debug "Console unresponsive, trying again"
+                    ::9pm::output::warning "Console unresponsive after abort, trying again ($i)"
                     int::msleep $int::ABORT_RESET_GRACE_MS
                 }
             }
