@@ -1,7 +1,6 @@
 language: python
 
 python:
-    - "2.7"
     - "3.6"
 
 script: python 9pm.py --option cmdl-supplied unit_tests/auto.yaml
