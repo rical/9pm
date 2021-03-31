@@ -3,7 +3,7 @@ language: python
 python:
     - "3.6"
 
-script: python 9pm.py --option cmdl-supplied unit_tests/auto.yaml
+script: python 9pm.py -d --option cmdl-supplied unit_tests/auto.yaml
 
 addons:
     apt_packages:
