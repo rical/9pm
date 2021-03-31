@@ -23,8 +23,9 @@ namespace path ::9pm
 
 set TESTDATA_LINE_CNT 500
 set ABORT_CNT 200 ;# Arbitrary chosen to provoke an exotic race condition
+set EXECUTE_CNT 1000 ;# Arbitrary chosen
 
-output::plan 9
+output::plan 10
 
 shell::open "localhost"
 
@@ -89,6 +90,14 @@ if {${?} == 0} {
     fatal output::fail "\$? set to 0 for command \"false\""
 }
 output::ok "Execute return code variable \$? has sane values"
+
+# This is intended to run a simple command as fast as possible to provoke
+# a "prompt race", where a command is started before the prompt is ready
+output::info "Testing fast looped execution ($EXECUTE_CNT times)"
+for {set i 0} {$i < $ABORT_CNT} {incr i} {
+    cmd::execute "true" 0
+}
+output::ok "Command executed $EXECUTE_CNT times"
 
 # This loop intends to provoke a race. Even doing puts
 # inside the loop can hide the potential race.
