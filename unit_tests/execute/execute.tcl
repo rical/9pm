@@ -22,7 +22,7 @@ package require 9pm
 namespace path ::9pm
 
 set TESTDATA_LINE_CNT 500
-set ABORT_CNT 200 ;# Arbitrary chosen to provoke an exotic race condition
+set ABORT_CNT 100 ;# Arbitrary chosen to provoke an exotic race condition
 set EXECUTE_CNT 1000 ;# Arbitrary chosen
 
 output::plan 10
@@ -104,6 +104,7 @@ output::ok "Command executed $EXECUTE_CNT times"
 output::info "Testing command abort ($ABORT_CNT times)"
 for {set i 0} {$i < $ABORT_CNT} {incr i} {
     cmd::start "sleep 1337"
+    misc::msleep 10
     cmd::abort
     # Check that shell still works
     cmd::execute "true" 0
