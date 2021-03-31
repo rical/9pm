@@ -22,6 +22,7 @@ package require 9pm
 namespace path ::9pm
 
 set TESTDATA_LINE_CNT 500
+set ABORT_CNT 200 ;# Arbitrary chosen to provoke an exotic race condition
 
 output::plan 9
 
@@ -89,12 +90,16 @@ if {${?} == 0} {
 }
 output::ok "Execute return code variable \$? has sane values"
 
-output::info "Testing command abort"
-cmd::start "sleep 1337"
-cmd::abort
-# Check that shell still works
-cmd::execute "true" 0
-output::ok "Sleep command aborted"
+# This loop intends to provoke a race. Even doing puts
+# inside the loop can hide the potential race.
+output::info "Testing command abort ($ABORT_CNT times)"
+for {set i 0} {$i < $ABORT_CNT} {incr i} {
+    cmd::start "sleep 1337"
+    cmd::abort
+    # Check that shell still works
+    cmd::execute "true" 0
+}
+output::ok "Sleep command aborted $ABORT_CNT"
 
 output::info "Testing command discard"
 cmd::start "true"
