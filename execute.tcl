@@ -33,11 +33,6 @@ namespace eval ::9pm::cmd {
             return "[::9pm::misc::get::rand_str 10][::9pm::misc::get::rand_int 1000]"
         }
 
-        proc msleep { time } {
-            after $time set end 1
-            vwait end
-        }
-
         proc unreg_exp_after {} {
             if {![info exists ::9pm::shell::active]} {
                 return
@@ -258,7 +253,7 @@ namespace eval ::9pm::cmd {
                         "Unable to abort \"$cmd\", didn't see \"$out\""
                 }
             }
-            int::msleep $grace
+            ::9pm::misc::msleep $grace
 
             send "echo ABORT-RESET$i\n"
             expect {

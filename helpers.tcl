@@ -143,4 +143,9 @@ namespace eval ::9pm::misc {
         }
         return FALSE
     }
+
+    proc msleep { time } {
+        after $time set end 1
+        vwait end
+    }
 }
