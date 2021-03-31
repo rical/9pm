@@ -25,8 +25,17 @@ namespace eval ::9pm::cmd {
     # Datastructe looks like:
     # data(<shell>) cmd {{cmd cmd1 checksum 1234} {cmd cmd2 checksum 4321}}
     namespace eval int {
+        set ABORT_RESET_ATTEMPTS 3
+        set ABORT_GRACE_MS 10
+        set ABORT_RESET_GRACE_MS 100
+
         proc gen_checksum {} {
             return "[::9pm::misc::get::rand_str 10][::9pm::misc::get::rand_int 1000]"
+        }
+
+        proc msleep { time } {
+            after $time set end 1
+            vwait end
         }
 
         proc unreg_exp_after {} {
@@ -235,16 +244,38 @@ namespace eval ::9pm::cmd {
 
         ::9pm::output::debug "Aborting \"$cmd\" (discarding $checksum)"
 
-        send $key
-        expect {
-            $out {
-                ::9pm::output::debug "Successfully aborted \"$cmd\" (got \"$out\")"
+        set reset FALSE
+        for {set i 0} {$i < $int::ABORT_RESET_ATTEMPTS} {incr i} {
+            send $key
+            expect {
+                $out {
+                    ::9pm::output::debug "Successfully aborted \"$cmd\" (got \"$out\")"
+                }
+                default {
+                    ::9pm::fatal ::9pm::output::fail \
+                        "Unable to abort \"$cmd\", didn't see \"$out\""
+                }
             }
-            default {
-                ::9pm::fatal ::9pm::output::fail \
-                    "Unable to abort \"$cmd\", didn't see \"$out\""
+            int::msleep $int::ABORT_GRACE_MS
+
+            send "echo ABORT-RESET$i\n"
+            expect {
+                -timeout 1
+                "\r\nABORT-RESET$i" {
+                    set reset TRUE
+                    break
+                }
+                default {
+                    ::9pm::output::debug "Console unresponsive, trying again"
+                    int::msleep $int::ABORT_RESET_GRACE_MS
+                }
             }
         }
+
+        if {!$reset} {
+            ::9pm::fatal ::9pm::output::fail "Unable to abort \"$cmd\", unable to reset"
+        }
+
         int::cmd::pop
     }
 
