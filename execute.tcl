@@ -232,6 +232,8 @@ namespace eval ::9pm::cmd {
 
     # Abort a running command by sending a ctrl key "key" and expecting a termination string "out"
     proc abort {{key "\003"} {out {\^C}}} {
+        set grace $int::ABORT_GRACE_MS
+
         if {![info exists ::9pm::shell::active]} {
             ::9pm::fatal ::9pm::output::user_error "Can't abort, no active spawn"
         }
@@ -256,7 +258,7 @@ namespace eval ::9pm::cmd {
                         "Unable to abort \"$cmd\", didn't see \"$out\""
                 }
             }
-            int::msleep $int::ABORT_GRACE_MS
+            int::msleep $grace
 
             send "echo ABORT-RESET$i\n"
             expect {
@@ -266,8 +268,8 @@ namespace eval ::9pm::cmd {
                     break
                 }
                 default {
-                    ::9pm::output::warning "Console unresponsive after abort, trying again ($i)"
-                    int::msleep $int::ABORT_RESET_GRACE_MS
+                    ::9pm::output::warning "Console unresponsive after abort, trying again ($i:$grace)"
+                    incr grace $int::ABORT_RESET_GRACE_MS
                 }
             }
         }
