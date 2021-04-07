@@ -13,7 +13,7 @@ package require 9pm
 9pm::shell::open "foobar"
 
 # Move the active shell (foobar) to the remote machine "machine" present in the configuration file
-9pm::ssh::connect "machine"
+9pm::ssh::connect [9pm::conf::get "machine"]
 
 # Execute the command "hostname" on the remote machine and capture the output
 set hostname [9pm::cmd::execute "hostname" 0]
