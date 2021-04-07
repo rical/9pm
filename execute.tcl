@@ -154,7 +154,7 @@ namespace eval ::9pm::cmd {
         ::9pm::output::debug2 "\"$cmd\" capturing output unitl checksum $checksum"
         expect {
             -timeout [dict get $opts "timeout"]
-            # We use notransfer so that we leave the checksum for "finnish"
+            # We use notransfer so that we leave the checksum for "finish"
             -notransfer -re {([^\r\n]+)\r\n} {
                 set line $expect_out(0,string)
                 set content $expect_out(1,string)
