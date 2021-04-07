@@ -121,7 +121,7 @@ namespace eval ::9pm::misc {
     # args = default arguments
     proc getopts {opts args} {
         if {![dict::isdict $opts]} {
-            ::9pm::fatal ::9pm::output::error "Options needs to be a dict, for bool use \"foo TURE\""
+            ::9pm::fatal ::9pm::output::error "Options needs to be a dict, for bool use \"foo TRUE\""
         }
         foreach {key val} $args {
             if {![dict exists $opts $key]} {
