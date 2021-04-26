@@ -92,7 +92,7 @@ namespace eval ::9pm::cmd {
         }
     }
     proc start {cmd args} {
-        set opts [9pm::misc::getopts $args]
+        set opts [9pm::misc::getopts $args "timeout" 10]
 
         if {![info exists ::9pm::shell::active]} {
             ::9pm::fatal ::9pm::output::user_error "You need a spawn to start \"$cmd\""
@@ -118,7 +118,7 @@ namespace eval ::9pm::cmd {
         }
 
         expect {
-            -timeout 10
+            -timeout [dict get $opts "timeout"]
             -re "$checksum(start) (\[0-9]+)\r\n" {
                 ::9pm::output::debug2 "\"$cmd\" started"
                 ::9pm::output::debug2 "\"$cmd\" start checksum $checksum(start)"
