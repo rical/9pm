@@ -159,6 +159,16 @@ namespace eval ::9pm::output {
         }
     }
 
+    proc test {test msg} {
+        if {$test} {
+            ok $msg
+            return TRUE
+        } else {
+            fail $msg
+            return FALSE
+        }
+    }
+
     # Output setup
     set log_base [file normalize $::9pm::core::cmdl(l)]
     file mkdir $log_base
