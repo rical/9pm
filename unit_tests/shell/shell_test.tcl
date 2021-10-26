@@ -31,7 +31,7 @@ proc check_pid {alias} {
 
     expect {
         -re {([0-9]+)\r\n} {
-           if {[dict get $9pm::shell::data($alias) "pid"] != $expect_out(1,string)} {
+           if {[dict get $9pm::spawn::data($alias) "pid"] != $expect_out(1,string)} {
                 fatal output::fail "Got different pid from shell then 9pm thinks it has" }
            }
         default { fatal output::fail "Did not see any pid from shell" }

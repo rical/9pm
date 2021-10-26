@@ -34,7 +34,7 @@ namespace eval ::9pm::cmd {
         }
 
         proc unreg_exp_after {} {
-            if {![info exists ::9pm::shell::active]} {
+            if {![info exists ::9pm::spawn::active]} {
                 return
             }
             # Unregister any existing expect_after clause for the current shell (spawn)
@@ -69,24 +69,24 @@ namespace eval ::9pm::cmd {
         }
         namespace eval cmd {
             proc is_running {} {
-                return [dict exists $::9pm::shell::data($::9pm::shell::active) "cmd"]
+                return [dict exists $::9pm::spawn::data($::9pm::spawn::active) "cmd"]
             }
             proc get_last {} {
-                return [lindex [dict get $::9pm::shell::data($::9pm::shell::active) "cmd"] end]
+                return [lindex [dict get $::9pm::spawn::data($::9pm::spawn::active) "cmd"] end]
             }
             proc cnt {} {
-                return [llength [dict get $::9pm::shell::data($::9pm::shell::active) "cmd"]]
+                return [llength [dict get $::9pm::spawn::data($::9pm::spawn::active) "cmd"]]
             }
             proc push {cmd checksum} {
-                dict lappend ::9pm::shell::data($::9pm::shell::active) "cmd" \
+                dict lappend ::9pm::spawn::data($::9pm::spawn::active) "cmd" \
                     [dict create "cmd" $cmd "checksum" $checksum]
             }
             proc pop {} {
                 if {[cnt] == 1} {
-                    dict unset ::9pm::shell::data($::9pm::shell::active) "cmd"
+                    dict unset ::9pm::spawn::data($::9pm::spawn::active) "cmd"
                 } else {
-                    dict set ::9pm::shell::data($::9pm::shell::active) "cmd"\
-                        [lrange [dict get $::9pm::shell::data($::9pm::shell::active) "cmd"] 0 end-1]
+                    dict set ::9pm::spawn::data($::9pm::spawn::active) "cmd"\
+                        [lrange [dict get $::9pm::spawn::data($::9pm::spawn::active) "cmd"] 0 end-1]
                 }
             }
         }
@@ -94,7 +94,7 @@ namespace eval ::9pm::cmd {
     proc start {cmd args} {
         set opts [9pm::misc::getopts $args "timeout" 10]
 
-        if {![info exists ::9pm::shell::active]} {
+        if {![info exists ::9pm::spawn::active]} {
             ::9pm::fatal ::9pm::output::user_error "You need a spawn to start \"$cmd\""
         }
         set checksum(start) [int::gen_checksum]
@@ -140,14 +140,14 @@ namespace eval ::9pm::cmd {
 
         set out [list]
 
-        if {![info exists ::9pm::shell::active]} {
+        if {![info exists ::9pm::spawn::active]} {
             ::9pm::fatal ::9pm::output::user_error "You need a spawn to capture output"
         }
         if {![int::cmd::is_running]} {
             ::9pm::fatal ::9pm::output::user_error "Can't capture output, nothing running on this shell"
         }
 
-        set cmd_data [lindex [dict get $::9pm::shell::data($::9pm::shell::active) "cmd"] end]
+        set cmd_data [lindex [dict get $::9pm::spawn::data($::9pm::spawn::active) "cmd"] end]
         set cmd [dict get $cmd_data "cmd"]
         set checksum [dict get $cmd_data "checksum"]
 
@@ -187,7 +187,7 @@ namespace eval ::9pm::cmd {
     }
 
     proc finish {} {
-        if {![info exists ::9pm::shell::active]} {
+        if {![info exists ::9pm::spawn::active]} {
             ::9pm::fatal ::9pm::output::user_error "Can't finish, no active spawn"
         }
         if {![int::cmd::is_running]} {
@@ -229,7 +229,7 @@ namespace eval ::9pm::cmd {
     proc abort {{key "\003"} {out {\^C}}} {
         set grace $int::ABORT_GRACE_MS
 
-        if {![info exists ::9pm::shell::active]} {
+        if {![info exists ::9pm::spawn::active]} {
             ::9pm::fatal ::9pm::output::user_error "Can't abort, no active spawn"
         }
         if {![int::cmd::is_running]} {
