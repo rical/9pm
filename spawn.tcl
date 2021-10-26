@@ -134,4 +134,57 @@ namespace eval ::9pm::spawn {
             return [::9pm::spawn::pop]
         }
     }
+
+    namespace eval ssh {
+        proc create {node} {
+            set hostname [::9pm::misc::dict::require $node hostname]
+            set prompt   [::9pm::misc::dict::require $node prompt]
+            set password [::9pm::misc::dict::get $node password]
+
+            set pid [spawn "ssh" "$hostname"]
+            if {$pid == 0} {
+                ::9pm::fatal ::9pm::output::fail "Failled to connect to $hostname"
+            }
+
+            # Wait for prompt
+            expect {
+                $prompt {
+                    ::9pm::output::info "Connected to \"$hostname\""
+                    send "unset HISTFILE\n"
+                }
+                -nocase "password" {
+                    if {$password == ""} {
+                        ::9pm::fatal ::9pm::output::fail \
+                            "SSH got password prompt but no password is provided in config"
+                    }
+                    send "$password\n"
+                    exp_continue -continue_timer
+                }
+                timeout {
+                    ::9pm::fatal ::9pm::output::fail "SSH connection to \"$hostname\" failed (timeout)"
+                }
+                eof {
+                    ::9pm::fatal ::9pm::output::fail "SSH connection to \"$hostname\" failed (eof)"
+                }
+            }
+
+            return [list $spawn_id $pid]
+        }
+
+        proc open {alias node} {
+            return [::9pm::spawn::open $alias "::9pm::spawn::ssh::create {$node}"]
+        }
+
+        proc close {alias} {
+            return [::9pm::spawn::close $alias]
+        }
+
+        proc push {alias node} {
+            return [::9pm::spawn::push $alias "::9pm::spawn::ssh::create {$node}"]
+        }
+
+        proc pop { } {
+            return [::9pm::spawn::pop]
+        }
+    }
 }
