@@ -6,7 +6,7 @@ output::plan 8
 
 proc check_active {expected} {
 
-    if {$::9pm::shell::active == $expected} {
+    if {$::9pm::spawn::active == $expected} {
         output::ok "Active check for $expected"
     } else {
         output::fail "Active check failed for $expected"
@@ -14,7 +14,7 @@ proc check_active {expected} {
 }
 
 proc check_unset {} {
-    if {![info exists ::9pm::shell::active]} {
+    if {![info exists ::9pm::spawn::active]} {
         output::ok "No active shell"
     } else {
         output::fail "Active shell is set"
