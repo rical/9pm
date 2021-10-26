@@ -258,7 +258,7 @@ namespace eval ::9pm::cmd {
             send "echo ABORT-RESET$i\n"
             expect {
                 -timeout 1
-                "\r\nABORT-RESET$i" {
+                "ABORT-RESET$i\r\n" {
                     set reset TRUE
                     break
                 }
