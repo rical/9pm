@@ -31,13 +31,13 @@ namespace eval ::9pm::ssh {
             append ssh_cmd " $args"
         }
 
-        ::9pm::output::debug "Connecting to \"$IP\" (as \"$USER\")"
+        ::9pm::output::debug "Connecting to \"$IP\""
 
         expect *
         send "$ssh_cmd\n"
         expect {
             $PROMPT {
-                ::9pm::output::debug "Connected to \"$IP\" (as \"$USER\")"
+                ::9pm::output::debug "Connected to \"$IP\""
             }
             -nocase "password" {
                 if {$PASS == ""} {
