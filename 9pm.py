@@ -267,6 +267,8 @@ def run_suite(cmdline, data):
                 skip = True
             if suberr:
                 err = True
+            if err and cmdline.abort:
+                break;
 
         elif 'case' in test:
             if not os.path.isfile(test['case']):
