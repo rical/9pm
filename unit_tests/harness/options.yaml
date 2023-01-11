@@ -2,8 +2,14 @@
 - case: "options.tcl"
   opts:
     - "suite-supplied"
+    - "mode:long"
+    - "optional-positive:yes"
+    - "skip-positive:yes"
 
 - suite: "options_nested.yaml"
   name: "a-nested-suite"
   opts:
     - "suite-supplied"
+    - "mode:long"
+    - "optional-positive:yes"
+    - "skip-positive:yes"
