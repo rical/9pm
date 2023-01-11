@@ -2,3 +2,8 @@
 - case: "options.tcl"
   opts:
     - "suite-supplied"
+
+- suite: "options_nested.yaml"
+  name: "a-nested-suite"
+  opts:
+    - "suite-supplied"

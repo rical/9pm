@@ -108,7 +108,6 @@ def run_onfail(cmdline, test):
     args = []
     if 'options' in test:
         args.extend(test['options'])
-    args.extend(cmdline.option)
 
     onfail = {}
     onfail['case'] = os.path.join(test['path'], test['onfail'])
@@ -126,7 +125,6 @@ def run_test(cmdline, test):
     args = []
     if 'options' in test:
         args.extend(test['options'])
-    args.extend(cmdline.option)
 
     print(pcolor.blue + "\nStarting test", test['name'] + pcolor.reset)
     if cmdline.debug:
@@ -159,6 +157,13 @@ def prefix_name(name):
 def gen_name(filename):
     return prefix_name(os.path.basename(filename))
 
+def lmerge(a, b):
+    new = a.copy()
+    for item in b:
+        if item not in a:
+            new.append(item)
+    return new
+
 def parse_yaml(path):
     with open(path, 'r') as stream:
         try:
@@ -168,19 +173,32 @@ def parse_yaml(path):
             return -1
     return data
 
-def parse(fpath):
+def parse(fpath, options, name=None):
     suite = {}
     suite['fpath'] = fpath
-    suite['name'] = gen_name(fpath)
     suite['suite'] = []
     suite['result'] = "pending"
     cur = os.path.dirname(fpath)
+
+    if name:
+        suite['name'] = name
+    else:
+        suite['name'] = gen_name(fpath)
 
     data = parse_yaml(fpath)
     for entry in data:
         if 'suite' in entry:
             fpath = os.path.join(cur, entry['suite'])
-            suite['suite'].append(parse(fpath))
+            if 'opts' in entry:
+                opts = lmerge(entry['opts'], options)
+            else:
+                opts = options.copy()
+
+            if 'name' in entry:
+                suite['suite'].append(parse(fpath, opts, prefix_name(entry['name'])))
+            else:
+                suite['suite'].append(parse(fpath, opts))
+
         elif 'case' in entry:
             case = {}
 
@@ -190,7 +208,10 @@ def parse(fpath):
                 name = os.path.basename(entry['case'])
 
             if 'opts' in entry:
-                case['options'] = [o.replace('<base>', cur) for o in entry['opts']]
+                opts = [o.replace('<base>', cur) for o in entry['opts']]
+                case['options'] = lmerge(opts, options)
+            else:
+                case['options'] = options
 
             if 'onfail' in entry:
                 case['onfail'] = entry['onfail']
@@ -367,9 +388,15 @@ def main():
     for filename in args.suites:
         fpath = os.path.join(os.getcwd(), filename)
         if filename.endswith('.yaml'):
-            cmdl['suite'].append(parse(fpath))
+            cmdl['suite'].append(parse(fpath, args.option))
         else:
-            cmdl['suite'].append({"case": fpath, "name": gen_name(filename)})
+            test = {"case": fpath, "name": gen_name(filename)}
+
+            if args.option:
+                test["options"] = args.option
+
+            cmdl['suite'].append(test)
+
 
     probe_suite(cmdl)
 
