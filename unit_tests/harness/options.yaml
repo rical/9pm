@@ -6,6 +6,14 @@
     - "optional-positive:yes"
     - "skip-positive:yes"
 
+- case: "options.tcl"
+  name: "argument-skip"
+  opts:
+    - "suite-supplied"
+    - "mode:long"
+    - "optional-positive:yes"
+    - "skip-positive:no"
+
 - suite: "options_nested.yaml"
   name: "a-nested-suite"
   opts:
