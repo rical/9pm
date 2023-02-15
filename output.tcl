@@ -130,6 +130,10 @@ namespace eval ::9pm::output {
         exit 0
     }
 
+    proc skip_suite {msg} {
+        skip_test "suite $msg"
+    }
+
     proc error {msg} {
         write "# ERROR:: $msg" RED
         return FALSE

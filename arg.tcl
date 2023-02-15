@@ -58,15 +58,23 @@ namespace eval ::9pm::arg {
         _argset $name
     }
 
-    # Needs to be called before non-skip-plan
-    proc require_or_skip {name value} {
+    proc _require_or_skip {skip_func name value} {
         _argset $name
         if {![info exists "::9pm::arg::$name"]} {
-            ::9pm::output::skip_test "Required argument \"$name\" not set"
+            $skip_func "Required argument \"$name\" not set"
             exit
         } elseif {[set ::9pm::arg::$name] != $value} {
-            ::9pm::output::skip_test "Required argument \"$name\" != \"$value\""
+            $skip_func "Required argument \"$name\" != \"$value\""
             exit
         }
     }
+
+    proc require_or_skip {name value} {
+        _require_or_skip "::9pm::output::skip_test" $name $value
+    }
+
+    proc require_or_skip_suite {name value} {
+        _require_or_skip "::9pm::output::skip_suite" $name $value
+    }
+
 }

@@ -74,6 +74,7 @@ def execute(args, test):
         ok = re.search('^ok (\d+) -', string)
         not_ok = re.search('^not ok (\d+) -', string)
         skip = re.search('^ok (\d+) # skip', string)
+        skip_suite = re.search('^ok (\d+) # skip suite', string)
 
         if plan:
             cprint(pcolor.purple, '{} {}'.format(stamp, string))
@@ -81,6 +82,11 @@ def execute(args, test):
         elif skip:
             cprint(pcolor.yellow, '{} {}'.format(stamp, string))
             test['executed'] = skip.group(1)
+            skip = True
+        elif skip_suite:
+            cprint(pcolor.yellow, '{} {}'.format(stamp, string))
+            test['executed'] = skip.group(1)
+            skip_suite = True
             skip = True
         elif ok:
             cprint(pcolor.green, '{} {}'.format(stamp, string))
@@ -102,7 +108,7 @@ def execute(args, test):
     if exitcode != 0:
         err = True
 
-    return skip, err
+    return skip_suite, skip, err
 
 def run_onfail(cmdline, test):
     args = []
@@ -127,10 +133,15 @@ def run_test(cmdline, test):
         args.extend(test['options'])
 
     print(pcolor.blue + "\nStarting test", test['name'] + pcolor.reset)
+
+    if test['result'] == "skip":
+        print("{}Skip test {} (suite skip){}" . format(pcolor.yellow, test['name'], pcolor.reset))
+        return True, True, False
+
     if cmdline.debug:
         print("Executing:", [test['case']] + args)
 
-    skip, err = execute(args, test)
+    skip_suite, skip, err = execute(args, test)
 
     if 'plan' not in test:
         print("test error, no plan")
@@ -144,7 +155,7 @@ def run_test(cmdline, test):
         print("test error, not conforming to plan ({}/{})".format(test['executed'], test['plan']))
         err = True
 
-    return skip, err
+    return skip_suite, skip, err
 
 # In this function, we generate an unique name for each case and suite. Both
 # suites and cases can be passed an arbitrary amount of times and the same test
@@ -277,13 +288,13 @@ def probe_suite(data):
 
     data['result'] = "noexec"
 
-def run_suite(cmdline, data):
+def run_suite(cmdline, data, skip_suite):
     skip = False
     err = False
 
     for test in data['suite']:
         if 'suite' in test:
-            subskip, suberr = run_suite(cmdline, test)
+            subskip, suberr = run_suite(cmdline, test, skip_suite)
             if subskip:
                 skip = True
             if suberr:
@@ -299,7 +310,10 @@ def run_suite(cmdline, data):
                 print("error, test case not executable {}".format(test['case']))
                 sys.exit(1)
 
-            subskip, suberr = run_test(cmdline, test)
+            if skip_suite:
+                test['result'] = "skip"
+
+            skip_suite, subskip, suberr = run_test(cmdline, test)
             if suberr:
                 if 'mask' in test and test['mask'] == "fail":
                     print("{}Test failure is masked in suite{}" . format(pcolor.red, pcolor.reset))
@@ -402,7 +416,7 @@ def main():
 
     setup_env(args)
 
-    skip, err = run_suite(args, cmdl)
+    skip, err = run_suite(args, cmdl, False)
     if err:
         cprint(pcolor.red, "\nx Execution")
     elif skip:
