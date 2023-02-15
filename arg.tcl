@@ -62,12 +62,10 @@ namespace eval ::9pm::arg {
     proc require_or_skip {name value} {
         _argset $name
         if {![info exists "::9pm::arg::$name"]} {
-            ::9pm::output::plan 1
-            ::9pm::output::skip "Required argument \"$name\" not set"
+            ::9pm::output::skip_test "Required argument \"$name\" not set"
             exit
         } elseif {[set ::9pm::arg::$name] != $value} {
-            ::9pm::output::plan 1
-            ::9pm::output::skip "Required argument \"$name\" != \"$value\""
+            ::9pm::output::skip_test "Required argument \"$name\" != \"$value\""
             exit
         }
     }

@@ -21,14 +21,14 @@
 package require 9pm
 namespace path ::9pm
 
-output::plan 4
-
 output::debug "argv before ::arg:: $argv"
 
 9pm::arg::require "mode"
 9pm::arg::optional "optional-negative"
 9pm::arg::optional "optional-positive"
 9pm::arg::require_or_skip "skip-positive" "yes"
+
+output::plan 4
 
 output::debug "argv after ::arg:: $argv"
 
