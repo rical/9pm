@@ -1,0 +1,11 @@
+---
+- case: "suite_skip.tcl"
+  opts:
+    - "require-value-foo:bar"
+- case: "suite_skip.tcl"
+  mask: "skip"
+  opts:
+    - "require-value-foo:foo"
+- case: "suite_skip.tcl"
+  opts:
+    - "require-value-foo:foo"
