@@ -36,6 +36,7 @@ namespace eval ::9pm::output {
     ::log_user 0
 
     set testnum 0
+    set planned 0
 
     proc colorize {color msg} {
         variable print_tap
@@ -85,7 +86,10 @@ namespace eval ::9pm::output {
     }
 
     proc plan {cnt} {
+        variable planned
+
         write "1..$cnt" GREEN
+        set planned $cnt
         return TRUE
     }
 
@@ -111,6 +115,19 @@ namespace eval ::9pm::output {
         incr testnum
         write "ok $testnum # skip $msg" YELLOW
         return TRUE
+    }
+
+    proc skip_test {msg} {
+        variable planned
+
+        if {$planned != 0} {
+            user_error "skip_test needs to be called before output::plan"
+            exit
+        }
+
+        9pm::output::plan 1
+        skip $msg
+        exit 0
     }
 
     proc error {msg} {
