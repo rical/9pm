@@ -221,6 +221,8 @@ namespace eval ::9pm::cmd {
         set cmd [dict get $last "cmd"]
         set checksum [dict get $last "checksum"]
 
+        int::unreg_exp_after
+
         ::9pm::output::debug "Discarding start of \"$cmd\" ($checksum)"
         int::cmd::pop
     }
