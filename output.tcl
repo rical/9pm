@@ -20,8 +20,11 @@ package require 9pm::init
 package require 9pm::helpers
 package provide 9pm::output 1.0
 
-# Wee need expect for log_user TODO: Check if it exists (gracefull error-out)
-package require Expect
+if {[catch {package require Expect} result]} {
+    puts "1..1"
+    puts "not ok 1 - $result (please install it)"
+    exit 1
+}
 
 namespace eval ::9pm::output {
     # Default output behaviour

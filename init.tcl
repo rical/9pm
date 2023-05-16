@@ -16,8 +16,12 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
-package require yaml
-package require cmdline
+if {[catch {package require yaml} result] || [catch {package require cmdline} result]} {
+    puts "1..1"
+    puts "not ok 1 - $result (please install tcllib)"
+    exit 1
+}
+
 package provide 9pm::init 1.0
 
 namespace eval ::9pm {

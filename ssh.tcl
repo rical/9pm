@@ -1,8 +1,10 @@
 package provide 9pm::ssh 1.0
 
-# Wee need Expect TODO: Check if it exists (gracefull error-out)
-package require Expect
-
+if {[catch {package require Expect} result]} {
+    puts "1..1"
+    puts "not ok 1 - $result (please install it)"
+    exit 1
+}
 
 namespace eval ::9pm::ssh {
     proc connect {node args} {

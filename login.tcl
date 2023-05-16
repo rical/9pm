@@ -1,6 +1,10 @@
 package provide 9pm::login 1.0
 
-package require Expect
+if {[catch {package require Expect} result]} {
+    puts "1..1"
+    puts "not ok 1 - $result (please install it)"
+    exit 1
+}
 
 namespace eval ::9pm::login {
     proc check {node args} {
