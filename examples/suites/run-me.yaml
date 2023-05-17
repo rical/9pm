@@ -1,0 +1,12 @@
+---
+# Try running this with -o "foo" and see what happens
+# ./9pm.py examples/suites/run-me.yaml -o "foo"
+
+# Not that name is not required
+- case: "test.sh"
+  name: "test-from-top-suite"
+  opts:
+    - "test-opt-from-run-me-suite"
+- suite: "nested.yaml"
+  opts:
+    - "suite-opt-from-run-me-suite"
