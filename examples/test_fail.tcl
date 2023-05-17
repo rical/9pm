@@ -4,6 +4,8 @@
 
 package require 9pm
 
+9pm::output::plan 1
+
 9pm::shell::open "myhost"
 
 set hostname [9pm::cmd::execute "hostname"]
