@@ -41,6 +41,7 @@ def cprint(color, *args, **kwargs):
 
 def execute(args, test):
     proc = subprocess.Popen([test['case']] + args, stdout=subprocess.PIPE)
+    skip_suite = False
     skip = False
     err = False
 
@@ -127,11 +128,11 @@ def run_test(cmdline, test):
 
     if 'plan' not in test:
         print("test error, no plan")
-        return False, True
+        return False, False, True
 
     if 'executed' not in test:
         print("test error, no tests executed")
-        return False, True
+        return False, False, True
 
     if test['plan'] != test['executed']:
         print("test error, not conforming to plan ({}/{})".format(test['executed'], test['plan']))
