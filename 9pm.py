@@ -81,10 +81,6 @@ def execute(args, test):
         else:
             print("{}{}".format(stamp, string))
 
-        if (ok or not_ok) and 'plan' not in test:
-            print("test error, test started before plan")
-            err = True
-
     out, error = proc.communicate()
     exitcode = proc.returncode
 
