@@ -33,6 +33,7 @@ class pcolor:
     cyan = '\033[96m'
     reset = '\033[0m'
     orange = '\033[33m'
+    faint = '\033[2m'
 
 def cprint(color, *args, **kwargs):
     sys.stdout.write(color)
@@ -58,6 +59,7 @@ def execute(args, test):
         not_ok = re.search('^not ok (\d+) -', string)
         skip = re.search('^ok (\d+) # skip', string)
         skip_suite = re.search('^ok (\d+) # skip suite', string)
+        comment = re.search('^\w*#', string)
 
         if plan:
             cprint(pcolor.purple, '{} {}'.format(stamp, string))
@@ -78,6 +80,8 @@ def execute(args, test):
             cprint(pcolor.red, '{} {}'.format(stamp, string))
             err = True
             test['executed'] = not_ok.group(1)
+        elif comment:
+            cprint(pcolor.faint, '{} {}'.format(stamp, string))
         else:
             print("{}{}".format(stamp, string))
 
