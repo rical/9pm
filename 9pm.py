@@ -42,7 +42,7 @@ def cprint(color, *args, **kwargs):
 def execute(args, test):
     proc = subprocess.Popen([test['case']] + args, stdout=subprocess.PIPE)
     skip_suite = False
-    skip = False
+    test_skip = False
     err = False
 
     while True:
@@ -65,12 +65,12 @@ def execute(args, test):
         elif skip:
             cprint(pcolor.yellow, '{} {}'.format(stamp, string))
             test['executed'] = skip.group(1)
-            skip = True
+            test_skip = True
         elif skip_suite:
             cprint(pcolor.yellow, '{} {}'.format(stamp, string))
             test['executed'] = skip.group(1)
             skip_suite = True
-            skip = True
+            test_skip = True
         elif ok:
             cprint(pcolor.green, '{} {}'.format(stamp, string))
             test['executed'] = ok.group(1)
@@ -87,7 +87,7 @@ def execute(args, test):
     if exitcode != 0:
         err = True
 
-    return skip_suite, skip, err
+    return skip_suite, test_skip, err
 
 def run_onfail(cmdline, test):
     args = []

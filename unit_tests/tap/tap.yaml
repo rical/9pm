@@ -7,6 +7,13 @@
   mask: "skip"
 
 - case: "tap.tcl"
+  name: "ok-skip-ok"
+  opts:
+    - ok
+    - skip
+    - ok
+  mask: "skip"
+- case: "tap.tcl"
   name: "skip"
   opts:
     - skip
