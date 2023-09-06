@@ -80,7 +80,7 @@ def execute(args, test):
             err = True
             test['executed'] = not_ok.group(1)
         else:
-            print("{}{}".format(stamp, string))
+            print("{} {}".format(stamp, string))
 
     out, error = proc.communicate()
     exitcode = proc.returncode
