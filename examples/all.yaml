@@ -1,0 +1,17 @@
+---
+- case: "bash.sh"
+- case: "python.py"
+
+- case: "bash.sh"
+  name: "bash-with-no-options"
+
+- case: "bash.sh"
+  name: "bash-with-options"
+  opts:
+    - "opt1-from-all"
+    - "opt2-from-all"
+
+- suite: "nested.yaml"
+  name: "nested-suite"
+  opts:
+    - "opt-from-all"

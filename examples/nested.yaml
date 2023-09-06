@@ -1,0 +1,10 @@
+---
+- case: "bash.sh"
+  name: "bash-in-nested"
+  opts:
+    - "opt-from-nested"
+
+- case: "python.py"
+  name: "python-in-nested"
+  opts:
+    - "opt-from-nested"
