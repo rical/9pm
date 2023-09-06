@@ -221,7 +221,22 @@ def parse(fpath, options, name=None):
             sys.exit(1)
     return suite
 
-def print_tree(data, base):
+def write_result_md_tree(md, data, base):
+    for test in data['suite']:
+        with open(md, 'a') as file:
+            file.write("{}- {} : {}\n".format(base, test['result'].upper(), test['name']))
+
+        if 'suite' in test:
+            write_result_md_tree(md, test, base + "  ")
+
+def write_result_md(data):
+    md = os.path.join(LOGDIR, 'result.md')
+
+    with open(md, 'a') as file:
+        file.write("# Test Result\n")
+    write_result_md_tree(md, data, "")
+
+def print_result_tree(data, base):
     i = 1
     llen = len(data['suite'])
 
@@ -255,7 +270,7 @@ def print_tree(data, base):
         print("{}{}{}{} {}{}".format(base, prefix, color, sign, test['name'], pcolor.reset))
 
         if 'suite' in test:
-            print_tree(test, nextbase)
+            print_result_tree(test, nextbase)
         i += 1
 
 def probe_suite(data):
@@ -456,7 +471,9 @@ def main():
         cprint(pcolor.yellow, "\ns Execution")
     else:
         cprint(pcolor.green, "\no Execution")
-    print_tree(cmdl, "")
+
+    print_result_tree(cmdl, "")
+    write_result_md(cmdl)
 
     db.close()
     sys.exit(err)
