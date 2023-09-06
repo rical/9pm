@@ -328,6 +328,37 @@ def run_suite(cmdline, data, skip_suite):
 
     return skip, err
 
+def parse_rc():
+    global ROOT_PATH
+
+    required = {"LOG_PATH"}
+    rc = {}
+
+    home_path = os.path.expanduser("~/.9pm.rc")
+    default_path = os.path.join(ROOT_PATH, 'etc', '9pm.rc')
+    if os.path.exists(home_path):
+        rc_path = home_path
+    elif os.path.exists(default_path):
+        rc_path = default_path
+    else:
+        print("error, can't find 9pm.rc file")
+        sys.exit(1)
+
+    with open(rc_path, 'r') as file:
+        for line in file:
+            line = line.strip()
+            if not line.startswith('#') and ':' in line:
+                key, value = [item.strip() for item in line.split(':', 1)]
+                value = value.split('"')[1]
+                rc[key] = value
+
+    for req in required:
+        if not rc.get(req):
+            print("error, required key \"{}\" missing from 9pm.rc" .format(req))
+            sys.exit(1)
+
+    return rc
+
 def parse_cmdline():
     parser = argparse.ArgumentParser()
     parser.add_argument('-a', '--abort', action='store_true',
@@ -364,6 +395,8 @@ def main():
     global DATABASE
     global SCRATCHDIR
     cprint(pcolor.yellow, "9PM - Simplicity is the ultimate sophistication")
+
+    rc = parse_rc()
 
     args = parse_cmdline()
 
