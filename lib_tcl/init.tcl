@@ -7,7 +7,8 @@ if {[catch {package require yaml} result] || [catch {package require cmdline} re
 package provide 9pm::init 1.0
 
 namespace eval ::9pm {
-    set root_path [file normalize [file dirname [info script]]]
+    # This is the 9pm repository root.
+    set root_path "[file normalize [file dirname [info script]]]/../"
 }
 # We can't call other procedures in the 9pm:: namespace here
 # as this is running early.
