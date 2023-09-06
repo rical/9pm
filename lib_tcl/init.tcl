@@ -91,7 +91,7 @@ namespace eval ::9pm::core {
     }
 
     if {[dict exists $rc "log_path"] && $cmdl(l) == ""} {
-        array set cmdl [list "l" [dict get $rc "log_path"]]
+        array set cmdl [list "l" "[dict get $rc "log_path"]/standalone"]
     }
 }
 

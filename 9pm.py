@@ -10,6 +10,7 @@ import tempfile
 import shutil
 import re
 import atexit
+from datetime import datetime
 
 TEST_CNT=0
 ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
@@ -17,6 +18,7 @@ LIB_TCL_PATH = ROOT_PATH + "/lib_tcl/"
 # TODO: proper argument strucutre
 DATABASE = ""
 SCRATCHDIR = ""
+LOGDIR = None
 
 if "TCLLIBPATH" in os.environ:
     os.environ["TCLLIBPATH"] = os.environ["TCLLIBPATH"] + " " + LIB_TCL_PATH
@@ -328,14 +330,12 @@ def run_suite(cmdline, data, skip_suite):
 
     return skip, err
 
-def parse_rc():
-    global ROOT_PATH
-
+def parse_rc(root_path):
     required = {"LOG_PATH"}
     rc = {}
 
     home_path = os.path.expanduser("~/.9pm.rc")
-    default_path = os.path.join(ROOT_PATH, 'etc', '9pm.rc')
+    default_path = os.path.join(root_path, 'etc', '9pm.rc')
     if os.path.exists(home_path):
         rc_path = home_path
     elif os.path.exists(default_path):
@@ -379,6 +379,21 @@ def parse_cmdline():
         sys.exit(1)
     return parser.parse_args()
 
+def setup_log_dir(log_path):
+    log_path = os.path.expanduser(log_path)
+
+    now = datetime.now()
+    dir_name = now.strftime('%Y-%m-%d_%H-%M-%S-%f')
+    log_dir = os.path.join(log_path, dir_name)
+    os.makedirs(log_dir)
+
+    last_link =os.path.join(log_path, "last")
+    if os.path.islink(last_link):
+        os.unlink(last_link)
+    os.symlink(dir_name, last_link)
+
+    return log_dir
+
 def setup_env(cmdline):
     os.environ["NINEPM_TAP"] = "1"
 
@@ -387,6 +402,7 @@ def setup_env(cmdline):
 
     os.environ["NINEPM_DATABASE"] = DATABASE
     os.environ["NINEPM_SCRATCHDIR"] = SCRATCHDIR
+    os.environ["NINEPM_LOG_PATH"] = LOGDIR
 
     if cmdline.config:
         os.environ["NINEPM_CONFIG"] = cmdline.config
@@ -394,9 +410,13 @@ def setup_env(cmdline):
 def main():
     global DATABASE
     global SCRATCHDIR
+    global LOGDIR
+
     cprint(pcolor.yellow, "9PM - Simplicity is the ultimate sophistication")
 
-    rc = parse_rc()
+    rc = parse_rc(ROOT_PATH)
+
+    LOGDIR = setup_log_dir(rc['LOG_PATH'])
 
     args = parse_cmdline()
 
