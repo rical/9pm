@@ -132,9 +132,9 @@ namespace eval ::9pm::cmd {
             ::9pm::fatal ::9pm::output::user_error "Can't capture output, nothing running on this shell"
         }
 
-        set cmd_data [lindex [dict get $::9pm::spawn::data($::9pm::spawn::active) "cmd"] end]
-        set cmd [dict get $cmd_data "cmd"]
-        set checksum [dict get $cmd_data "checksum"]
+        set last [int::cmd::get_last]
+        set cmd [dict get $last "cmd"]
+        set checksum [dict get $last "checksum"]
 
         ::9pm::output::debug2 "\"$cmd\" capturing output unitl checksum $checksum"
         expect {
