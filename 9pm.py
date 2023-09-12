@@ -170,7 +170,7 @@ def parse_yaml(path):
             return -1
     return data
 
-def parse(fpath, options, name=None):
+def parse_suite(fpath, pname, options, name=None):
     suite = {}
     suite['fpath'] = fpath
     suite['suite'] = []
@@ -182,7 +182,13 @@ def parse(fpath, options, name=None):
     else:
         suite['name'] = gen_name(fpath)
 
+    if not os.path.isfile(fpath):
+        print("error, test suite not found {}" . format(fpath))
+        print("(referenced from {})" . format(pname))
+        sys.exit(1)
+
     data = parse_yaml(fpath)
+    pname = fpath
     for entry in data:
         if 'suite' in entry:
             fpath = os.path.join(cur, entry['suite'])
@@ -190,11 +196,10 @@ def parse(fpath, options, name=None):
                 opts = lmerge(entry['opts'], options)
             else:
                 opts = options.copy()
-
             if 'name' in entry:
-                suite['suite'].append(parse(fpath, opts, prefix_name(entry['name'])))
+                suite['suite'].append(parse_suite(fpath, pname, opts, prefix_name(entry['name'])))
             else:
-                suite['suite'].append(parse(fpath, opts))
+                suite['suite'].append(parse_suite(fpath, pname, opts))
 
         elif 'case' in entry:
             case = {}
@@ -219,6 +224,13 @@ def parse(fpath, options, name=None):
             case['case'] = os.path.join(cur, entry['case'])
             case['path'] = cur
             case['name'] = prefix_name(name)
+            if not os.path.isfile(case['case']):
+                print("error, test case not found {}" . format(case['case']))
+                print("(referenced from {})" . format(fpath))
+                sys.exit(1)
+            if not os.access(case['case'], os.X_OK):
+                print("error, test case not executable {}".format(case['case']))
+                sys.exit(1)
             suite['suite'].append(case)
         else:
             print("error, missing suite/case in suite {}".format(suite['name']))
@@ -454,7 +466,7 @@ def main():
     for filename in args.suites:
         fpath = os.path.join(os.getcwd(), filename)
         if filename.endswith('.yaml'):
-            cmdl['suite'].append(parse(fpath, args.option))
+            cmdl['suite'].append(parse_suite(fpath, "command line", args.option))
         else:
             test = {"case": fpath, "name": gen_name(filename)}
 
