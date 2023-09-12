@@ -438,12 +438,28 @@ def setup_env(cmdline):
     if cmdline.config:
         os.environ["NINEPM_CONFIG"] = cmdline.config
 
+def get_git_sha():
+    if not os.path.isdir(os.path.join(ROOT_PATH, '.git')):
+        return ""
+
+    try:
+        sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'],
+                stderr=subprocess.STDOUT).decode('utf-8').strip()
+        return sha
+    except FileNotFoundError:
+        return ""
+    except subprocess.CalledProcessError:
+        return ""
+
 def main():
     global DATABASE
     global SCRATCHDIR
     global LOGDIR
 
-    cprint(pcolor.yellow, "9PM - Simplicity is the ultimate sophistication")
+    sha = ""
+    if (sha := get_git_sha()):
+        sha = "({})" . format(sha[:10])
+    cprint(pcolor.yellow, "9PM - Simplicity is the ultimate sophistication {}" . format(sha))
 
     rc = parse_rc(ROOT_PATH)
 
