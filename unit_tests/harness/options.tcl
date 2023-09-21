@@ -6,11 +6,12 @@ namespace path ::9pm
 output::debug "argv before ::arg:: $argv"
 
 9pm::arg::require "mode"
+9pm::arg::require "scratch"
 9pm::arg::optional "optional-negative"
 9pm::arg::optional "optional-positive"
 9pm::arg::require_or_skip "skip-positive" "yes"
 
-output::plan 4
+output::plan 5
 
 output::debug "argv after ::arg:: $argv"
 
@@ -38,4 +39,9 @@ if {[info exists 9pm::arg::optional-positive]} {
     output::fail "didn't get optional argument"
 }
 
-
+output::info "got scratch option = $9pm::arg::scratch"
+if {$9pm::arg::scratch == $9pm::db::scratch} {
+    output::ok "<scratch> in suite evaluated to SCRATCHDIR"
+} else {
+    output::fail "<scratch> in suite did not evaluate to SCRATCHDIR"
+}

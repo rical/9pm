@@ -5,6 +5,7 @@
     - "mode:long"
     - "optional-positive:yes"
     - "skip-positive:yes"
+    - "scratch:<scratch>"
 
 - case: "options.tcl"
   name: "argument-skip"
@@ -12,6 +13,7 @@
     - "suite-supplied"
     - "mode:long"
     - "optional-positive:yes"
+    - "scratch:<scratch>"
     - "skip-positive:no"
 
 - suite: "options_nested.yaml"
@@ -19,5 +21,6 @@
   opts:
     - "suite-supplied"
     - "mode:long"
+    - "scratch:<scratch>"
     - "optional-positive:yes"
     - "skip-positive:yes"

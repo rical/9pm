@@ -193,7 +193,8 @@ def parse_suite(fpath, pname, options, name=None):
         if 'suite' in entry:
             fpath = os.path.join(cur, entry['suite'])
             if 'opts' in entry:
-                opts = lmerge(entry['opts'], options)
+                opts = [o.replace('<scratch>', SCRATCHDIR) for o in entry['opts']]
+                opts = lmerge(opts, options)
             else:
                 opts = options.copy()
             if 'name' in entry:
@@ -211,6 +212,7 @@ def parse_suite(fpath, pname, options, name=None):
 
             if 'opts' in entry:
                 opts = [o.replace('<base>', cur) for o in entry['opts']]
+                opts = [o.replace('<scratch>', SCRATCHDIR) for o in opts]
                 case['options'] = lmerge(opts, options)
             else:
                 case['options'] = options
