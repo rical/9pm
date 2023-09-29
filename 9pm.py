@@ -434,6 +434,7 @@ def setup_env(cmdline):
     if cmdline.debug:
         os.environ["NINEPM_DEBUG"] = "1"
 
+    os.environ["NINEPM_ROOT_PATH"] = ROOT_PATH
     os.environ["NINEPM_DATABASE"] = DATABASE
     os.environ["NINEPM_SCRATCHDIR"] = SCRATCHDIR
     os.environ["NINEPM_LOG_PATH"] = LOGDIR
