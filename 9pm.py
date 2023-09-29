@@ -193,7 +193,8 @@ def parse_suite(fpath, pname, options, name=None):
         if 'suite' in entry:
             fpath = os.path.join(cur, entry['suite'])
             if 'opts' in entry:
-                opts = [o.replace('<scratch>', SCRATCHDIR) for o in entry['opts']]
+                opts = [o.replace('<base>', cur) for o in entry['opts']]
+                opts = [o.replace('<scratch>', SCRATCHDIR) for o in opts]
                 opts = lmerge(opts, options)
             else:
                 opts = options.copy()
