@@ -27,11 +27,12 @@ namespace eval ::9pm::ssh {
         if {$keyfile != ""} {
             append ssh_cmd " -i $keyfile"
         }
-        if {$args != ""} {
-            append ssh_cmd " $args"
+        foreach arg $args {
+            append ssh_cmd " $arg"
         }
 
         ::9pm::output::debug "Connecting to \"$hostname\""
+        ::9pm::output::debug "Running: \"$ssh_cmd\""
 
         expect *
         send "$ssh_cmd\n"
