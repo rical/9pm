@@ -28,4 +28,4 @@ jobs:
       run: python3 9pm.py --option cmdl-supplied unit_tests/auto.yaml
 
     - name: Publish Test Result
-      run: cat ~/9pm_log/last/result.md >> $GITHUB_STEP_SUMMARY
+      run: cat ~/9pm_log/last/result-gh.md >> $GITHUB_STEP_SUMMARY

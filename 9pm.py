@@ -240,20 +240,43 @@ def parse_suite(fpath, pname, options, name=None):
             sys.exit(1)
     return suite
 
-def write_result_md_tree(md, data, base):
+def get_github_emoji(result):
+    if result == "pass":
+        return ":white_check_mark:"
+    if result == "fail":
+        return ":red_circle:"
+    if result == "skip":
+        return ":large_orange_diamond:"
+    if result == "masked-fail":
+        return ":o:"
+    if result == "masked-skip":
+        return ":small_orange_diamond:"
+
+    return result
+
+def write_result_md_tree(md, gh, data, base):
     for test in data['suite']:
         with open(md, 'a') as file:
             file.write("{}- {} : {}\n".format(base, test['result'].upper(), test['name']))
 
-        if 'suite' in test:
-            write_result_md_tree(md, test, base + "  ")
+        with open(gh, 'a') as file:
+            mark = get_github_emoji(test['result'])
+            file.write("{}- {} : {}\n".format(base, mark, test['name']))
 
-def write_result_md(data):
+        if 'suite' in test:
+            write_result_md_tree(md, gh, test, base + "  ")
+
+def write_result_files(data):
     md = os.path.join(LOGDIR, 'result.md')
+    gh = os.path.join(LOGDIR, 'result-gh.md')
 
     with open(md, 'a') as file:
         file.write("# Test Result\n")
-    write_result_md_tree(md, data, "")
+
+    with open(gh, 'a') as file:
+        file.write("# Test Result\n")
+
+    write_result_md_tree(md, gh, data, "")
 
 def print_result_tree(data, base):
     i = 1
@@ -509,7 +532,7 @@ def main():
         cprint(pcolor.green, "\no Execution")
 
     print_result_tree(cmdl, "")
-    write_result_md(cmdl)
+    write_result_files(cmdl)
 
     db.close()
     sys.exit(err)
