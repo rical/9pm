@@ -28,4 +28,6 @@ jobs:
       run: python3 9pm.py --option cmdl-supplied unit_tests/auto.yaml
 
     - name: Publish Test Result
+      # Ensure this runs even if unit tests fails
+      if: always()
       run: cat ~/9pm_log/last/result-gh.md >> $GITHUB_STEP_SUMMARY
