@@ -101,8 +101,10 @@ def run_onfail(cmdline, test):
     if 'options' in test:
         args.extend(test['options'])
 
+    dirname = os.path.dirname(test['case'])
+
     onfail = {}
-    onfail['case'] = os.path.join(test['path'], test['onfail'])
+    onfail['case'] = os.path.join(dirname, test['onfail'])
     onfail['name'] = 'onfail'
 
     print("\n{}Running onfail \"{}\" for test {}{}" . format(pcolor.cyan, test['onfail'],
@@ -235,7 +237,6 @@ def parse_suite(fpath, pname, options, name=None):
                 case['mask'] = entry['mask']
 
             case['case'] = os.path.join(cur, entry['case'])
-            case['path'] = cur
             if not os.path.isfile(case['case']):
                 print("error, test case not found {}" . format(case['case']))
                 print("(referenced from {})" . format(fpath))
