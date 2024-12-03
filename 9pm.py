@@ -149,7 +149,7 @@ def run_test(cmdline, test):
 def prefix_name(name):
     global TEST_CNT
     TEST_CNT += 1
-    return str(TEST_CNT).zfill(4) + "-" + name
+    return str(TEST_CNT).zfill(4) + "-" + name.replace(" ", "-")
 
 def gen_name(filename):
     return prefix_name(os.path.basename(filename))
