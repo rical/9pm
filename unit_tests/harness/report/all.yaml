@@ -1,0 +1,10 @@
+---
+- settings:
+    test-spec: Readme.adoc
+
+- case: "test.pl"
+
+- case: "test.pl"
+  name: "static-named"
+
+- suite: "dynamic/dynamic.yaml"

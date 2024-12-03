@@ -10,6 +10,7 @@ import tempfile
 import shutil
 import re
 import atexit
+import hashlib
 from datetime import datetime
 
 TEST_CNT=0
@@ -101,6 +102,13 @@ def execute(args, test, output_log):
 
     return skip_suite, test_skip, err
 
+def calculate_sha1sum(path):
+    sha1 = hashlib.sha1()
+    with open(path, "rb") as file:
+        for chunk in iter(lambda: file.read(4096), b""):
+            sha1.update(chunk)
+    return sha1.hexdigest()
+
 def run_onfail(cmdline, test):
     args = []
     if 'options' in test:
@@ -187,6 +195,16 @@ def parse_yaml(path):
             return -1
     return data
 
+def get_test_spec_path(case_path, test_spec):
+    case_dirname = os.path.dirname(case_path)
+    case_basename = os.path.basename(case_path)
+    case_name = os.path.splitext(case_basename)[0]
+
+    test_spec = test_spec.replace('<case>', case_name)
+
+    return  os.path.join(case_dirname, test_spec)
+
+
 def parse_suite(suite_path, parent_suite_path, options, name=None):
     suite = {}
     suite['suite'] = []
@@ -252,6 +270,14 @@ def parse_suite(suite_path, parent_suite_path, options, name=None):
                 case['mask'] = entry['mask']
 
             case['case'] = os.path.join(suite_dirname, entry['case'])
+
+            if 'settings' in suite:
+                if 'test-spec' in suite['settings']:
+                    test_spec_path = get_test_spec_path(case['case'], suite['settings']['test-spec'])
+                    if os.path.exists(test_spec_path):
+                        case['test-spec'] = test_spec_path
+                        case['test-spec-sha'] = calculate_sha1sum(test_spec_path)
+
             if not os.path.isfile(case['case']):
                 print("error, test case not found {}" . format(case['case']))
                 print("(referenced from {})" . format(suite_path))
@@ -267,43 +293,115 @@ def parse_suite(suite_path, parent_suite_path, options, name=None):
             sys.exit(1)
     return suite
 
-def get_github_emoji(result):
-    if result == "pass":
-        return ":white_check_mark:"
-    if result == "fail":
-        return ":red_circle:"
-    if result == "skip":
-        return ":large_orange_diamond:"
-    if result == "masked-fail":
-        return ":o:"
-    if result == "masked-skip":
-        return ":small_orange_diamond:"
-
-    return result
-
-def write_result_md_tree(md, gh, data, base):
+def write_report_result_tree(file, includes, data, depth):
     for test in data['suite']:
-        with open(md, 'a') as file:
-            file.write("{}- {} : {}\n".format(base, test['result'].upper(), test['name']))
+        indent = '  ' * depth
+        stars = '*' + '*' * depth
 
-        with open(gh, 'a') as file:
-            mark = get_github_emoji(test['result'])
-            file.write("{}- {} : {}\n".format(base, mark, test['name']))
+        string = f"{indent}"
+        string += f"{stars}"
+        string += f" [.{test['result']}]#{test['result'].upper()}#"
+        if 'outfile' in test:
+            string += f" <<output-{test['name']},{test['name']}>>"
+        else:
+            string += f" {test['name']}"
+
+        # Append (Spec) if there's a test specification
+        if 'test-spec' in test:
+            if test['test-spec-sha'] not in includes:
+                includes.append(test['test-spec-sha'])
+
+            include_dir = os.path.join(LOGDIR, "report-incl")
+            os.makedirs(include_dir, exist_ok=True)
+            # We ignore potential overwrites
+            shutil.copy(test['test-spec'], os.path.join(include_dir, test['test-spec-sha']))
+
+            string += f" <<incl-{test['test-spec-sha']},(Spec)>>"
+
+        file.write(f"{string}\n")
 
         if 'suite' in test:
-            write_result_md_tree(md, gh, test, base + "  ")
+            write_report_result_tree(file, includes, test, depth + 1)
 
-def write_result_files(data):
-    md = os.path.join(LOGDIR, 'result.md')
-    gh = os.path.join(LOGDIR, 'result-gh.md')
+def write_report_includes(file, includes, data, depth):
+    for sha1sum in includes:
+        # Note: not having incl- and breaks asciidoctor
+        file.write(f"\n[[incl-{sha1sum}]]\n")
+        file.write("include::{}[]\n" . format(os.path.join("report-incl", sha1sum)))
 
-    with open(md, 'a') as file:
+def write_report_output(file, data, depth):
+    for test in data['suite']:
+
+        if 'outfile' in test:
+            if 'test-spec-sha' in test:
+                file.write(f"\n=== <<incl-{test['test-spec-sha']},{test['name']}>>\n")
+            else:
+                file.write(f"\n=== {test['name']}\n")
+
+            file.write(f"\n[[output-{test['name']}]]\n")
+            file.write(f"----\n")
+            file.write(f"include::{test['outfile']}[]\n")
+            file.write(f"----\n")
+
+        if 'suite' in test:
+            write_report_output(file, test, depth + 1)
+
+def write_report(data):
+    with open(os.path.join(LOGDIR, 'report.adoc'), 'a') as file:
+        current_date = datetime.now().strftime("%Y-%m-%d")
+        file.write("= 9pm Test Report\n")
+        file.write("Author: 9pm Test Framework\n")
+        file.write(f"Date: {current_date}\n")
+        file.write(":toc: left\n")
+        file.write(":toc-title: INDEX\n")
+        file.write(":sectnums:\n")
+        file.write(":pdf-page-size: A4\n")
+
+        file.write("\n== Test Result\n\n")
+
+        includes = []
+        write_report_result_tree(file, includes, data, 0)
+
+        file.write("\n<<<\n")
+        file.write("\n== Test Output\n")
+        write_report_output(file, data, 0)
+
+        file.write("\n<<<\n")
+        file.write("\n== Test Specification\n")
+        write_report_includes(file, includes, data, 0)
+
+
+def write_github_result_tree(file, data, depth):
+    icon_map = {
+        "pass": ":white_check_mark:",
+        "fail": ":red_circle:",
+        "skip": ":large_orange_diamond:",
+        "masked-fail": ":o:",
+        "masked-skip": ":small_orange_diamond:",
+    }
+    for test in data['suite']:
+        mark = icon_map.get(test['result'], "")
+        file.write("{}- {} : {}\n".format('  ' * depth, mark, test['name']))
+
+        if 'suite' in test:
+            write_github_result_tree(file, test, depth + 1)
+
+def write_github_result(data):
+    with open(os.path.join(LOGDIR, 'result-gh.md'), 'a') as file:
         file.write("# Test Result\n")
+        write_github_result_tree(file, data, 0)
 
-    with open(gh, 'a') as file:
+def write_md_result_tree(file, data, depth):
+    for test in data['suite']:
+        file.write("{}- {} : {}\n".format('  ' * depth, test['result'].upper(), test['name']))
+
+        if 'suite' in test:
+            write_md_result_tree(file, test, depth + 1)
+
+def write_md_result(data):
+    with open(os.path.join(LOGDIR, 'result.md'), 'a') as file:
         file.write("# Test Result\n")
-
-    write_result_md_tree(md, gh, data, "")
+        write_md_result_tree(file, data, 0)
 
 def print_result_tree(data, base):
     i = 1
@@ -563,7 +661,9 @@ def main():
         cprint(pcolor.green, "\no Execution")
 
     print_result_tree(cmdl, "")
-    write_result_files(cmdl)
+    write_md_result(cmdl)
+    write_github_result(cmdl)
+    write_report(cmdl)
 
     db.close()
     sys.exit(err)
