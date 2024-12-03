@@ -217,9 +217,9 @@ def parse_suite(fpath, pname, options, name=None):
             case = {}
 
             if 'name' in entry:
-                name = entry['name']
+                case['name'] = prefix_name(entry['name'])
             else:
-                name = os.path.basename(entry['case'])
+                case['name'] = gen_name(entry['case'])
 
             if 'opts' in entry:
                 opts = [o.replace('<base>', cur) for o in entry['opts']]
@@ -236,7 +236,6 @@ def parse_suite(fpath, pname, options, name=None):
 
             case['case'] = os.path.join(cur, entry['case'])
             case['path'] = cur
-            case['name'] = prefix_name(name)
             if not os.path.isfile(case['case']):
                 print("error, test case not found {}" . format(case['case']))
                 print("(referenced from {})" . format(fpath))
