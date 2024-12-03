@@ -44,11 +44,14 @@ def cprint(color, *args, **kwargs):
     print(*args, **kwargs)
     sys.stdout.write(pcolor.reset)
 
-def execute(args, test):
+def execute(args, test, log):
     proc = subprocess.Popen([test['case']] + args, stdout=subprocess.PIPE)
     skip_suite = False
     test_skip = False
     err = False
+
+    if args:
+        log.write(f"Starting with arguments: {args}\n\n")
 
     while True:
         line = proc.stdout.readline().decode('utf-8')
@@ -64,6 +67,8 @@ def execute(args, test):
         skip = re.search('^ok (\d+) # skip', string)
         skip_suite = re.search('^ok (\d+) # skip suite', string)
         comment = re.search('^\w*#', string)
+
+        log.write(f"{stamp} {string}\n")
 
         if plan:
             cprint(pcolor.purple, '{} {}'.format(stamp, string))
@@ -121,7 +126,9 @@ def run_onfail(cmdline, test):
     if cmdline.debug:
         print("Executing onfail {} for test {}" . format(onfail['case'], test['case']))
 
-    execute(args, onfail)
+    with open(os.path.join(LOGDIR, "on-fail.log"), 'a') as log:
+        log.write(f"\n\nON FAIL START")
+        execute(args, onfail, log)
 
 def run_test(cmdline, test):
     args = []
@@ -137,7 +144,8 @@ def run_test(cmdline, test):
     if cmdline.debug:
         print("Executing:", [test['case']] + args)
 
-    skip_suite, skip, err = execute(args, test)
+    with open(test['logfile'], 'a') as log:
+        skip_suite, skip, err = execute(args, test, log)
 
     if 'plan' not in test:
         print("test error, no plan")
@@ -163,6 +171,9 @@ def prefix_name(name):
 
 def gen_name(filename):
     return prefix_name(os.path.basename(filename))
+
+def gen_logfile(name):
+    return os.path.join(LOGDIR, "output", os.path.splitext(name)[0] + ".log")
 
 def lmerge(a, b):
     new = a.copy()
@@ -238,6 +249,8 @@ def parse_suite(suite_path, parent_suite_path, options, name=None):
                 case['name'] = prefix_name(entry['name'])
             else:
                 case['name'] = gen_name(entry['case'])
+
+            case['logfile'] = gen_logfile(case['name'])
 
             if 'opts' in entry:
                 opts = [o.replace('<base>', suite_dirname) for o in entry['opts']]
@@ -544,6 +557,7 @@ def setup_log_dir(log_path):
     dir_name = now.strftime('%Y-%m-%d_%H-%M-%S-%f')
     log_dir = os.path.join(log_path, dir_name)
     os.makedirs(log_dir)
+    os.makedirs(os.path.join(log_dir, "output"))
 
     last_link =os.path.join(log_path, "last")
     if os.path.islink(last_link):
@@ -612,7 +626,10 @@ def main():
         if filename.endswith('.yaml'):
             cmdl['suite'].append(parse_suite(fpath, "command-line", args.option))
         else:
-            test = {"case": fpath, "name": gen_name(filename)}
+            test = {}
+            test['case'] =  fpath
+            test['name'] = gen_name(filename)
+            test['logfile'] = gen_logfile(test['name'])
 
             if args.option:
                 test["options"] = args.option
