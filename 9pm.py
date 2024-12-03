@@ -189,6 +189,16 @@ def parse_suite(fpath, pname, options, name=None):
 
     data = parse_yaml(fpath)
     pname = fpath
+
+    # Pre parse suite
+    for entry in data:
+        if 'settings' in entry:
+            if entry['settings'] is None:
+                print(f"error, empty \"settings\" in suite {suite['fpath']}, invalid indent?")
+                sys.exit(1)
+
+            suite['settings'] = entry['settings']
+
     for entry in data:
         if 'suite' in entry:
             fpath = os.path.join(cur, entry['suite'])
@@ -235,8 +245,10 @@ def parse_suite(fpath, pname, options, name=None):
                 print("error, test case not executable {}".format(case['case']))
                 sys.exit(1)
             suite['suite'].append(case)
+        elif 'settings' in entry:
+            pass # Handled by preparser
         else:
-            print("error, missing suite/case in suite {}".format(suite['name']))
+            print("error, missing suite/case/settings in suite {}".format(suite['name']))
             sys.exit(1)
     return suite
 
