@@ -1,0 +1,54 @@
+extends: default
+font:
+  catalog:
+    merge: true
+    SourceCodePro:
+      normal: SourceCodePro-Regular.ttf
+      bold: SourceCodePro-Bold.ttf
+      italic: SourceCodePro-Italic.ttf
+      bold-italic: SourceCodePro-BoldItalic.ttf
+
+base:
+  font-family: SourceCodePro
+  font-size: 10
+  line-height-length: 1.3
+  font-color: #1f2937
+
+code:
+  background-color: #ffffff
+  border-color: #ffffff
+
+heading:
+  font-family: SourceCodePro
+  font-style: bold
+
+role:
+  underline:
+    text-decoration: underline
+  pass:
+    font-color: #14532d
+    font-style: bold
+  fail:
+    font-color: #b91c1c
+    font-style: bold
+  skip:
+    font-color: #eab308
+    font-style: bold
+
+link:
+    font-color: #1f2937
+    text-decoration: underline
+
+heading-h1:
+  font-size: 24
+
+heading-h2:
+  font-size: 18
+
+heading-h3:
+  font-size: 12
+  margin-top: 30
+  text-decoration: underline
+
+heading-h4:
+  font-size: 11
