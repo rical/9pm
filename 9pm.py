@@ -172,48 +172,46 @@ def parse_yaml(path):
             return -1
     return data
 
-def parse_suite(fpath, pname, options, name=None):
+def parse_suite(suite_path, parent_suite_path, options, name=None):
     suite = {}
-    suite['fpath'] = fpath
     suite['suite'] = []
     suite['result'] = "pending"
-    cur = os.path.dirname(fpath)
+    suite_dirname = os.path.dirname(suite_path)
 
     if name:
-        suite['name'] = name
+        suite['name'] = prefix_name(name)
     else:
-        suite['name'] = gen_name(fpath)
+        suite['name'] = gen_name(suite_path)
 
-    if not os.path.isfile(fpath):
-        print("error, test suite not found {}" . format(fpath))
-        print("(referenced from {})" . format(pname))
+    if not os.path.isfile(suite_path):
+        print("error, test suite not found {}" . format(suite_path))
+        print("(referenced from {})" . format(parent_suite_path))
         sys.exit(1)
 
-    data = parse_yaml(fpath)
-    pname = fpath
+    data = parse_yaml(suite_path)
 
     # Pre parse suite
     for entry in data:
         if 'settings' in entry:
             if entry['settings'] is None:
-                print(f"error, empty \"settings\" in suite {suite['fpath']}, invalid indent?")
+                print(f"error, empty \"settings\" in suite {suite['suite_path']}, invalid indent?")
                 sys.exit(1)
 
             suite['settings'] = entry['settings']
 
     for entry in data:
         if 'suite' in entry:
-            fpath = os.path.join(cur, entry['suite'])
+            next_suite_path = os.path.join(suite_dirname, entry['suite'])
             if 'opts' in entry:
-                opts = [o.replace('<base>', cur) for o in entry['opts']]
+                opts = [o.replace('<base>', suite_dirname) for o in entry['opts']]
                 opts = [o.replace('<scratch>', SCRATCHDIR) for o in opts]
                 opts = lmerge(opts, options)
             else:
                 opts = options.copy()
             if 'name' in entry:
-                suite['suite'].append(parse_suite(fpath, pname, opts, prefix_name(entry['name'])))
+                suite['suite'].append(parse_suite(next_suite_path, suite_path, opts, entry['name']))
             else:
-                suite['suite'].append(parse_suite(fpath, pname, opts))
+                suite['suite'].append(parse_suite(next_suite_path, suite_path, opts))
 
         elif 'case' in entry:
             case = {}
@@ -224,7 +222,7 @@ def parse_suite(fpath, pname, options, name=None):
                 case['name'] = gen_name(entry['case'])
 
             if 'opts' in entry:
-                opts = [o.replace('<base>', cur) for o in entry['opts']]
+                opts = [o.replace('<base>', suite_dirname) for o in entry['opts']]
                 opts = [o.replace('<scratch>', SCRATCHDIR) for o in opts]
                 case['options'] = lmerge(opts, options)
             else:
@@ -236,10 +234,10 @@ def parse_suite(fpath, pname, options, name=None):
             if 'mask' in entry:
                 case['mask'] = entry['mask']
 
-            case['case'] = os.path.join(cur, entry['case'])
+            case['case'] = os.path.join(suite_dirname, entry['case'])
             if not os.path.isfile(case['case']):
                 print("error, test case not found {}" . format(case['case']))
-                print("(referenced from {})" . format(fpath))
+                print("(referenced from {})" . format(suite_path))
                 sys.exit(1)
             if not os.access(case['case'], os.X_OK):
                 print("error, test case not executable {}".format(case['case']))
@@ -517,11 +515,11 @@ def main():
         print("Created databasefile: {}".format(db.name))
     DATABASE = db.name
 
-    cmdl = {'name': 'cmdl', 'suite': []}
+    cmdl = {'name': 'command-line', 'suite': []}
     for filename in args.suites:
         fpath = os.path.join(os.getcwd(), filename)
         if filename.endswith('.yaml'):
-            cmdl['suite'].append(parse_suite(fpath, "command line", args.option))
+            cmdl['suite'].append(parse_suite(fpath, "command-line", args.option))
         else:
             test = {"case": fpath, "name": gen_name(filename)}
 
