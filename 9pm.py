@@ -306,7 +306,7 @@ def write_test_report_result(test, path, includes, depth):
         string = f"{indent}"
         string += f"{stars}"
         string += f" [.{test['result']}]#{test['result'].upper()}#"
-        string += " - "
+        string += f" - {test['name']}"
 
         if 'test-spec' in test:
             sha1sum = calculate_sha1sum(test['test-spec'])
@@ -318,7 +318,7 @@ def write_test_report_result(test, path, includes, depth):
             # We ignore potential overwrites
             shutil.copy(test['test-spec'], os.path.join(include_dir, sha1sum))
 
-            string += f"<<adoc-{sha1sum},{test['name']}>>"
+            string += f" <<adoc-{sha1sum},(Spec)>>"
         else:
             string += f"{test['name']}"
 
