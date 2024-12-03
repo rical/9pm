@@ -10,6 +10,7 @@ import tempfile
 import shutil
 import re
 import atexit
+import hashlib
 from datetime import datetime
 
 TEST_CNT=0
@@ -96,6 +97,13 @@ def execute(args, test):
 
     return skip_suite, test_skip, err
 
+def calculate_sha1sum(path):
+    sha1 = hashlib.sha1()
+    with open(path, "rb") as file:
+        for chunk in iter(lambda: file.read(4096), b""):
+            sha1.update(chunk)
+    return sha1.hexdigest()
+
 def run_onfail(cmdline, test):
     args = []
     if 'options' in test:
@@ -172,6 +180,16 @@ def parse_yaml(path):
             return -1
     return data
 
+def get_test_spec_path(case_path, test_spec):
+    case_dirname = os.path.dirname(case_path)
+    case_basename = os.path.basename(case_path)
+    case_name = os.path.splitext(case_basename)[0]
+
+    test_spec = test_spec.replace('<case>', case_name)
+
+    return  os.path.join(case_dirname, test_spec)
+
+
 def parse_suite(suite_path, parent_suite_path, options, name=None):
     suite = {}
     suite['suite'] = []
@@ -235,6 +253,13 @@ def parse_suite(suite_path, parent_suite_path, options, name=None):
                 case['mask'] = entry['mask']
 
             case['case'] = os.path.join(suite_dirname, entry['case'])
+
+            if 'settings' in suite:
+                if 'test-spec' in suite['settings']:
+                    test_spec_path = get_test_spec_path(case['case'], suite['settings']['test-spec'])
+                    if os.path.exists(test_spec_path):
+                        case['test-spec'] = test_spec_path
+
             if not os.path.isfile(case['case']):
                 print("error, test case not found {}" . format(case['case']))
                 print("(referenced from {})" . format(suite_path))
@@ -264,21 +289,73 @@ def get_github_emoji(result):
 
     return result
 
-def write_result_md_tree(md, gh, data, base):
-    for test in data['suite']:
-        with open(md, 'a') as file:
-            file.write("{}- {} : {}\n".format(base, test['result'].upper(), test['name']))
+def write_md_result_data(test, path, depth):
+    with open(path, 'a') as file:
+        file.write("{}- {} : {}\n".format('  ' * depth, test['result'].upper(), test['name']))
 
-        with open(gh, 'a') as file:
-            mark = get_github_emoji(test['result'])
-            file.write("{}- {} : {}\n".format(base, mark, test['name']))
+def write_github_result_data(test, path, depth):
+    with open(path, 'a') as file:
+        mark = get_github_emoji(test['result'])
+        file.write("{}- {} : {}\n".format('  ' * depth, mark, test['name']))
+
+def write_test_report_result(test, path, includes, depth):
+    with open(path, 'a') as file:
+        indent = '  ' * depth
+        stars = '*' + '*' * depth
+
+        string = f"{indent}"
+        string += f"{stars}"
+        string += f" [.{test['result']}]#{test['result'].upper()}#"
+        string += " - "
+
+        if 'test-spec' in test:
+            sha1sum = calculate_sha1sum(test['test-spec'])
+            if sha1sum not in includes:
+                includes.append(sha1sum)
+
+            include_dir = os.path.join(LOGDIR, "adoc")
+            os.makedirs(include_dir, exist_ok=True)
+            # We ignore potential overwrites
+            shutil.copy(test['test-spec'], os.path.join(include_dir, sha1sum))
+
+            string += f"<<adoc-{sha1sum},{test['name']}>>"
+        else:
+            string += f"{test['name']}"
+
+        file.write(f"{string}\n")
+
+def write_result_tree(md, gh, adoc, adoc_incl, data, depth):
+    for test in data['suite']:
+        write_md_result_data(test, md, depth)
+        write_github_result_data(test, gh, depth)
+        write_test_report_result(test, adoc, adoc_incl, depth)
 
         if 'suite' in test:
-            write_result_md_tree(md, gh, test, base + "  ")
+            write_result_tree(md, gh, adoc, adoc_incl, test, depth + 1)
+
+def get_adoc_spec_file(path):
+    dirname = os.path.dirname(path)
+
+    if os.path.exists(os.path.join(dirname, "Readme.adoc")):
+        return os.path.join(dirname, "Readme.adoc")
+
+    if os.path.exists(os.path.splitext(path)[0] + ".adoc"):
+        return os.path.splitext(path)[0] + ".adoc"
+
+    return None
+
+def write_test_report_spec(adoc, adoc_incl, data, depth):
+    with open(adoc, 'a') as file:
+        file.write("\n== Test Specification\n")
+
+        for sha1sum in adoc_incl:
+            # Note: not having spec- and breaks asciidoctor
+                file.write("\n[[adoc-{}]]\ninclude::{}[]\n".  format(sha1sum, os.path.join("adoc", sha1sum)))
 
 def write_result_files(data):
     md = os.path.join(LOGDIR, 'result.md')
     gh = os.path.join(LOGDIR, 'result-gh.md')
+    adoc = os.path.join(LOGDIR, 'result.adoc')
 
     with open(md, 'a') as file:
         file.write("# Test Result\n")
@@ -286,7 +363,21 @@ def write_result_files(data):
     with open(gh, 'a') as file:
         file.write("# Test Result\n")
 
-    write_result_md_tree(md, gh, data, "")
+    with open(adoc, 'a') as file:
+        current_date = datetime.now().strftime("%Y-%m-%d")
+        file.write("= Test Report\n")
+        file.write("Author: Test Framework\n")
+        file.write(f"Date: {current_date}\n")
+        file.write(":toc: left\n")
+        file.write(":toc-title: INDEX\n")
+        file.write(":sectnums:\n")
+        file.write(":pdf-page-size: A4\n")
+
+        file.write("\n== Test Result\n\n")
+
+    adoc_incl = []
+    write_result_tree(md, gh, adoc, adoc_incl, data, 0)
+    write_test_report_spec(adoc, adoc_incl, data, 0)
 
 def print_result_tree(data, base):
     i = 1

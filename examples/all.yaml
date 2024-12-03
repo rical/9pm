@@ -1,6 +1,10 @@
 ---
+- settings:
+    test-spec: <case>.adoc
+
 - case: "cases/bash.sh"
 - case: "cases/python.py"
+- case: "cases/perl/test.pl"
 
 - case: "cases/bash.sh"
   name: "bash-with-no-options"
@@ -15,3 +19,7 @@
   name: "nested-suite"
   opts:
     - "opt-from-all"
+
+- case: "cases/on-fail/bash.sh"
+  name: "bash-run-onfail-cleanup"
+  onfail: "cleanup.sh"
