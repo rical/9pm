@@ -29,3 +29,9 @@ jobs:
 
     - name: Publish Test Result
       run: cat ~/9pm_log/last/result-gh.md >> $GITHUB_STEP_SUMMARY
+
+    - name: Upload Logs as Artifacts
+      uses: actions/upload-artifact@v3
+      with:
+        name: 9pm-logs
+        path: ~/9pm_log/
