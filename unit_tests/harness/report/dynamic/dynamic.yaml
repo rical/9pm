@@ -1,0 +1,8 @@
+---
+- settings:
+    test-spec: <case>.adoc
+
+- case: "bash.sh"
+
+- case: "bash.sh"
+  name: "dynamic-named"

@@ -9,7 +9,7 @@ understand in the context of 9pm.
 # Execution
 Start the all.yaml test suite with
 
-`./9pm.py examples/all.yaml examples/bash.sh`
+`./9pm.py examples/all.yaml examples/cases/bash.sh`
 
 The end result tree should look something like:
 

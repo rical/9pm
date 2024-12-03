@@ -10,6 +10,7 @@ import tempfile
 import shutil
 import re
 import atexit
+import hashlib
 from datetime import datetime
 
 TEST_CNT=0
@@ -43,11 +44,14 @@ def cprint(color, *args, **kwargs):
     print(*args, **kwargs)
     sys.stdout.write(pcolor.reset)
 
-def execute(args, test):
+def execute(args, test, log):
     proc = subprocess.Popen([test['case']] + args, stdout=subprocess.PIPE)
     skip_suite = False
     test_skip = False
     err = False
+
+    if args:
+        log.write(f"Starting with arguments: {args}\n\n")
 
     while True:
         line = proc.stdout.readline().decode('utf-8')
@@ -63,6 +67,8 @@ def execute(args, test):
         skip = re.search('^ok (\d+) # skip', string)
         skip_suite = re.search('^ok (\d+) # skip suite', string)
         comment = re.search('^\w*#', string)
+
+        log.write(f"{stamp} {string}\n")
 
         if plan:
             cprint(pcolor.purple, '{} {}'.format(stamp, string))
@@ -96,13 +102,22 @@ def execute(args, test):
 
     return skip_suite, test_skip, err
 
+def calculate_sha1sum(path):
+    sha1 = hashlib.sha1()
+    with open(path, "rb") as file:
+        for chunk in iter(lambda: file.read(4096), b""):
+            sha1.update(chunk)
+    return sha1.hexdigest()
+
 def run_onfail(cmdline, test):
     args = []
     if 'options' in test:
         args.extend(test['options'])
 
+    dirname = os.path.dirname(test['case'])
+
     onfail = {}
-    onfail['case'] = os.path.join(test['path'], test['onfail'])
+    onfail['case'] = os.path.join(dirname, test['onfail'])
     onfail['name'] = 'onfail'
 
     print("\n{}Running onfail \"{}\" for test {}{}" . format(pcolor.cyan, test['onfail'],
@@ -111,7 +126,9 @@ def run_onfail(cmdline, test):
     if cmdline.debug:
         print("Executing onfail {} for test {}" . format(onfail['case'], test['case']))
 
-    execute(args, onfail)
+    with open(os.path.join(LOGDIR, "on-fail.log"), 'a') as log:
+        log.write(f"\n\nON FAIL START")
+        execute(args, onfail, log)
 
 def run_test(cmdline, test):
     args = []
@@ -127,7 +144,8 @@ def run_test(cmdline, test):
     if cmdline.debug:
         print("Executing:", [test['case']] + args)
 
-    skip_suite, skip, err = execute(args, test)
+    with open(test['logfile'], 'a') as log:
+        skip_suite, skip, err = execute(args, test, log)
 
     if 'plan' not in test:
         print("test error, no plan")
@@ -149,10 +167,13 @@ def run_test(cmdline, test):
 def prefix_name(name):
     global TEST_CNT
     TEST_CNT += 1
-    return str(TEST_CNT).zfill(4) + "-" + name
+    return str(TEST_CNT).zfill(4) + "-" + name.replace(" ", "-")
 
 def gen_name(filename):
     return prefix_name(os.path.basename(filename))
+
+def gen_logfile(name):
+    return os.path.join(LOGDIR, "output", os.path.splitext(name)[0] + ".log")
 
 def lmerge(a, b):
     new = a.copy()
@@ -170,49 +191,69 @@ def parse_yaml(path):
             return -1
     return data
 
-def parse_suite(fpath, pname, options, name=None):
+def get_test_spec_path(case_path, test_spec):
+    case_dirname = os.path.dirname(case_path)
+    case_basename = os.path.basename(case_path)
+    case_name = os.path.splitext(case_basename)[0]
+
+    test_spec = test_spec.replace('<case>', case_name)
+
+    return  os.path.join(case_dirname, test_spec)
+
+
+def parse_suite(suite_path, parent_suite_path, options, name=None):
     suite = {}
-    suite['fpath'] = fpath
     suite['suite'] = []
     suite['result'] = "pending"
-    cur = os.path.dirname(fpath)
+    suite_dirname = os.path.dirname(suite_path)
 
     if name:
-        suite['name'] = name
+        suite['name'] = prefix_name(name)
     else:
-        suite['name'] = gen_name(fpath)
+        suite['name'] = gen_name(suite_path)
 
-    if not os.path.isfile(fpath):
-        print("error, test suite not found {}" . format(fpath))
-        print("(referenced from {})" . format(pname))
+    if not os.path.isfile(suite_path):
+        print("error, test suite not found {}" . format(suite_path))
+        print("(referenced from {})" . format(parent_suite_path))
         sys.exit(1)
 
-    data = parse_yaml(fpath)
-    pname = fpath
+    data = parse_yaml(suite_path)
+
+    # Pre parse suite
+    for entry in data:
+        if 'settings' in entry:
+            if entry['settings'] is None:
+                print(f"error, empty \"settings\" in suite {suite['suite_path']}, invalid indent?")
+                sys.exit(1)
+
+            suite['settings'] = entry['settings']
+
     for entry in data:
         if 'suite' in entry:
-            fpath = os.path.join(cur, entry['suite'])
+            next_suite_path = os.path.join(suite_dirname, entry['suite'])
             if 'opts' in entry:
-                opts = [o.replace('<base>', cur) for o in entry['opts']]
+                opts = [o.replace('<base>', suite_dirname) for o in entry['opts']]
                 opts = [o.replace('<scratch>', SCRATCHDIR) for o in opts]
                 opts = lmerge(opts, options)
             else:
                 opts = options.copy()
             if 'name' in entry:
-                suite['suite'].append(parse_suite(fpath, pname, opts, prefix_name(entry['name'])))
+                suite['suite'].append(parse_suite(next_suite_path, suite_path, opts, entry['name']))
             else:
-                suite['suite'].append(parse_suite(fpath, pname, opts))
+                suite['suite'].append(parse_suite(next_suite_path, suite_path, opts))
 
         elif 'case' in entry:
             case = {}
 
             if 'name' in entry:
-                name = entry['name']
+                case['name'] = prefix_name(entry['name'])
             else:
-                name = os.path.basename(entry['case'])
+                case['name'] = gen_name(entry['case'])
+
+            case['logfile'] = gen_logfile(case['name'])
 
             if 'opts' in entry:
-                opts = [o.replace('<base>', cur) for o in entry['opts']]
+                opts = [o.replace('<base>', suite_dirname) for o in entry['opts']]
                 opts = [o.replace('<scratch>', SCRATCHDIR) for o in opts]
                 case['options'] = lmerge(opts, options)
             else:
@@ -224,19 +265,26 @@ def parse_suite(fpath, pname, options, name=None):
             if 'mask' in entry:
                 case['mask'] = entry['mask']
 
-            case['case'] = os.path.join(cur, entry['case'])
-            case['path'] = cur
-            case['name'] = prefix_name(name)
+            case['case'] = os.path.join(suite_dirname, entry['case'])
+
+            if 'settings' in suite:
+                if 'test-spec' in suite['settings']:
+                    test_spec_path = get_test_spec_path(case['case'], suite['settings']['test-spec'])
+                    if os.path.exists(test_spec_path):
+                        case['test-spec'] = test_spec_path
+
             if not os.path.isfile(case['case']):
                 print("error, test case not found {}" . format(case['case']))
-                print("(referenced from {})" . format(fpath))
+                print("(referenced from {})" . format(suite_path))
                 sys.exit(1)
             if not os.access(case['case'], os.X_OK):
                 print("error, test case not executable {}".format(case['case']))
                 sys.exit(1)
             suite['suite'].append(case)
+        elif 'settings' in entry:
+            pass # Handled by preparser
         else:
-            print("error, missing suite/case in suite {}".format(suite['name']))
+            print("error, missing suite/case/settings in suite {}".format(suite['name']))
             sys.exit(1)
     return suite
 
@@ -254,21 +302,73 @@ def get_github_emoji(result):
 
     return result
 
-def write_result_md_tree(md, gh, data, base):
-    for test in data['suite']:
-        with open(md, 'a') as file:
-            file.write("{}- {} : {}\n".format(base, test['result'].upper(), test['name']))
+def write_md_result_data(test, path, depth):
+    with open(path, 'a') as file:
+        file.write("{}- {} : {}\n".format('  ' * depth, test['result'].upper(), test['name']))
 
-        with open(gh, 'a') as file:
-            mark = get_github_emoji(test['result'])
-            file.write("{}- {} : {}\n".format(base, mark, test['name']))
+def write_github_result_data(test, path, depth):
+    with open(path, 'a') as file:
+        mark = get_github_emoji(test['result'])
+        file.write("{}- {} : {}\n".format('  ' * depth, mark, test['name']))
+
+def write_test_report_result(test, path, includes, depth):
+    with open(path, 'a') as file:
+        indent = '  ' * depth
+        stars = '*' + '*' * depth
+
+        string = f"{indent}"
+        string += f"{stars}"
+        string += f" [.{test['result']}]#{test['result'].upper()}#"
+        string += f" - {test['name']}"
+
+        if 'test-spec' in test:
+            sha1sum = calculate_sha1sum(test['test-spec'])
+            if sha1sum not in includes:
+                includes.append(sha1sum)
+
+            include_dir = os.path.join(LOGDIR, "adoc")
+            os.makedirs(include_dir, exist_ok=True)
+            # We ignore potential overwrites
+            shutil.copy(test['test-spec'], os.path.join(include_dir, sha1sum))
+
+            string += f" <<adoc-{sha1sum},(Spec)>>"
+        else:
+            string += f"{test['name']}"
+
+        file.write(f"{string}\n")
+
+def write_result_tree(md, gh, adoc, adoc_incl, data, depth):
+    for test in data['suite']:
+        write_md_result_data(test, md, depth)
+        write_github_result_data(test, gh, depth)
+        write_test_report_result(test, adoc, adoc_incl, depth)
 
         if 'suite' in test:
-            write_result_md_tree(md, gh, test, base + "  ")
+            write_result_tree(md, gh, adoc, adoc_incl, test, depth + 1)
+
+def get_adoc_spec_file(path):
+    dirname = os.path.dirname(path)
+
+    if os.path.exists(os.path.join(dirname, "Readme.adoc")):
+        return os.path.join(dirname, "Readme.adoc")
+
+    if os.path.exists(os.path.splitext(path)[0] + ".adoc"):
+        return os.path.splitext(path)[0] + ".adoc"
+
+    return None
+
+def write_test_report_spec(adoc, adoc_incl, data, depth):
+    with open(adoc, 'a') as file:
+        file.write("\n== Test Specification\n")
+
+        for sha1sum in adoc_incl:
+            # Note: not having spec- and breaks asciidoctor
+                file.write("\n[[adoc-{}]]\ninclude::{}[]\n".  format(sha1sum, os.path.join("adoc", sha1sum)))
 
 def write_result_files(data):
     md = os.path.join(LOGDIR, 'result.md')
     gh = os.path.join(LOGDIR, 'result-gh.md')
+    adoc = os.path.join(LOGDIR, 'result.adoc')
 
     with open(md, 'a') as file:
         file.write("# Test Result\n")
@@ -276,7 +376,21 @@ def write_result_files(data):
     with open(gh, 'a') as file:
         file.write("# Test Result\n")
 
-    write_result_md_tree(md, gh, data, "")
+    with open(adoc, 'a') as file:
+        current_date = datetime.now().strftime("%Y-%m-%d")
+        file.write("= Test Report\n")
+        file.write("Author: Test Framework\n")
+        file.write(f"Date: {current_date}\n")
+        file.write(":toc: left\n")
+        file.write(":toc-title: INDEX\n")
+        file.write(":sectnums:\n")
+        file.write(":pdf-page-size: A4\n")
+
+        file.write("\n== Test Result\n\n")
+
+    adoc_incl = []
+    write_result_tree(md, gh, adoc, adoc_incl, data, 0)
+    write_test_report_spec(adoc, adoc_incl, data, 0)
 
 def print_result_tree(data, base):
     i = 1
@@ -443,6 +557,7 @@ def setup_log_dir(log_path):
     dir_name = now.strftime('%Y-%m-%d_%H-%M-%S-%f')
     log_dir = os.path.join(log_path, dir_name)
     os.makedirs(log_dir)
+    os.makedirs(os.path.join(log_dir, "output"))
 
     last_link =os.path.join(log_path, "last")
     if os.path.islink(last_link):
@@ -505,13 +620,16 @@ def main():
         print("Created databasefile: {}".format(db.name))
     DATABASE = db.name
 
-    cmdl = {'name': 'cmdl', 'suite': []}
+    cmdl = {'name': 'command-line', 'suite': []}
     for filename in args.suites:
         fpath = os.path.join(os.getcwd(), filename)
         if filename.endswith('.yaml'):
-            cmdl['suite'].append(parse_suite(fpath, "command line", args.option))
+            cmdl['suite'].append(parse_suite(fpath, "command-line", args.option))
         else:
-            test = {"case": fpath, "name": gen_name(filename)}
+            test = {}
+            test['case'] =  fpath
+            test['name'] = gen_name(filename)
+            test['logfile'] = gen_logfile(test['name'])
 
             if args.option:
                 test["options"] = args.option

@@ -1,0 +1,19 @@
+=== Python Example
+==== Description
+An example of how to create a 9pm test case by printing TAP from Python.
+
+This test specification has the same name as the testcase but with the .adoc extension.
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nam sed auctor ipsum. Sed pharetra vestibulum leo, ac vulputate odio tristique eget. Orci varius natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Sed dictum, est ut elementum bibendum, velit odio feugiat ante, et posuere metus erat a nulla. Curabitur lacinia vel lacus in feugiat. Integer pulvinar vestibulum felis et vehicula. Sed facilisis turpis eget felis cursus feugiat. Quisque sodales mauris id sapien viverra, in suscipit arcu aliquet. Vestibulum porttitor aliquam arcu mattis efficitur. In hac habitasse platea dictumst. Vivamus aliquet pretium dolor, ut imperdiet ligula tristique vel. Interdum et malesuada fames ac ante ipsum primis in faucibus. 
+
+==== Topology
+Localhost only.
+
+==== Test sequence
+. Lorem ipsum dolor sit amet
+. Consectetur adipiscing elit
+. Sed do eiusmod tempor incididunt
+. Ut labore et dolore magna aliqua
+. Excepteur sint occaecat cupidatat non proident
+
+<<<
