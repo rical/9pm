@@ -21,8 +21,11 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y tcl tcllib expect
+        sudo apt-get install -y tcl tcllib expect ruby ruby-dev build-essential
         pip install pyyaml
+        gem install --user-install asciidoctor-pdf
+        gem install --user-install rouge
+        echo "PATH=$PATH:$(ruby -e 'puts Gem.user_dir')/bin" >> $GITHUB_ENV
 
     - name: Run Unit Tests
       run: python3 9pm.py --option cmdl-supplied unit_tests/auto.yaml
@@ -30,8 +33,22 @@ jobs:
     - name: Publish Test Result
       run: cat ~/9pm_log/last/result-gh.md >> $GITHUB_STEP_SUMMARY
 
+    - name: Generate Test Report
+      run: |
+        asciidoctor-pdf \
+          --theme report/theme.yml \
+          -a pdf-fontsdir=report/fonts \
+          ~/9pm_log/last/report.adoc \
+          -o ~/9pm_log/last/report.pdf
+
     - name: Upload Logs as Artifacts
       uses: actions/upload-artifact@v3
       with:
         name: 9pm-logs
         path: ~/9pm_log/
+
+    - name: Upload Test Report as Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-report
+        path: ~/9pm_log/last/report.pdf
