@@ -518,6 +518,7 @@ def parse_rc(root_path):
     required_keys = ["LOG_PATH"]
 
     files = [
+        os.path.join(root_path, '..', '9pm.rc'),
         os.path.join("~/.9pm.rc"),
         os.path.join(root_path, 'etc', '9pm.rc')
     ]
