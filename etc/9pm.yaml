@@ -1,0 +1,7 @@
+# This is the default config for 9pm and its test cases.
+# The top level "9pm" contains data aimed for the 9pm.py test executor.
+# This file is passed down to test cases as the env variable NINEPM_CONFIG.
+
+9pm:
+  PROJECT-NAME: "9pm"
+  PROJECT-ROOT: "./"

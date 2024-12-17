@@ -346,12 +346,12 @@ def write_report_output(file, data, depth):
         if 'suite' in test:
             write_report_output(file, test, depth + 1)
 
-def write_report_parent_info(file, rc):
-    if 'PARENT_PROJECT_NAME' not in rc or 'PARENT_PROJECT_ROOT' not in rc:
+def write_report_project_info(file, config):
+    if 'PROJECT-NAME' not in config or 'PROJECT-ROOT' not in config:
         return None
 
-    name = rc['PARENT_PROJECT_NAME']
-    root = rc['PARENT_PROJECT_ROOT']
+    name = config['PROJECT-NAME']
+    root = config['PROJECT-ROOT']
     version = run_git_cmd(root, ["describe", "--tags", "--always"])
     sha = run_git_cmd(root, ['rev-parse', 'HEAD'])[:12]
 
@@ -364,10 +364,10 @@ def write_report_parent_info(file, rc):
 
     file.write("|===\n")
 
-def write_report(data, rc):
+def write_report(data, config):
     with open(os.path.join(LOGDIR, 'report.adoc'), 'a') as file:
         current_date = datetime.now().strftime("%Y-%m-%d")
-        name = rc['PARENT_PROJECT_NAME'] if 'PARENT_PROJECT_NAME' in rc else "9pm"
+        name = config['PROJECT-NAME'] if 'PROJECT-NAME' in config else "9pm"
 
         file.write(f"= {name} Test Report\n")
         file.write("Author: 9pm Test Framework\n")
@@ -379,7 +379,7 @@ def write_report(data, rc):
 
         file.write("\n<<<\n")
         file.write("\n== Test Summary\n\n")
-        write_report_parent_info(file, rc)
+        write_report_project_info(file, config)
 
         file.write("\n<<<\n")
         file.write("\n== Test Result\n\n")
@@ -537,20 +537,46 @@ def run_suite(cmdline, data, skip_suite):
 
     return skip, err
 
+def parse_config(root_path, config_file):
+    files = [
+        os.path.join(root_path, '..', '9pm.yaml'),
+        os.path.join(root_path, 'etc', '9pm.yaml')
+    ]
+
+    path = next((os.path.expanduser(f) for f in files if os.path.exists(os.path.expanduser(f))), None)
+
+    if config_file:
+        if not os.path.exists(config_file):
+            print(f"error, config file \"{config_file}\" not found.")
+            sys.exit(1)
+
+        path = config_file
+
+    if path:
+        cprint(pcolor.faint, f"Using Config: {path}")
+    else:
+        print("Running without config")
+        return
+
+    try:
+        with open(path, 'r') as f:
+            data = yaml.safe_load(f) or {}
+    except yaml.YAMLError:
+        print(f"error, parsing YAML {path} config.")
+        sys.exit(1)
+
+    if '9pm' in data:
+        return data['9pm']
+    return []
+
 def parse_rc(root_path):
     rc = {}
     required_keys = ["LOG_PATH"]
-    voluntary_keys = [
-        "PARENT_PROJECT_NAME",
-        "PARENT_PROJECT_ROOT",
-    ]
 
     files = [
-        os.path.join(root_path, '..', '9pm.rc'),
         os.path.join("~/.9pm.rc"),
         os.path.join(root_path, 'etc', '9pm.rc')
     ]
-
     path = next((os.path.expanduser(f) for f in files if os.path.exists(os.path.expanduser(f))), None)
 
     if path:
@@ -570,11 +596,6 @@ def parse_rc(root_path):
     if missing_keys:
         print(f"error, 9pm.rc is missing required keys: {', '.join(missing_keys)}")
         sys.exit(1)
-
-    allowed_keys = set(required_keys + voluntary_keys)
-    unsupported_keys = [key for key in data if key not in allowed_keys]
-    if unsupported_keys:
-        print(f"warning, 9pm.rc contains unsupported keys: {', '.join(unsupported_keys)}")
 
     return data
 
@@ -655,13 +676,15 @@ def main():
 
     LOGDIR = setup_log_dir(rc['LOG_PATH'])
 
-    if 'PARENT_PROJECT_NAME' in rc:
-        str = f"\nTesting {rc['PARENT_PROJECT_NAME']}"
-        if 'PARENT_PROJECT_ROOT' in rc:
-            str += f" ({run_git_cmd(rc['PARENT_PROJECT_ROOT'], ['rev-parse', 'HEAD'])[:12]})"
-        cprint(pcolor.yellow, str)
-
     args = parse_cmdline()
+
+    config = parse_config(ROOT_PATH, args.config)
+
+    if 'PROJECT-NAME' in config:
+        str = f"\nTesting {config['PROJECT-NAME']}"
+        if 'PROJECT-ROOT' in config:
+            str += f" ({run_git_cmd(config['PROJECT-ROOT'], ['rev-parse', 'HEAD'])[:12]})"
+        cprint(pcolor.yellow, str)
 
     scratch = tempfile.mkdtemp(suffix='', prefix='9pm_', dir='/tmp')
     if args.debug:
@@ -706,7 +729,7 @@ def main():
     print_result_tree(cmdl, "")
     write_md_result(cmdl)
     write_github_result(cmdl)
-    write_report(cmdl, rc)
+    write_report(cmdl, config)
 
     db.close()
     sys.exit(err)

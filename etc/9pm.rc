@@ -2,19 +2,8 @@
 #
 # If you wish to have your own configuration you can copy this and modify
 # the values as you see fit. Here's the order of precedence:
-# 1) Project unique RC: ../9pm.rc
-# 2) Your personal RC for all your project: ~/.9pm.rc
-# 3) Default 9pm fallback (this file) .../9pm/etc/9pm.rc
+# 1) Your personal RC for all your project: ~/.9pm.rc
+# 2) Default 9pm fallback (this file) .../9pm/etc/9pm.rc
 
 # Default log base path
 LOG_PATH: "~/.local/share/9pm/logs"
-
-## Parent Project Settings
-#
-# Typically 9pm is included as a submodule of a parent project which it tests.
-
-# Name of the parent project
-#PARENT_PROJECT_NAME: "Foobar"
-
-# The root directory if the parent project, relative to 9pm root.
-#PARENT_PROJECT_ROOT: "../"
