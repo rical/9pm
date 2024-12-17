@@ -514,33 +514,35 @@ def run_suite(cmdline, data, skip_suite):
     return skip, err
 
 def parse_rc(root_path):
-    required = {"LOG_PATH"}
     rc = {}
+    required_keys = ["LOG_PATH"]
 
-    home_path = os.path.expanduser("~/.9pm.rc")
-    default_path = os.path.join(root_path, 'etc', '9pm.rc')
-    if os.path.exists(home_path):
-        rc_path = home_path
-    elif os.path.exists(default_path):
-        rc_path = default_path
+    files = [
+        os.path.join("~/.9pm.rc"),
+        os.path.join(root_path, 'etc', '9pm.rc')
+    ]
+
+    path = next((os.path.expanduser(f) for f in files if os.path.exists(os.path.expanduser(f))), None)
+
+    if path:
+        cprint(pcolor.faint, f"Using RC: {path}")
     else:
-        print("error, can't find 9pm.rc file")
+        print("error, can't find any 9pm.rc file")
         sys.exit(1)
 
-    with open(rc_path, 'r') as file:
-        for line in file:
-            line = line.strip()
-            if not line.startswith('#') and ':' in line:
-                key, value = [item.strip() for item in line.split(':', 1)]
-                value = value.split('"')[1]
-                rc[key] = value
+    try:
+        with open(path, 'r') as f:
+            data = yaml.safe_load(f) or {}
+    except yaml.YAMLError:
+        print(f"error, parsing YAML {path} running config.")
+        sys.exit(1)
 
-    for req in required:
-        if not rc.get(req):
-            print("error, required key \"{}\" missing from 9pm.rc" .format(req))
-            sys.exit(1)
+    missing_keys = [key for key in required_keys if key not in data]
+    if missing_keys:
+        print(f"error, 9pm.rc is missing required keys: {', '.join(missing_keys)}")
+        sys.exit(1)
 
-    return rc
+    return data
 
 def parse_cmdline():
     parser = argparse.ArgumentParser()
