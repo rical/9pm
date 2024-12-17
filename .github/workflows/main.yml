@@ -31,24 +31,24 @@ jobs:
       run: python3 9pm.py --option cmdl-supplied unit_tests/auto.yaml
 
     - name: Publish Test Result
-      run: cat ~/9pm_log/last/result-gh.md >> $GITHUB_STEP_SUMMARY
+      run: cat ~/.local/share/9pm/logs/last/result-gh.md >> $GITHUB_STEP_SUMMARY
 
     - name: Generate Test Report
       run: |
         asciidoctor-pdf \
           --theme report/theme.yml \
           -a pdf-fontsdir=report/fonts \
-          ~/9pm_log/last/report.adoc \
-          -o ~/9pm_log/last/report.pdf
+          ~/.local/share/9pm/logs/last/report.adoc \
+          -o ~/.local/share/9pm/logs/last/report.pdf
 
     - name: Upload Logs as Artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: 9pm-logs
-        path: ~/9pm_log/
+        path: ~/.local/share/9pm/logs
 
     - name: Upload Test Report as Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: test-report
-        path: ~/9pm_log/last/report.pdf
+        path: ~/.local/share/9pm/logs/last/report.pdf
