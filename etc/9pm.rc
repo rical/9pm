@@ -1,7 +1,10 @@
 # This is a default running config for 9pm.
 #
-# If you wish to have your own configuration you can copy this to
-# ~/.9pm.rc and modify the values as you see fit.
+# If you wish to have your own configuration you can copy this and modify
+# the values as you see fit. Here's the order of precedence:
+# 1) Project unique RC: ../9pm.rc
+# 2) Your personal RC for all your project: ~/.9pm.rc
+# 3) Default 9pm fallback (this file) .../9pm/etc/9pm.rc
 
 # Default log base path
 LOG_PATH: "~/.local/share/9pm/logs"
