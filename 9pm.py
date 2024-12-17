@@ -346,16 +346,40 @@ def write_report_output(file, data, depth):
         if 'suite' in test:
             write_report_output(file, test, depth + 1)
 
-def write_report(data):
+def write_report_parent_info(file, rc):
+    if 'PARENT_PROJECT_NAME' not in rc or 'PARENT_PROJECT_ROOT' not in rc:
+        return None
+
+    name = rc['PARENT_PROJECT_NAME']
+    root = rc['PARENT_PROJECT_ROOT']
+    version = run_git_cmd(root, ["describe", "--tags", "--always"])
+    sha = run_git_cmd(root, ['rev-parse', 'HEAD'])[:12]
+
+    file.write(f"\n=== {name} Info\n\n")
+
+    file.write('[cols="1h,2"]\n')
+    file.write("|===\n")
+    file.write(f"| Version | {version}\n")
+    file.write(f"| SHA     | {sha}\n")
+
+    file.write("|===\n")
+
+def write_report(data, rc):
     with open(os.path.join(LOGDIR, 'report.adoc'), 'a') as file:
         current_date = datetime.now().strftime("%Y-%m-%d")
-        file.write("= 9pm Test Report\n")
+        name = rc['PARENT_PROJECT_NAME'] if 'PARENT_PROJECT_NAME' in rc else "9pm"
+
+        file.write(f"= {name} Test Report\n")
         file.write("Author: 9pm Test Framework\n")
         file.write(f"Date: {current_date}\n")
         file.write(":toc: left\n")
         file.write(":toc-title: INDEX\n")
         file.write(":sectnums:\n")
         file.write(":pdf-page-size: A4\n")
+
+        file.write("\n<<<\n")
+        file.write("\n== Test Summary\n\n")
+        write_report_parent_info(file, rc)
 
         file.write("\n<<<\n")
         file.write("\n== Test Result\n\n")
@@ -682,7 +706,7 @@ def main():
     print_result_tree(cmdl, "")
     write_md_result(cmdl)
     write_github_result(cmdl)
-    write_report(cmdl)
+    write_report(cmdl, rc)
 
     db.close()
     sys.exit(err)
