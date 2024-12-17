@@ -8,3 +8,13 @@
 
 # Default log base path
 LOG_PATH: "~/.local/share/9pm/logs"
+
+## Parent Project Settings
+#
+# Typically 9pm is included as a submodule of a parent project which it tests.
+
+# Name of the parent project
+#PARENT_PROJECT_NAME: "Foobar"
+
+# The root directory if the parent project, relative to 9pm root.
+#PARENT_PROJECT_ROOT: "../"

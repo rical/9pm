@@ -516,6 +516,10 @@ def run_suite(cmdline, data, skip_suite):
 def parse_rc(root_path):
     rc = {}
     required_keys = ["LOG_PATH"]
+    voluntary_keys = [
+        "PARENT_PROJECT_NAME",
+        "PARENT_PROJECT_ROOT",
+    ]
 
     files = [
         os.path.join(root_path, '..', '9pm.rc'),
@@ -542,6 +546,11 @@ def parse_rc(root_path):
     if missing_keys:
         print(f"error, 9pm.rc is missing required keys: {', '.join(missing_keys)}")
         sys.exit(1)
+
+    allowed_keys = set(required_keys + voluntary_keys)
+    unsupported_keys = [key for key in data if key not in allowed_keys]
+    if unsupported_keys:
+        print(f"warning, 9pm.rc contains unsupported keys: {', '.join(unsupported_keys)}")
 
     return data
 
@@ -595,17 +604,17 @@ def setup_env(cmdline):
     if cmdline.config:
         os.environ["NINEPM_CONFIG"] = cmdline.config
 
-def get_git_sha():
-    if not os.path.isdir(os.path.join(ROOT_PATH, '.git')):
+def run_git_cmd(path, command):
+    if not os.path.isdir(os.path.join(path, '.git')):
         return ""
 
     try:
-        sha = subprocess.check_output(['git', 'rev-parse', 'HEAD'],
-                stderr=subprocess.STDOUT).decode('utf-8').strip()
-        return sha
-    except FileNotFoundError:
-        return ""
-    except subprocess.CalledProcessError:
+        result = subprocess.check_output(
+            ['git', '-C', path] + command,
+            stderr=subprocess.STDOUT
+        ).decode('utf-8').strip()
+        return result
+    except (FileNotFoundError, subprocess.CalledProcessError):
         return ""
 
 def main():
@@ -614,13 +623,19 @@ def main():
     global LOGDIR
 
     sha = ""
-    if (sha := get_git_sha()):
-        sha = "({})" . format(sha[:10])
+    if (sha := run_git_cmd(ROOT_PATH, ['rev-parse', 'HEAD'])):
+        sha = f"({sha[:10]})"
     cprint(pcolor.yellow, "9PM - Simplicity is the ultimate sophistication {}" . format(sha))
 
     rc = parse_rc(ROOT_PATH)
 
     LOGDIR = setup_log_dir(rc['LOG_PATH'])
+
+    if 'PARENT_PROJECT_NAME' in rc:
+        str = f"\nTesting {rc['PARENT_PROJECT_NAME']}"
+        if 'PARENT_PROJECT_ROOT' in rc:
+            str += f" ({run_git_cmd(rc['PARENT_PROJECT_ROOT'], ['rev-parse', 'HEAD'])[:12]})"
+        cprint(pcolor.yellow, str)
 
     args = parse_cmdline()
 
