@@ -4,4 +4,4 @@
 # ~/.9pm.rc and modify the values as you see fit.
 
 # Default log base path
-LOG_PATH: "~/9pm_log"
+LOG_PATH: "~/.local/share/9pm/logs"
