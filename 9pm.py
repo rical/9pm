@@ -357,6 +357,7 @@ def write_report(data):
         file.write(":sectnums:\n")
         file.write(":pdf-page-size: A4\n")
 
+        file.write("\n<<<\n")
         file.write("\n== Test Result\n\n")
 
         includes = []
