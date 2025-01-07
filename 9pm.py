@@ -211,7 +211,18 @@ def get_test_spec_path(case_path, test_spec):
     return  os.path.join(case_dirname, test_spec)
 
 
-def parse_suite(suite_path, parent_suite_path, options, name=None):
+def get_suite_settings(name, data, upstream_settings):
+    for entry in data:
+        if 'settings' in entry:
+            if entry['settings'] is None:
+                print(f"error, empty \"settings\" in suite {suite['suite_path']}, invalid indent?")
+                sys.exit(1)
+
+            vcprint(pcolor.faint, f"Suite {name} has settings: {entry['settings']}")
+            return entry['settings']
+    return upstream_settings
+
+def parse_suite(suite_path, parent_suite_path, options, settings, name=None):
     suite = {}
     suite['suite'] = []
     suite['result'] = "pending"
@@ -229,14 +240,7 @@ def parse_suite(suite_path, parent_suite_path, options, name=None):
 
     data = parse_yaml(suite_path)
 
-    # Pre parse suite
-    for entry in data:
-        if 'settings' in entry:
-            if entry['settings'] is None:
-                print(f"error, empty \"settings\" in suite {suite['suite_path']}, invalid indent?")
-                sys.exit(1)
-
-            suite['settings'] = entry['settings']
+    settings = get_suite_settings(suite['name'], data, settings)
 
     for entry in data:
         if 'suite' in entry:
@@ -248,9 +252,9 @@ def parse_suite(suite_path, parent_suite_path, options, name=None):
             else:
                 opts = options.copy()
             if 'name' in entry:
-                suite['suite'].append(parse_suite(next_suite_path, suite_path, opts, entry['name']))
+                suite['suite'].append(parse_suite(next_suite_path, suite_path, opts, settings, entry['name']))
             else:
-                suite['suite'].append(parse_suite(next_suite_path, suite_path, opts))
+                suite['suite'].append(parse_suite(next_suite_path, suite_path, opts, settings))
 
         elif 'case' in entry:
             case = {}
@@ -277,14 +281,13 @@ def parse_suite(suite_path, parent_suite_path, options, name=None):
 
             case['case'] = os.path.join(suite_dirname, entry['case'])
 
-            if 'settings' in suite:
-                if 'test-spec' in suite['settings']:
-                    test_spec_path = get_test_spec_path(case['case'], suite['settings']['test-spec'])
-                    if os.path.exists(test_spec_path):
-                        vcprint(pcolor.faint, f"Found test specification: {test_spec_path} for {case['case']}")
-                        case['test-spec'] = test_spec_path
-                        case['test-spec-sha'] = calculate_sha1sum(test_spec_path)
-                    else:
+            if 'test-spec' in settings:
+                test_spec_path = get_test_spec_path(case['case'], settings['test-spec'])
+                if os.path.exists(test_spec_path):
+                    vcprint(pcolor.faint, f"Found test specification: {test_spec_path} for {case['case']}")
+                    case['test-spec'] = test_spec_path
+                    case['test-spec-sha'] = calculate_sha1sum(test_spec_path)
+                else:
                         vcprint(pcolor.faint, f"No test specification for {case['case']} ({test_spec_path})")
 
             if not os.path.isfile(case['case']):
@@ -718,7 +721,7 @@ def main():
     for filename in args.suites:
         fpath = os.path.join(os.getcwd(), filename)
         if filename.endswith('.yaml'):
-            cmdl['suite'].append(parse_suite(fpath, "command-line", args.option))
+            cmdl['suite'].append(parse_suite(fpath, "command-line", args.option, {}))
         else:
             test = {}
             test['case'] =  fpath
