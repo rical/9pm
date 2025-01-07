@@ -363,7 +363,7 @@ def write_report_project_info(file, config):
         return None
 
     name = config['PROJECT-NAME']
-    root = config['PROJECT-ROOT']
+    root = os.path.join(ROOT_PATH, config['PROJECT-ROOT'])
     version = run_git_cmd(root, ["describe", "--tags", "--always"])
     sha = run_git_cmd(root, ['rev-parse', 'HEAD'])[:12]
 
@@ -714,7 +714,7 @@ def main():
     if 'PROJECT-NAME' in proj:
         str = f"\nTesting {proj['PROJECT-NAME']}"
         if 'PROJECT-ROOT' in proj:
-            str += f" ({run_git_cmd(proj['PROJECT-ROOT'], ['rev-parse', 'HEAD'])[:12]})"
+            str += f" ({run_git_cmd(os.path.join(ROOT_PATH, proj['PROJECT-ROOT']), ['rev-parse', 'HEAD'])[:12]})"
         cprint(pcolor.yellow, str)
 
     cmdl = {'name': 'command-line', 'suite': []}
