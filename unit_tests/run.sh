@@ -6,4 +6,4 @@ base=$(dirname $(readlink -f $0))
 tool=$base/../9pm.py
 
 echo "* Running all automated test, all should be OK!"
-$tool --option cmdl-supplied $base/auto.yaml
+$tool -v --option cmdl-supplied $base/auto.yaml

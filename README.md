@@ -38,18 +38,25 @@ Run the framework with:
 ./9pm.py [OPTIONS] SUITE | TEST ...
 ```
 
-### Command-Line Options
+### Harness Command-Line Options
 
-| Option          | Description                                          |
+| Option           | Description                                          |
 |------------------|------------------------------------------------------|
 | `-a, --abort`    | Stop execution after the first failure.              |
-| `-c, --config`   | Specify a custom configuration file.                 |
-| `-d, --debug`    | Enable debug mode for verbose output.                |
-| `-o, --option`   | Pass options to tests/suites (repeatable).           |
+| `-v, --verbose`  | Enable verbose output.                               |
+| `-p, --proj`     | Specify an explicit project configuration.           |
+
+### Test Case Command-Line Options (Passed to Test Cases)
+
+| Option           | Description                                          |
+|------------------|------------------------------------------------------|
+| `-c, --config`   | Test Case config.                                    |
+| `-d, --debug`    | Enable test case debug.                              |
+| `-o, --option`   | Test case options (repeatable).                      |
 
 Example:
 ```bash
-./9pm.py -d -o "testopt1" test/suites/main.yaml test/cases/cleanup.sh
+./9pm.py -o "ssh" suites/main.yaml cases/cleanup.sh
 ```
 
 ---

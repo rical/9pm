@@ -109,10 +109,10 @@ def calculate_sha1sum(path):
             sha1.update(chunk)
     return sha1.hexdigest()
 
-def run_onfail(cmdline, test):
-    args = []
+def run_onfail(args, test):
+    opts = []
     if 'options' in test:
-        args.extend(test['options'])
+        opts.extend(test['options'])
 
     dirname = os.path.dirname(test['case'])
 
@@ -123,17 +123,17 @@ def run_onfail(cmdline, test):
     print("\n{}Running onfail \"{}\" for test {}{}" . format(pcolor.cyan, test['onfail'],
         test['name'], pcolor.reset))
 
-    if cmdline.debug:
-        print("Executing onfail {} for test {}" . format(onfail['case'], test['case']))
+    if args.verbose:
+        cprint(pcolor.faint, f"Executing onfail {onfail['case']} for test {test['case']}")
 
     with open(os.path.join(LOGDIR, "on-fail.log"), 'a') as log:
         log.write(f"\n\nON FAIL START")
-        execute(args, onfail, log)
+        execute(opts, onfail, log)
 
-def run_test(cmdline, test):
-    args = []
+def run_test(args, test):
+    opts = []
     if 'options' in test:
-        args.extend(test['options'])
+        opts.extend(test['options'])
 
     print(pcolor.blue + "\nStarting test", test['name'] + pcolor.reset)
 
@@ -145,11 +145,12 @@ def run_test(cmdline, test):
 
         return True, True, False
 
-    if cmdline.debug:
-        print("Executing:", [test['case']] + args)
+    if args.verbose:
+        cprint(pcolor.faint, f"Test File: {test['case']}")
+        cprint(pcolor.faint, f"Test Cmdl: {opts}")
 
     with open(os.path.join(LOGDIR, test['outfile']), 'a') as output:
-        skip_suite, skip, err = execute(args, test, output)
+        skip_suite, skip, err = execute(opts, test, output)
 
     if 'plan' not in test:
         print("test error, no plan")
@@ -477,18 +478,18 @@ def probe_suite(data):
 
     data['result'] = "noexec"
 
-def run_suite(cmdline, data, skip_suite):
+def run_suite(args, data, skip_suite):
     skip = False
     err = False
 
     for test in data['suite']:
         if 'suite' in test:
-            subskip, suberr = run_suite(cmdline, test, skip_suite)
+            subskip, suberr = run_suite(args, test, skip_suite)
             if subskip:
                 skip = True
             if suberr:
                 err = True
-            if err and cmdline.abort:
+            if err and args.abort:
                 break;
 
         elif 'case' in test:
@@ -502,7 +503,7 @@ def run_suite(cmdline, data, skip_suite):
             if skip_suite:
                 test['result'] = "skip"
 
-            skip_suite, subskip, suberr = run_test(cmdline, test)
+            skip_suite, subskip, suberr = run_test(args, test)
             if suberr:
                 if 'mask' in test and test['mask'] == "fail":
                     print("{}Test failure is masked in suite{}" . format(pcolor.red, pcolor.reset))
@@ -513,9 +514,9 @@ def run_suite(cmdline, data, skip_suite):
                     err = True
 
                 if 'onfail' in test:
-                    run_onfail(cmdline, test)
+                    run_onfail(args, test)
 
-                if err and cmdline.abort:
+                if err and args.abort:
                     print("Aborting execution")
                     break
             elif subskip:
@@ -537,7 +538,7 @@ def run_suite(cmdline, data, skip_suite):
 
     return skip, err
 
-def parse_proj_config(root_path, config_file):
+def parse_proj_config(root_path, args):
     files = [
         os.path.join(root_path, '..', '9pm-proj.yaml'),
         os.path.join(root_path, 'etc', '9pm-proj.yaml')
@@ -548,15 +549,16 @@ def parse_proj_config(root_path, config_file):
 
     path = next((os.path.expanduser(f) for f in files if os.path.exists(os.path.expanduser(f))), None)
 
-    if config_file:
-        if not os.path.exists(config_file):
-            print(f"error, config file \"{config_file}\" not found.")
+    if args.proj:
+        if not os.path.exists(args.proj):
+            print(f"error, config file \"{args.proj}\" not found.")
             sys.exit(1)
 
-        path = config_file
+        path = args.proj
 
     if path:
-        cprint(pcolor.faint, f"Using Project Config: {path}")
+        if args.verbose:
+            cprint(pcolor.faint, f"Using project config: {path}")
         os.environ["NINEPM_PROJ_CONFIG"] = path
     else:
         print("error, can't find any 9pm project config")
@@ -573,7 +575,7 @@ def parse_proj_config(root_path, config_file):
         return data['9pm']
     return []
 
-def parse_rc(root_path):
+def parse_rc(root_path, args):
     required_keys = ["LOG_PATH"]
 
     files = [
@@ -583,7 +585,8 @@ def parse_rc(root_path):
     path = next((os.path.expanduser(f) for f in files if os.path.exists(os.path.expanduser(f))), None)
 
     if path:
-        cprint(pcolor.faint, f"Using RC: {path}")
+        if args.verbose:
+            cprint(pcolor.faint, f"Using RC: {path}")
     else:
         print("error, can't find any 9pm.rc file")
         sys.exit(1)
@@ -608,6 +611,8 @@ def parse_cmdline():
             help='(9PM) Abort execution if test fails')
     parser.add_argument('-p', '--proj', metavar='FILE', action='store',
             help='(9PM) Path to project configuration')
+    parser.add_argument('-v', '--verbose', action='store_true',
+            help='(9PM) Enable verbose output')
     parser.add_argument('-c', '--config', metavar='FILE', action='store',
             help='(TEST) Config file passed to test case')
     parser.add_argument('-d', '--debug', action='store_true',
@@ -640,19 +645,18 @@ def setup_log_dir(log_path):
 
     return log_dir
 
-def setup_env(cmdline):
+def setup_env(args):
     os.environ["NINEPM_TAP"] = "1"
-
-    if cmdline.debug:
-        os.environ["NINEPM_DEBUG"] = "1"
 
     os.environ["NINEPM_ROOT_PATH"] = ROOT_PATH
     os.environ["NINEPM_DATABASE"] = DATABASE
     os.environ["NINEPM_SCRATCHDIR"] = SCRATCHDIR
     os.environ["NINEPM_LOG_PATH"] = LOGDIR
 
-    if cmdline.config:
-        os.environ["NINEPM_CONFIG"] = cmdline.config
+    if args.debug:
+        os.environ["NINEPM_DEBUG"] = "1"
+    if args.config:
+        os.environ["NINEPM_CONFIG"] = args.config
 
 def run_git_cmd(path, command):
     if not os.path.isdir(os.path.join(path, '.git')):
@@ -677,30 +681,32 @@ def main():
         sha = f"({sha[:10]})"
     cprint(pcolor.yellow, "9PM - Simplicity is the ultimate sophistication {}" . format(sha))
 
-    rc = parse_rc(ROOT_PATH)
-
-    LOGDIR = setup_log_dir(rc['LOG_PATH'])
-
     args = parse_cmdline()
 
-    proj = parse_proj_config(ROOT_PATH, args.proj)
+    rc = parse_rc(ROOT_PATH, args)
+
+    LOGDIR = setup_log_dir(rc['LOG_PATH'])
+    if args.verbose:
+        cprint(pcolor.faint, f"Logging to: {LOGDIR}")
+
+    proj = parse_proj_config(ROOT_PATH, args)
+
+    scratch = tempfile.mkdtemp(suffix='', prefix='9pm_', dir='/tmp')
+    if args.verbose:
+        cprint(pcolor.faint, f"Created scratch dir: {scratch}")
+    SCRATCHDIR = scratch
+    atexit.register(shutil.rmtree, SCRATCHDIR)
+
+    db = tempfile.NamedTemporaryFile(suffix='_db', prefix='9pm_', dir=scratch)
+    if args.verbose:
+        cprint(pcolor.faint, f"Created databasefile: {db.name}")
+    DATABASE = db.name
 
     if 'PROJECT-NAME' in proj:
         str = f"\nTesting {proj['PROJECT-NAME']}"
         if 'PROJECT-ROOT' in proj:
             str += f" ({run_git_cmd(proj['PROJECT-ROOT'], ['rev-parse', 'HEAD'])[:12]})"
         cprint(pcolor.yellow, str)
-
-    scratch = tempfile.mkdtemp(suffix='', prefix='9pm_', dir='/tmp')
-    if args.debug:
-        print("Created scratch dir:", scratch)
-    SCRATCHDIR = scratch
-    atexit.register(shutil.rmtree, SCRATCHDIR)
-
-    db = tempfile.NamedTemporaryFile(suffix='_db', prefix='9pm_', dir=scratch)
-    if args.debug:
-        print("Created databasefile: {}".format(db.name))
-    DATABASE = db.name
 
     cmdl = {'name': 'command-line', 'suite': []}
     for filename in args.suites:
