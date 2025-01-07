@@ -537,11 +537,14 @@ def run_suite(cmdline, data, skip_suite):
 
     return skip, err
 
-def parse_config(root_path, config_file):
+def parse_proj_config(root_path, config_file):
     files = [
-        os.path.join(root_path, '..', '9pm.yaml'),
-        os.path.join(root_path, 'etc', '9pm.yaml')
+        os.path.join(root_path, '..', '9pm-proj.yaml'),
+        os.path.join(root_path, 'etc', '9pm-proj.yaml')
     ]
+
+    if "NINEPM_PROJ_CONFIG" in os.environ:
+        files.insert(0, os.environ["NINEPM_PROJ_CONFIG"])
 
     path = next((os.path.expanduser(f) for f in files if os.path.exists(os.path.expanduser(f))), None)
 
@@ -553,10 +556,11 @@ def parse_config(root_path, config_file):
         path = config_file
 
     if path:
-        cprint(pcolor.faint, f"Using Config: {path}")
+        cprint(pcolor.faint, f"Using Project Config: {path}")
+        os.environ["NINEPM_PROJ_CONFIG"] = path
     else:
-        print("Running without config")
-        return
+        print("error, can't find any 9pm project config")
+        sys.exit(1)
 
     try:
         with open(path, 'r') as f:
@@ -570,7 +574,6 @@ def parse_config(root_path, config_file):
     return []
 
 def parse_rc(root_path):
-    rc = {}
     required_keys = ["LOG_PATH"]
 
     files = [
@@ -603,6 +606,8 @@ def parse_cmdline():
     parser = argparse.ArgumentParser()
     parser.add_argument('-a', '--abort', action='store_true',
             help='(9PM) Abort execution if test fails')
+    parser.add_argument('-p', '--proj', metavar='FILE', action='store',
+            help='(9PM) Path to project configuration')
     parser.add_argument('-c', '--config', metavar='FILE', action='store',
             help='(TEST) Config file passed to test case')
     parser.add_argument('-d', '--debug', action='store_true',
@@ -678,12 +683,12 @@ def main():
 
     args = parse_cmdline()
 
-    config = parse_config(ROOT_PATH, args.config)
+    proj = parse_proj_config(ROOT_PATH, args.proj)
 
-    if 'PROJECT-NAME' in config:
-        str = f"\nTesting {config['PROJECT-NAME']}"
-        if 'PROJECT-ROOT' in config:
-            str += f" ({run_git_cmd(config['PROJECT-ROOT'], ['rev-parse', 'HEAD'])[:12]})"
+    if 'PROJECT-NAME' in proj:
+        str = f"\nTesting {proj['PROJECT-NAME']}"
+        if 'PROJECT-ROOT' in proj:
+            str += f" ({run_git_cmd(proj['PROJECT-ROOT'], ['rev-parse', 'HEAD'])[:12]})"
         cprint(pcolor.yellow, str)
 
     scratch = tempfile.mkdtemp(suffix='', prefix='9pm_', dir='/tmp')
@@ -729,7 +734,7 @@ def main():
     print_result_tree(cmdl, "")
     write_md_result(cmdl)
     write_github_result(cmdl)
-    write_report(cmdl, config)
+    write_report(cmdl, proj)
 
     db.close()
     sys.exit(err)
