@@ -20,6 +20,7 @@ LIB_TCL_PATH = ROOT_PATH + "/lib_tcl/"
 DATABASE = ""
 SCRATCHDIR = ""
 LOGDIR = None
+VERBOSE = False
 
 if "TCLLIBPATH" in os.environ:
     os.environ["TCLLIBPATH"] = os.environ["TCLLIBPATH"] + " " + LIB_TCL_PATH
@@ -43,6 +44,12 @@ def cprint(color, *args, **kwargs):
     sys.stdout.write(color)
     print(*args, **kwargs)
     sys.stdout.write(pcolor.reset)
+
+def vcprint(color, *args, **kwargs):
+    global VERBOSE
+
+    if VERBOSE:
+        cprint(color, *args, **kwargs)
 
 def execute(args, test, output_log):
     proc = subprocess.Popen([test['case']] + args, stdout=subprocess.PIPE)
@@ -123,8 +130,7 @@ def run_onfail(args, test):
     print("\n{}Running onfail \"{}\" for test {}{}" . format(pcolor.cyan, test['onfail'],
         test['name'], pcolor.reset))
 
-    if args.verbose:
-        cprint(pcolor.faint, f"Executing onfail {onfail['case']} for test {test['case']}")
+    vcprint(pcolor.faint, f"Executing onfail {onfail['case']} for test {test['case']}")
 
     with open(os.path.join(LOGDIR, "on-fail.log"), 'a') as log:
         log.write(f"\n\nON FAIL START")
@@ -145,9 +151,8 @@ def run_test(args, test):
 
         return True, True, False
 
-    if args.verbose:
-        cprint(pcolor.faint, f"Test File: {test['case']}")
-        cprint(pcolor.faint, f"Test Cmdl: {opts}")
+    vcprint(pcolor.faint, f"Test File: {test['case']}")
+    vcprint(pcolor.faint, f"Test Cmdl: {opts}")
 
     with open(os.path.join(LOGDIR, test['outfile']), 'a') as output:
         skip_suite, skip, err = execute(opts, test, output)
@@ -276,8 +281,11 @@ def parse_suite(suite_path, parent_suite_path, options, name=None):
                 if 'test-spec' in suite['settings']:
                     test_spec_path = get_test_spec_path(case['case'], suite['settings']['test-spec'])
                     if os.path.exists(test_spec_path):
+                        vcprint(pcolor.faint, f"Found test specification: {test_spec_path} for {case['case']}")
                         case['test-spec'] = test_spec_path
                         case['test-spec-sha'] = calculate_sha1sum(test_spec_path)
+                    else:
+                        vcprint(pcolor.faint, f"No test specification for {case['case']} ({test_spec_path})")
 
             if not os.path.isfile(case['case']):
                 print("error, test case not found {}" . format(case['case']))
@@ -557,8 +565,7 @@ def parse_proj_config(root_path, args):
         path = args.proj
 
     if path:
-        if args.verbose:
-            cprint(pcolor.faint, f"Using project config: {path}")
+        vcprint(pcolor.faint, f"Using project config: {path}")
         os.environ["NINEPM_PROJ_CONFIG"] = path
     else:
         print("error, can't find any 9pm project config")
@@ -585,8 +592,7 @@ def parse_rc(root_path, args):
     path = next((os.path.expanduser(f) for f in files if os.path.exists(os.path.expanduser(f))), None)
 
     if path:
-        if args.verbose:
-            cprint(pcolor.faint, f"Using RC: {path}")
+        vcprint(pcolor.faint, f"Using RC: {path}")
     else:
         print("error, can't find any 9pm.rc file")
         sys.exit(1)
@@ -675,6 +681,7 @@ def main():
     global DATABASE
     global SCRATCHDIR
     global LOGDIR
+    global VERBOSE
 
     sha = ""
     if (sha := run_git_cmd(ROOT_PATH, ['rev-parse', 'HEAD'])):
@@ -682,24 +689,23 @@ def main():
     cprint(pcolor.yellow, "9PM - Simplicity is the ultimate sophistication {}" . format(sha))
 
     args = parse_cmdline()
+    VERBOSE = args.verbose
 
     rc = parse_rc(ROOT_PATH, args)
 
     LOGDIR = setup_log_dir(rc['LOG_PATH'])
-    if args.verbose:
-        cprint(pcolor.faint, f"Logging to: {LOGDIR}")
+
+    vcprint(pcolor.faint, f"Logging to: {LOGDIR}")
 
     proj = parse_proj_config(ROOT_PATH, args)
 
     scratch = tempfile.mkdtemp(suffix='', prefix='9pm_', dir='/tmp')
-    if args.verbose:
-        cprint(pcolor.faint, f"Created scratch dir: {scratch}")
+    vcprint(pcolor.faint, f"Created scratch dir: {scratch}")
     SCRATCHDIR = scratch
     atexit.register(shutil.rmtree, SCRATCHDIR)
 
     db = tempfile.NamedTemporaryFile(suffix='_db', prefix='9pm_', dir=scratch)
-    if args.verbose:
-        cprint(pcolor.faint, f"Created databasefile: {db.name}")
+    vcprint(pcolor.faint, f"Created databasefile: {db.name}")
     DATABASE = db.name
 
     if 'PROJECT-NAME' in proj:
