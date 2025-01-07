@@ -602,13 +602,13 @@ def parse_rc(root_path):
 def parse_cmdline():
     parser = argparse.ArgumentParser()
     parser.add_argument('-a', '--abort', action='store_true',
-            help='Abort suite if test failes')
+            help='(9PM) Abort execution if test fails')
     parser.add_argument('-c', '--config', metavar='FILE', action='store',
-            help='Use config file')
+            help='(TEST) Config file passed to test case')
     parser.add_argument('-d', '--debug', action='store_true',
-            help='Enable debug mode')
+            help='(TEST) Enable test case debug')
     parser.add_argument('-o', '--option', action='append', default=[],
-            help='Option to pass to tests and suites (use multiple -o for multiple options)')
+            help='(TEST) Option(s) passed to all test cases (can be repeated)')
     parser.add_argument('suites', nargs='+', metavar='TEST|SUITE',
             help='Test or suite to run')
     if len(sys.argv) == 1:
