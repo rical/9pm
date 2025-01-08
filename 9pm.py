@@ -669,6 +669,7 @@ def setup_env(args):
 
 def run_git_cmd(path, command):
     if not os.path.isdir(os.path.join(path, '.git')):
+        vcprint(pcolor.orange, f"warning, no .git dir in path ({path})")
         return ""
 
     try:
@@ -679,6 +680,20 @@ def run_git_cmd(path, command):
         return result
     except (FileNotFoundError, subprocess.CalledProcessError):
         return ""
+
+def pr_proj_info(proj):
+    str = f"\nTesting"
+
+    if 'PROJECT-NAME' in proj:
+        str += f" {proj['PROJECT-NAME']}"
+
+    if 'PROJECT-ROOT' in proj:
+        git_sha = run_git_cmd(os.path.join(ROOT_PATH, proj['PROJECT-ROOT']), ['rev-parse', 'HEAD'])[:12]
+
+    if git_sha:
+        str += f" ({git_sha})"
+
+    cprint(pcolor.yellow, str)
 
 def main():
     global DATABASE
@@ -711,11 +726,7 @@ def main():
     vcprint(pcolor.faint, f"Created databasefile: {db.name}")
     DATABASE = db.name
 
-    if 'PROJECT-NAME' in proj:
-        str = f"\nTesting {proj['PROJECT-NAME']}"
-        if 'PROJECT-ROOT' in proj:
-            str += f" ({run_git_cmd(os.path.join(ROOT_PATH, proj['PROJECT-ROOT']), ['rev-parse', 'HEAD'])[:12]})"
-        cprint(pcolor.yellow, str)
+    pr_proj_info(proj)
 
     cmdl = {'name': 'command-line', 'suite': []}
     for filename in args.suites:
