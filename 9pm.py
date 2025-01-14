@@ -21,6 +21,7 @@ DATABASE = ""
 SCRATCHDIR = ""
 LOGDIR = None
 VERBOSE = False
+NOEXEC = False
 
 if "TCLLIBPATH" in os.environ:
     os.environ["TCLLIBPATH"] = os.environ["TCLLIBPATH"] + " " + LIB_TCL_PATH
@@ -134,7 +135,8 @@ def run_onfail(args, test):
 
     with open(os.path.join(LOGDIR, "on-fail.log"), 'a') as log:
         log.write(f"\n\nON FAIL START")
-        execute(opts, onfail, log)
+        if not NOEXEC:
+            execute(opts, onfail, log)
 
 def run_test(args, test):
     opts = []
@@ -155,7 +157,11 @@ def run_test(args, test):
     vcprint(pcolor.faint, f"Test Cmdl: {opts}")
 
     with open(os.path.join(LOGDIR, test['outfile']), 'a') as output:
-        skip_suite, skip, err = execute(opts, test, output)
+        if NOEXEC:
+            print("Skipped because --no-exec", file=output)
+            return False, True, False
+        else:
+            skip_suite, skip, err = execute(opts, test, output)
 
     if 'plan' not in test:
         print("test error, no plan")
@@ -618,6 +624,8 @@ def parse_cmdline():
     parser = argparse.ArgumentParser()
     parser.add_argument('-a', '--abort', action='store_true',
             help='(9PM) Abort execution if test fails')
+    parser.add_argument('--no-exec', action='store_true',
+            help='(9PM) Do not execute any tests')
     parser.add_argument('-p', '--proj', metavar='FILE', action='store',
             help='(9PM) Path to project configuration')
     parser.add_argument('-v', '--verbose', action='store_true',
@@ -703,6 +711,7 @@ def main():
     global SCRATCHDIR
     global LOGDIR
     global VERBOSE
+    global NOEXEC
 
     sha = ""
     if (sha := run_git_cmd(ROOT_PATH, ['rev-parse', 'HEAD'])):
@@ -711,6 +720,7 @@ def main():
 
     args = parse_cmdline()
     VERBOSE = args.verbose
+    NOEXEC = args.no_exec
 
     rc = parse_rc(ROOT_PATH, args)
 
