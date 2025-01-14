@@ -52,6 +52,12 @@ def vcprint(color, *args, **kwargs):
     if VERBOSE:
         cprint(color, *args, **kwargs)
 
+def rootify_path(path):
+    path = os.path.join(ROOT_PATH, path)
+    path = os.path.expanduser(path)
+    path = os.path.normpath(path)
+    return path
+
 def execute(args, test, output_log):
     proc = subprocess.Popen([test['case']] + args, stdout=subprocess.PIPE)
     skip_suite = False
@@ -325,27 +331,13 @@ def write_report_result_tree(file, includes, data, depth):
             string += f" {test['name']}"
 
         # Append (Spec) if there's a test specification
-        if 'test-spec' in test:
-            if test['test-spec-sha'] not in includes:
-                includes.append(test['test-spec-sha'])
-
-            include_dir = os.path.join(LOGDIR, "report-incl")
-            os.makedirs(include_dir, exist_ok=True)
-            # We ignore potential overwrites
-            shutil.copy(test['test-spec'], os.path.join(include_dir, test['test-spec-sha']))
-
+        if 'test-spec-sha' in test:
             string += f" <<incl-{test['test-spec-sha']},(Spec)>>"
 
         file.write(f"{string}\n")
 
         if 'suite' in test:
             write_report_result_tree(file, includes, test, depth + 1)
-
-def write_report_includes(file, includes, data, depth):
-    for sha1sum in includes:
-        # Note: not having incl- and breaks asciidoctor
-        file.write(f"\n[[incl-{sha1sum}]]\n")
-        file.write("include::{}[]\n" . format(os.path.join("report-incl", sha1sum)))
 
 def write_report_output(file, data, depth):
     for test in data['suite']:
@@ -364,12 +356,22 @@ def write_report_output(file, data, depth):
         if 'suite' in test:
             write_report_output(file, test, depth + 1)
 
+def write_report_specifications(file, data, depth):
+    for test in data['suite']:
+
+        if 'test-spec-sha' in test:
+            file.write(f"\n[[incl-{test['test-spec-sha']}]]\n")
+            file.write("include::{}[]\n" . format(test['test-spec']))
+
+        if 'suite' in test:
+            write_report_specifications(file, test, depth + 1)
+
 def write_report_project_info(file, config):
     if 'PROJECT-NAME' not in config or 'PROJECT-ROOT' not in config:
         return None
 
     name = config['PROJECT-NAME']
-    root = os.path.join(ROOT_PATH, config['PROJECT-ROOT'])
+    root = config['PROJECT-ROOT']
     version = run_git_cmd(root, ["describe", "--tags", "--always"])
     sha = run_git_cmd(root, ['rev-parse', 'HEAD'])[:12]
 
@@ -386,12 +388,14 @@ def write_report(data, config):
     with open(os.path.join(LOGDIR, 'report.adoc'), 'a') as file:
         current_date = datetime.now().strftime("%Y-%m-%d")
         name = config['PROJECT-NAME'] if 'PROJECT-NAME' in config else "9pm"
+        topdoc = config['PROJECT-TOPDOC'] + "/" if 'PROJECT-TOPDOC' in config else ""
 
         file.write(f"= {name} Test Report\n")
         file.write("Author: 9pm Test Framework\n")
         file.write(f"Date: {current_date}\n")
         file.write(":toc: left\n")
         file.write(":toc-title: INDEX\n")
+        file.write(f":topdoc: {topdoc}\n")
         file.write(":sectnums:\n")
         file.write(":pdf-page-size: A4\n")
 
@@ -411,7 +415,7 @@ def write_report(data, config):
 
         file.write("\n<<<\n")
         file.write("\n== Test Specification\n")
-        write_report_includes(file, includes, data, 0)
+        write_report_specifications(file, data, 0)
 
 
 def write_github_result_tree(file, data, depth):
@@ -587,9 +591,16 @@ def parse_proj_config(root_path, args):
         print(f"error, parsing YAML {path} config.")
         sys.exit(1)
 
-    if '9pm' in data:
-        return data['9pm']
-    return []
+    if not '9pm' in data:
+        return []
+
+    if 'PROJECT-ROOT' in data['9pm']:
+        data['9pm']['PROJECT-ROOT'] = rootify_path(data['9pm']['PROJECT-ROOT'])
+
+    if 'PROJECT-TOPDOC' in data['9pm']:
+        data['9pm']['PROJECT-TOPDOC'] = rootify_path(data['9pm']['PROJECT-TOPDOC'])
+
+    return data['9pm']
 
 def parse_rc(root_path, args):
     required_keys = ["LOG_PATH"]
@@ -699,7 +710,7 @@ def pr_proj_info(proj):
         str += f" {proj['PROJECT-NAME']}"
 
     if 'PROJECT-ROOT' in proj:
-        git_sha = run_git_cmd(os.path.join(ROOT_PATH, proj['PROJECT-ROOT']), ['rev-parse', 'HEAD'])[:12]
+        git_sha = run_git_cmd(proj['PROJECT-ROOT'], ['rev-parse', 'HEAD'])[:12]
 
     if git_sha:
         str += f" ({git_sha})"
