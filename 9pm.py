@@ -343,10 +343,10 @@ def write_report_output(file, data, depth):
     for test in data['suite']:
 
         if 'outfile' in test:
+            file.write(f"\n=== {test['name']}\n")
+
             if 'test-spec-sha' in test:
-                file.write(f"\n=== <<incl-{test['test-spec-sha']},{test['name']}>>\n")
-            else:
-                file.write(f"\n=== {test['name']}\n")
+                file.write(f"\n<<incl-{test['test-spec-sha']},Test Specification>>\n")
 
             file.write(f"\n[[output-{test['name']}]]\n")
             file.write(f"----\n")
