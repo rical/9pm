@@ -673,13 +673,16 @@ def run_git_cmd(path, command):
         return ""
 
     try:
+        vcprint(pcolor.faint, f"Running: git -C {path} {command}")
         result = subprocess.check_output(
             ['git', '-C', path] + command,
             stderr=subprocess.STDOUT
         ).decode('utf-8').strip()
-        return result
-    except (FileNotFoundError, subprocess.CalledProcessError):
+    except Exception as e:
+        cprint(pcolor.orange, f"warning, git command failed ({e})")
         return ""
+
+    return result
 
 def pr_proj_info(proj):
     str = f"\nTesting"
