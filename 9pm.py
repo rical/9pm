@@ -687,14 +687,16 @@ def setup_env(args):
         os.environ["NINEPM_CONFIG"] = args.config
 
 def run_git_cmd(path, command):
-    if not os.path.isdir(os.path.join(path, '.git')):
+    gitdir = os.path.join(path, '.git')
+
+    if not os.path.isdir(gitdir):
         vcprint(pcolor.orange, f"warning, no .git dir in path ({path})")
         return ""
 
     try:
-        vcprint(pcolor.faint, f"Running: git -C {path} {command}")
+        vcprint(pcolor.faint, f"Running: git --git-dir {gitdir} {command}")
         result = subprocess.check_output(
-            ['git', '-C', path] + command,
+            ['git', '--git-dir', gitdir] + command,
             stderr=subprocess.STDOUT
         ).decode('utf-8').strip()
     except Exception as e:
