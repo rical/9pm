@@ -1,6 +1,6 @@
 #!/bin/bash
 DIR="$(cd "$(dirname "$0")" && pwd)"
-TCLLIBPATH="$DIR/../../"
+TCLLIBPATH="$DIR/../../../"
 
 export TCLLIBPATH=$TCLLIBPATH
 
