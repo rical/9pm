@@ -1,0 +1,8 @@
+---
+- case: "../cases/worker.py"
+  opts:
+    - "top1"
+- suite: "options.yaml"
+  opts:
+    - "top2"
+- case: "../cases/worker1.py"

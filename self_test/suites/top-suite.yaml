@@ -1,0 +1,4 @@
+---
+- case: "../cases/worker.py"
+- suite: "middle-suite.yaml"
+- case: "../cases/worker1.py"
