@@ -59,6 +59,7 @@ def rootify_path(path):
     return path
 
 def execute(args, test, output_log):
+    os.environ["NINEPM_TEST_NAME"] = test['name']
     proc = subprocess.Popen([test['case']] + args, stdout=subprocess.PIPE)
     skip_suite = False
     test_skip = False
@@ -740,6 +741,8 @@ def main():
     args = parse_cmdline()
     VERBOSE = args.verbose
     NOEXEC = args.no_exec
+
+    vcprint(pcolor.faint, f"Verbose output turned on")
 
     rc = parse_rc(ROOT_PATH, args)
 

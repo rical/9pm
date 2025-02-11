@@ -1,0 +1,6 @@
+---
+- case: "../cases/worker.py"
+  name: "my-worker"
+- case: "../cases/worker.py"
+- case: "../cases/worker1.py"
+  name: "my-worker1"

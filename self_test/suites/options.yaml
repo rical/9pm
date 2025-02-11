@@ -1,0 +1,6 @@
+---
+- case: "../cases/worker.py"
+- case: "../cases/worker.py"
+  opts:
+    - "opt1"
+    - "opt2"
