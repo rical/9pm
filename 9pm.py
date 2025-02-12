@@ -251,6 +251,9 @@ def parse_suite(suite_path, parent_suite_path, options, settings, name=None):
         sys.exit(1)
 
     data = parse_yaml(suite_path)
+    if not data:
+        print(f"fatal, empty suite {suite['name']}")
+        sys.exit(1)
 
     settings = get_suite_settings(suite['name'], data, settings)
 
