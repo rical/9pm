@@ -506,6 +506,9 @@ def run_suite(args, data, skip_suite):
     skip = False
     err = False
 
+    if data['name'] != "command-line":
+        print(pcolor.blue + f"\nRunning suite {data['name']}" + pcolor.reset)
+
     for test in data['suite']:
         if 'suite' in test:
             subskip, suberr = run_suite(args, test, skip_suite)
