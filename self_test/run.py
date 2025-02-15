@@ -144,6 +144,9 @@ class Test9pm:
                 "expected": [
                     {"name": "0002-worker", "args": ["cmdline"]},
                     {"name": "0003-worker", "args": ["opt1", "opt2", "cmdline"]},
+                    {"name": "0004-worker", "args": [
+                        f"{os.path.join(self.script_dir, 'suites/foo')}", "cmdline"]
+                    },
                 ],
             }
         )
