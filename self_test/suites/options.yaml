@@ -4,3 +4,6 @@
   opts:
     - "opt1"
     - "opt2"
+- case: "../cases/worker.py"
+  opts:
+    - "<base>/foo"
