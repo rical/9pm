@@ -278,6 +278,39 @@ class Test9pm:
 
         self.run(["cases/fail.sh", "cases/pass.sh"], ["--abort"], 1, "Aborting execution")
 
+    def test_repeat_flag(self):
+        """Verify that -r (--repeat) works"""
+
+        self.test(
+            {
+                "desc": "Repeate two tests two times",
+                "args": ["-r", "2"],
+                "tests": ["cases/worker.py", "cases/worker1.py"],
+                "expected": [
+                    {"name": "0001-worker", "args": []},
+                    {"name": "0002-worker1", "args": []},
+                    {"name": "0003-worker", "args": []},
+                    {"name": "0004-worker1", "args": []}
+                ],
+            }
+        )
+        self.test(
+            {
+                "desc": "Repeate suite and test two times",
+                "args": ["-r", "2"],
+                "tests": ["suites/suite.yaml", "cases/worker1.py"],
+                "expected": [
+                    {"name": "0002-worker", "args": []},
+                    {"name": "0003-worker", "args": []},
+                    {"name": "0004-worker1", "args": []},
+                    {"name": "0007-worker", "args": []},
+                    {"name": "0008-worker", "args": []},
+                    {"name": "0009-worker1", "args": []},
+                    {"name": "0010-worker1", "args": []}
+                ],
+            }
+        )
+
     def cleanup(self):
         """Cleanup temp directory after tests"""
         self.temp_dir_base.cleanup()
@@ -305,6 +338,7 @@ if __name__ == "__main__":
         tester.test_config_file()
         tester.test_verbose_flag()
         tester.test_abort_flag()
+        tester.test_repeat_flag()
         print_green("All tests passed.")
     finally:
         tester.cleanup()

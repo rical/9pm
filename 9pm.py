@@ -654,6 +654,8 @@ def parse_cmdline():
             help='(TEST) Enable test case debug')
     parser.add_argument('-o', '--option', action='append', default=[],
             help='(TEST) Option(s) passed to all test cases (can be repeated)')
+    parser.add_argument('-r', '--repeat', type=int, default=1,
+            help='(TEST) Number of times to repeat the test (default: 1)')
     parser.add_argument('suites', nargs='+', metavar='TEST|SUITE',
             help='Test or suite to run')
     if len(sys.argv) == 1:
@@ -728,20 +730,21 @@ def pr_proj_info(proj):
 
 def create_base_suite(args):
     suite = {'name': 'command-line', 'suite': []}
-    for filename in args.suites:
-        fpath = os.path.join(os.getcwd(), filename)
-        if filename.endswith('.yaml'):
-            suite['suite'].append(parse_suite(fpath, "command-line", args.option, {}))
-        else:
-            test = {}
-            test['case'] =  fpath
-            test['name'] = gen_name(filename)
-            test['outfile'] = gen_outfile(test['name'])
+    for _ in range(args.repeat):
+        for filename in args.suites:
+            fpath = os.path.join(os.getcwd(), filename)
+            if filename.endswith('.yaml'):
+                suite['suite'].append(parse_suite(fpath, "command-line", args.option, {}))
+            else:
+                test = {}
+                test['case'] =  fpath
+                test['name'] = gen_name(filename)
+                test['outfile'] = gen_outfile(test['name'])
 
-            if args.option:
-                test["options"] = args.option
+                if args.option:
+                    test["options"] = args.option
 
-            suite['suite'].append(test)
+                suite['suite'].append(test)
     return suite
 
 def main():
