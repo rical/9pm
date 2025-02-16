@@ -726,6 +726,24 @@ def pr_proj_info(proj):
 
     cprint(pcolor.yellow, str)
 
+def create_base_suite(args):
+    suite = {'name': 'command-line', 'suite': []}
+    for filename in args.suites:
+        fpath = os.path.join(os.getcwd(), filename)
+        if filename.endswith('.yaml'):
+            suite['suite'].append(parse_suite(fpath, "command-line", args.option, {}))
+        else:
+            test = {}
+            test['case'] =  fpath
+            test['name'] = gen_name(filename)
+            test['outfile'] = gen_outfile(test['name'])
+
+            if args.option:
+                test["options"] = args.option
+
+            suite['suite'].append(test)
+    return suite
+
 def main():
     global DATABASE
     global SCRATCHDIR
@@ -763,28 +781,12 @@ def main():
 
     pr_proj_info(proj)
 
-    cmdl = {'name': 'command-line', 'suite': []}
-    for filename in args.suites:
-        fpath = os.path.join(os.getcwd(), filename)
-        if filename.endswith('.yaml'):
-            cmdl['suite'].append(parse_suite(fpath, "command-line", args.option, {}))
-        else:
-            test = {}
-            test['case'] =  fpath
-            test['name'] = gen_name(filename)
-            test['outfile'] = gen_outfile(test['name'])
-
-            if args.option:
-                test["options"] = args.option
-
-            cmdl['suite'].append(test)
-
-
-    probe_suite(cmdl)
+    suite = create_base_suite(args)
+    probe_suite(suite)
 
     setup_env(args)
 
-    skip, err = run_suite(args, cmdl, False)
+    skip, err = run_suite(args, suite, False)
     if err:
         cprint(pcolor.red, "\nx Execution")
     elif skip:
@@ -792,10 +794,10 @@ def main():
     else:
         cprint(pcolor.green, "\no Execution")
 
-    print_result_tree(cmdl, "")
-    write_md_result(cmdl)
-    write_github_result(cmdl)
-    write_report(cmdl, proj)
+    print_result_tree(suite, "")
+    write_md_result(suite)
+    write_github_result(suite)
+    write_report(suite, proj)
 
     db.close()
     sys.exit(err)
