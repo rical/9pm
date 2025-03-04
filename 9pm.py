@@ -569,7 +569,7 @@ def run_suite(args, data, skip_suite):
 def get_first_existing_file(list, name):
     for f in list:
         if os.path.exists(os.path.expanduser(f)):
-            return f
+            return os.path.expanduser(f)
         vcprint(pcolor.faint, f"({name} not found: {f})")
 
     print("error, can't find any {name} to use")
