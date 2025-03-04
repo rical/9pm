@@ -272,11 +272,28 @@ class Test9pm:
         """Verify that that 9pm verbose output works (-v)"""
 
         self.run(["cases/worker.py", "cases/worker.py"], ["-v"], 0, "Verbose output turned on")
+        print_green(f"[PASS] Verbose flag works (-v)")
 
     def test_abort_flag(self):
         """Verify that that 9pm abort flag works (--abort)"""
 
         self.run(["cases/fail.sh", "cases/pass.sh"], ["--abort"], 1, "Aborting execution")
+        print_green(f"[PASS] Abort flag works (-a --abort)")
+
+    def test_proj_config(self):
+        """Verify that that 9pm project config works (--proj)"""
+
+        self.run(["cases/pass.sh"], ["-v"], 0, "Testing 9pm")
+
+        self.run(["cases/pass.sh"], ["-v", "--proj", "configs/proj-test1.yaml"], 0, "Testing Self Test 1")
+
+        self.env["NINEPM_PROJ_CONFIG"] = "configs/proj-test2.yaml"
+        self.run(["cases/pass.sh"], ["-v"], 0, "Testing Self Test 2")
+        # This shall have precedence over env
+        self.run(["cases/pass.sh"], ["-v", "--proj", "configs/proj-test1.yaml"], 0, "Testing Self Test 1")
+        del self.env["NINEPM_PROJ_CONFIG"]
+
+        print_green(f"[PASS] Project Config works")
 
     def test_repeat_flag(self):
         """Verify that -r (--repeat) works"""
@@ -339,6 +356,7 @@ if __name__ == "__main__":
         tester.test_verbose_flag()
         tester.test_abort_flag()
         tester.test_repeat_flag()
+        tester.test_proj_config()
         print_green("All tests passed.")
     finally:
         tester.cleanup()
