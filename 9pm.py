@@ -566,6 +566,15 @@ def run_suite(args, data, skip_suite):
 
     return skip, err
 
+def get_first_existing_file(list, name):
+    for f in list:
+        if os.path.exists(os.path.expanduser(f)):
+            return f
+        vcprint(pcolor.faint, f"({name} not found: {f})")
+
+    print("error, can't find any {name} to use")
+    sys.exit(1)
+
 def parse_proj_config(root_path, args):
     files = [
         os.path.join(root_path, '..', '9pm-proj.yaml'),
@@ -575,21 +584,12 @@ def parse_proj_config(root_path, args):
     if "NINEPM_PROJ_CONFIG" in os.environ:
         files.insert(0, os.environ["NINEPM_PROJ_CONFIG"])
 
-    path = next((os.path.expanduser(f) for f in files if os.path.exists(os.path.expanduser(f))), None)
-
     if args.proj:
-        if not os.path.exists(args.proj):
-            print(f"error, config file \"{args.proj}\" not found.")
-            sys.exit(1)
+        files.insert(0, args.proj)
 
-        path = args.proj
-
-    if path:
-        vcprint(pcolor.faint, f"Using project config: {path}")
-        os.environ["NINEPM_PROJ_CONFIG"] = path
-    else:
-        print("error, can't find any 9pm project config")
-        sys.exit(1)
+    path = get_first_existing_file(files, "Project Config")
+    vcprint(pcolor.faint, f"Using project config: {path}")
+    os.environ["NINEPM_PROJ_CONFIG"] = path
 
     try:
         with open(path, 'r') as f:
@@ -616,13 +616,9 @@ def parse_rc(root_path, args):
         os.path.join("~/.9pm.rc"),
         os.path.join(root_path, 'etc', '9pm.rc')
     ]
-    path = next((os.path.expanduser(f) for f in files if os.path.exists(os.path.expanduser(f))), None)
 
-    if path:
-        vcprint(pcolor.faint, f"Using RC: {path}")
-    else:
-        print("error, can't find any 9pm.rc file")
-        sys.exit(1)
+    path = get_first_existing_file(files, "Running Config")
+    vcprint(pcolor.faint, f"Using RC: {path}")
 
     try:
         with open(path, 'r') as f:
