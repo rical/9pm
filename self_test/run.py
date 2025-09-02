@@ -67,7 +67,7 @@ class Test9pm:
             print(result.stderr, file=sys.stderr)
 
         # Ensure the return code is as expected
-        assert result.returncode == expected_return, f"Failed: {result.stderr}"
+        assert result.returncode == expected_return, f"Failed: Got unexpected retun code {result.returncode}"
 
         # If grep is provided, ensure the output contains the specified text
         if grep:
