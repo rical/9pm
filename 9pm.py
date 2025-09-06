@@ -442,16 +442,31 @@ def write_report(data, config):
     with open(os.path.join(LOGDIR, 'report.adoc'), 'a') as file:
         current_date = datetime.now().strftime("%Y-%m-%d")
         name = config['PROJECT-NAME'] if 'PROJECT-NAME' in config else "9pm"
+        root = config['PROJECT-ROOT']
         topdoc = config['PROJECT-TOPDOC'] + "/" if 'PROJECT-TOPDOC' in config else ""
+        version = run_git_cmd(root, ["describe", "--tags", "--always"])
 
-        file.write(f"= {name} Test Report\n")
-        file.write("Author: 9pm Test Framework\n")
-        file.write(f"Date: {current_date}\n")
-        file.write(":toc: left\n")
-        file.write(":toc-title: INDEX\n")
+        file.write(":title-page:\n")
         file.write(f":topdoc: {topdoc}\n")
+        file.write("ifdef::logo[]\n")  # Optional -a logo=PATH from asciidoctor-pdf
+        file.write(":title-logo-image: {logo}\n")
+        file.write("endif::[]\n")
+        file.write(":toc:\n")
+        file.write(":toclevels: 2\n")
         file.write(":sectnums:\n")
+        file.write(":sectnumlevels: 2\n")
+        file.write(":pdfmark:\n")
         file.write(":pdf-page-size: A4\n")
+        file.write(":pdf-page-layout: portrait\n")
+        file.write(":pdf-page-margin: [1in, 0.5in]\n")
+        file.write(f":keywords: regression, test, testing, 9pm, {name}\n")
+        file.write(":subject: Regression testing\n")
+        file.write(":autofit-option:\n")
+        file.write("\n")
+
+        file.write(f"= Test Report\n")
+        file.write(f"{name} {version}\n")
+        file.write(f"{current_date}\n")
 
         file.write("\n<<<\n")
         file.write("\n== Test Summary\n\n")
