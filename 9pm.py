@@ -328,47 +328,53 @@ def write_report_result_tree(file, includes, data, depth):
 
         string = f"{indent}"
         string += f"{stars}"
-        string += f" [.{test['result']}]#{test['result'].upper()}#"
+        string += f" {resultfmt(test)}"
         if 'outfile' in test:
             string += f" <<output-{test['name']},{test['name']}>>"
         else:
             string += f" {test['name']}"
-
-        # Append (Spec) if there's a test specification
-        if 'test-spec-sha' in test:
-            string += f" <<incl-{test['test-spec-sha']},(Spec)>>"
 
         file.write(f"{string}\n")
 
         if 'suite' in test:
             write_report_result_tree(file, includes, test, depth + 1)
 
-def write_report_output(file, data, depth):
-    for test in data['suite']:
+def resultfmt(test):
+    result = test.get('result', 'unknown')
+    if result == 'masked-fail':
+        return "[.fail line-through]#FAIL#"
+    elif result == 'masked-skip':
+        return "[.skip line-through]#SKIP#"
+    else:
+        return f"[.{result}]#{result.upper()}#"
 
+def write_report_output(file, data, depth, is_first=True):
+    """For each test in suite, write specification¹, result, and output"""
+    for test in data['suite']:
         if 'outfile' in test:
-            file.write(f"\n=== {test['name']}\n")
+            # Add page break before each test, except first one
+            if is_first:
+                is_first = False
+            else:
+                file.write("\n<<<\n")
 
-            if 'test-spec-sha' in test:
-                file.write(f"\n<<incl-{test['test-spec-sha']},Test Specification>>\n")
-
+            # Test heading is always from 'name:' in the suite file
             file.write(f"\n[[output-{test['name']}]]\n")
-            file.write(f"----\n")
+            file.write(f"\n=== {resultfmt(test)} {test['name']}\n")
+
+            # Skip headnig from test spec.
+            if 'test-spec' in test:
+                file.write("include::{}[lines=2..-1]\n" . format(test['test-spec']))
+
+            file.write("\n==== Output\n")
+            file.write("----\n")
             file.write(f"include::{test['outfile']}[]\n")
-            file.write(f"----\n")
+            file.write("----\n")
 
         if 'suite' in test:
-            write_report_output(file, test, depth + 1)
+            is_first = write_report_output(file, test, depth + 1, is_first)
 
-def write_report_specifications(file, data, depth):
-    for test in data['suite']:
-
-        if 'test-spec-sha' in test:
-            file.write(f"\n[[incl-{test['test-spec-sha']}]]\n")
-            file.write("include::{}[]\n" . format(test['test-spec']))
-
-        if 'suite' in test:
-            write_report_specifications(file, test, depth + 1)
+    return is_first
 
 def write_report_project_info(file, config):
     if 'PROJECT-NAME' not in config or 'PROJECT-ROOT' not in config:
@@ -409,17 +415,7 @@ def write_report(data, config):
 
         file.write("\n<<<\n")
         file.write("\n== Test Result\n\n")
-
-        includes = []
-        write_report_result_tree(file, includes, data, 0)
-
-        file.write("\n<<<\n")
-        file.write("\n== Test Output\n")
         write_report_output(file, data, 0)
-
-        file.write("\n<<<\n")
-        file.write("\n== Test Specification\n")
-        write_report_specifications(file, data, 0)
 
 
 def write_github_result_tree(file, data, depth):
