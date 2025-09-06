@@ -387,12 +387,56 @@ def write_report_project_info(file, config):
 
     file.write(f"\n=== {name} Info\n\n")
 
-    file.write('[cols="1h,2"]\n')
+    file.write('[cols="1h,2", width=30%]\n')
     file.write("|===\n")
     file.write(f"| Version | {version}\n")
     file.write(f"| SHA     | {sha}\n")
 
     file.write("|===\n")
+
+def write_report_test_info(file, data):
+    pass_count = 0
+    fail_count = 0
+    skip_count = 0
+    masked_fail_count = 0
+    masked_skip_count = 0
+
+    def count_tests(suite_data):
+        nonlocal pass_count, fail_count, skip_count, masked_fail_count, masked_skip_count
+        for test in suite_data['suite']:
+            if 'suite' in test:
+                # This is a sub-suite, recurse but don't count it
+                count_tests(test)
+            elif 'result' in test:
+                # This is a leaf test case, count it
+                if test['result'] == 'pass':
+                    pass_count += 1
+                elif test['result'] == 'fail':
+                    fail_count += 1
+                elif test['result'] == 'skip':
+                    skip_count += 1
+                elif test['result'] == 'masked-fail':
+                    masked_fail_count += 1
+                elif test['result'] == 'masked-skip':
+                    masked_skip_count += 1
+
+    count_tests(data)
+
+    file.write("\n=== Test Overview\n\n")
+    file.write('[cols="1h,2", width=30%]\n')
+    file.write("|===\n")
+    file.write(f"| {resultfmt({'result': 'pass'})} | {pass_count}\n")
+    file.write(f"| {resultfmt({'result': 'fail'})} | {fail_count}\n")
+    file.write(f"| {resultfmt({'result': 'skip'})} | {skip_count}\n")
+    file.write(f"| {resultfmt({'result': 'masked-fail'})} | {masked_fail_count}\n")
+    file.write(f"| {resultfmt({'result': 'masked-skip'})} | {masked_skip_count}\n")
+
+    total_count = pass_count + fail_count + skip_count + masked_fail_count + masked_skip_count
+    file.write(f"| *TOTAL* | *{total_count}*\n")
+    file.write("|===\n")
+
+    includes = []
+    write_report_result_tree(file, includes, data, 0)
 
 def write_report(data, config):
     with open(os.path.join(LOGDIR, 'report.adoc'), 'a') as file:
@@ -412,6 +456,7 @@ def write_report(data, config):
         file.write("\n<<<\n")
         file.write("\n== Test Summary\n\n")
         write_report_project_info(file, config)
+        write_report_test_info(file, data)
 
         file.write("\n<<<\n")
         file.write("\n== Test Result\n\n")
