@@ -44,6 +44,7 @@ jobs:
         asciidoctor-pdf \
           --theme report/theme.yml \
           -a pdf-fontsdir=report/fonts \
+          -a logo=logo.png \
           ~/.local/share/9pm/logs/last/report.adoc \
           -o ~/.local/share/9pm/logs/last/report.pdf
 
