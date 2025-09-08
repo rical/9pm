@@ -1,5 +1,5 @@
 
-# 9pm - The Simple Test Executor
+<img align="left" src="logo.png" alt="9pm Logo" width=400>
 
 9pm is a flexible and efficient framework for running test cases or suites defined in YAML files or specified via command-line arguments. It supports nested suites, detailed logging, and robust error handling, making it ideal for simply managing complex test setups.
 
