@@ -76,12 +76,12 @@ def execute(args, test, output_log):
         string = line.rstrip()
         stamp = time.strftime("%Y-%m-%d %H:%M:%S")
 
-        plan = re.search('^(\d+)..(\d+)$', string)
-        ok = re.search('^ok (\d+) -', string)
-        not_ok = re.search('^not ok (\d+) -', string)
-        skip = re.search('^ok (\d+) # skip', string)
-        skip_suite = re.search('^ok (\d+) # skip suite', string)
-        comment = re.search('^\w*#', string)
+        plan = re.search(r'^(\d+)..(\d+)$', string)
+        ok = re.search(r'^ok (\d+) -', string)
+        not_ok = re.search(r'^not ok (\d+) -', string)
+        skip = re.search(r'^ok (\d+) # skip', string)
+        skip_suite = re.search(r'^ok (\d+) # skip suite', string)
+        comment = re.search(r'^\w*#', string)
 
         output_log.write(f"{stamp} {string}\n")
 
