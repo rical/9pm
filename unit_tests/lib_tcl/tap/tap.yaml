@@ -1,41 +1,41 @@
 ---
 - case: "tap.tcl"
-  name: "ok-skip"
+  name: "OK Skip"
   opts:
     - ok
     - skip
   mask: "skip"
 
 - case: "tap.tcl"
-  name: "ok-skip-ok"
+  name: "OK Skip OK"
   opts:
     - ok
     - skip
     - ok
   mask: "skip"
 - case: "tap.tcl"
-  name: "skip"
+  name: "Skip"
   opts:
     - skip
   mask: "skip"
 
 - case: "tap.tcl"
-  name: "ok"
+  name: "OK"
   opts:
     - ok
 
 - case: "plan.sh"
-  name: "plan-first"
+  name: "Plan First"
   opts:
     - first
 
 - case: "plan.sh"
-  name: "plan-last"
+  name: "Plan Last"
   opts:
     - last
 
 - case: "plan.sh"
-  name: "plan-omit"
+  name: "Plan Omit"
   opts:
     - omit
   mask: "fail"

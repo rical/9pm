@@ -5,6 +5,6 @@
 - case: "test.pl"
 
 - case: "test.pl"
-  name: "static-named"
+  name: "Verify fixed test-spec: Readme.adoc"
 
 - suite: "dynamic/dynamic.yaml"
