@@ -1,6 +1,6 @@
 === Bash Example
 ==== Description
-An example of how to create a 9pm test case by printing TAP from Python.
+An example of how to create a 9pm test case by printing TAP from Bash.
 
 This test specification has the same name as the testcase but with the .adoc extension.
 

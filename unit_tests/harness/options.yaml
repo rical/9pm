@@ -9,7 +9,7 @@
     - "base:<base>"
 
 - case: "options.tcl"
-  name: "argument-skip"
+  name: "Argument Skip"
   opts:
     - "suite-supplied"
     - "mode:long"
@@ -19,7 +19,7 @@
     - "skip-positive:no"
 
 - suite: "options_nested.yaml"
-  name: "a-nested-suite"
+  name: "A Nested Suite"
   opts:
     - "suite-supplied"
     - "mode:long"

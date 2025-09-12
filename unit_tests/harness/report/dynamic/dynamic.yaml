@@ -5,4 +5,4 @@
 - case: "bash.sh"
 
 - case: "bash.sh"
-  name: "dynamic-named"
+  name: "Verify dynamic test-spec: <case>.adoc"
