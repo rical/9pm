@@ -15,5 +15,3 @@ Localhost only.
 . Sed do eiusmod tempor incididunt
 . Ut labore et dolore magna aliqua
 . Excepteur sint occaecat cupidatat non proident
-
-<<<
