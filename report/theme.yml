@@ -1,3 +1,5 @@
+# Alternative fonts: Helvetica, Times-Roman, Courier
+---
 extends: default
 font:
   catalog:
@@ -15,11 +17,12 @@ base:
   font-color: #1f2937
 
 code:
+  font-size: 8
   background-color: #ffffff
   border-color: #ffffff
 
 heading:
-  font-family: SourceCodePro
+  font-size: 14
   font-style: bold
 
 role:
@@ -36,8 +39,8 @@ role:
     font-style: bold
 
 link:
-    font-color: #1f2937
-    text-decoration: underline
+  font-color: #2563eb
+  text-decoration: underline
 
 heading-h1:
   font-size: 24
@@ -46,9 +49,7 @@ heading-h2:
   font-size: 18
 
 heading-h3:
-  font-size: 12
-  margin-top: 30
-  text-decoration: underline
+  font-size: 14
 
 heading-h4:
-  font-size: 11
+  font-size: 12
