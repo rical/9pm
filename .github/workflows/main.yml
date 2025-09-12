@@ -31,22 +31,16 @@ jobs:
         echo "PATH=$PATH:$(ruby -e 'puts Gem.user_dir')/bin" >> $GITHUB_ENV
 
     - name: Run Self Tests
-      run: python3 self_test/run.py
+      run: make check
 
     - name: Run Unit Tests
-      run: python3 9pm.py --option cmdl-supplied unit_tests/auto.yaml
+      run: make test
 
     - name: Publish Test Result
       run: cat ~/.local/share/9pm/logs/last/result-gh.md >> $GITHUB_STEP_SUMMARY
 
     - name: Generate Test Report
-      run: |
-        asciidoctor-pdf \
-          --theme report/theme.yml \
-          -a pdf-fontsdir=report/fonts \
-          -a logo=logo.png \
-          ~/.local/share/9pm/logs/last/report.adoc \
-          -o ~/.local/share/9pm/logs/last/report.pdf
+      run: make report
 
     - name: Upload Logs as Artifacts
       uses: actions/upload-artifact@v4
