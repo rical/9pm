@@ -59,7 +59,7 @@ def rootify_path(path):
     return path
 
 def execute(args, test, output_log):
-    os.environ["NINEPM_TEST_NAME"] = test['name']
+    os.environ["NINEPM_TEST_NAME"] = test['unix_name']
     proc = subprocess.Popen([test['case']] + args, stdout=subprocess.PIPE)
     skip_suite = False
     test_skip = False
@@ -133,6 +133,7 @@ def run_onfail(args, test):
 
     onfail = {}
     onfail['case'] = os.path.join(dirname, test['onfail'])
+    onfail['unix_name'] = 'onfail'
     onfail['name'] = 'onfail'
 
     print("\n{}Running onfail \"{}\" for test {}{}" . format(pcolor.cyan, test['onfail'],
@@ -190,10 +191,17 @@ def run_test(args, test):
 def prefix_name(name):
     global TEST_CNT
     TEST_CNT += 1
-    return str(TEST_CNT).zfill(4) + "-" + name.replace(" ", "-")
+    # Normalize name for filesystem safety: replace spaces and remove/replace special chars
+    normalized = name.lower().replace(" ", "-").replace(".", "").replace("<", "").replace(">", "").replace("?", "")
+    return str(TEST_CNT).zfill(4) + "-" + normalized
 
-def gen_name(filename):
-    return prefix_name(os.path.basename(filename))
+def gen_name(filepath):
+    return os.path.basename(filepath)
+
+def gen_unix_name(filename):
+    base = os.path.basename(filename)
+    name_without_ext = os.path.splitext(base)[0]
+    return prefix_name(name_without_ext)
 
 def gen_outfile(name):
     return os.path.join("output", os.path.splitext(name)[0] + ".log")
@@ -242,8 +250,10 @@ def parse_suite(suite_path, parent_suite_path, options, settings, name=None):
     suite_dirname = os.path.dirname(suite_path)
 
     if name:
-        suite['name'] = prefix_name(name)
+        suite['unix_name'] = prefix_name(name)
+        suite['name'] = name
     else:
+        suite['unix_name'] = gen_unix_name(suite_path)
         suite['name'] = gen_name(suite_path)
 
     if not os.path.isfile(suite_path):
@@ -276,11 +286,13 @@ def parse_suite(suite_path, parent_suite_path, options, settings, name=None):
             case = {}
 
             if 'name' in entry:
-                case['name'] = prefix_name(entry['name'])
+                case['unix_name'] = prefix_name(entry['name'])
+                case['name'] = entry['name']
             else:
+                case['unix_name'] = gen_unix_name(entry['case'])
                 case['name'] = gen_name(entry['case'])
 
-            case['outfile'] = gen_outfile(case['name'])
+            case['outfile'] = gen_outfile(case['unix_name'])
 
             if 'opts' in entry:
                 opts = [o.replace('<base>', suite_dirname) for o in entry['opts']]
@@ -330,7 +342,7 @@ def write_report_result_tree(file, includes, data, depth):
         string += f"{stars}"
         string += f" {resultfmt(test)}"
         if 'outfile' in test:
-            string += f" <<output-{test['name']},{test['name']}>>"
+            string += f" <<output-{test['unix_name']},{test['name']}>>"
         else:
             string += f" {test['name']}"
 
@@ -359,7 +371,7 @@ def write_report_output(file, data, depth, is_first=True):
                 file.write("\n<<<\n")
 
             # Test heading is always from 'name:' in the suite file
-            file.write(f"\n[[output-{test['name']}]]\n")
+            file.write(f"\n[[output-{test['unix_name']}]]\n")
             file.write(f"\n=== {resultfmt(test)} {test['name']}\n")
 
             # Skip headnig from test spec.
@@ -789,9 +801,10 @@ def create_base_suite(args):
                 suite['suite'].append(parse_suite(fpath, "command-line", args.option, {}))
             else:
                 test = {}
-                test['case'] =  fpath
+                test['case'] = fpath
+                test['unix_name'] = gen_unix_name(filename)
                 test['name'] = gen_name(filename)
-                test['outfile'] = gen_outfile(test['name'])
+                test['outfile'] = gen_outfile(test['unix_name'])
 
                 if args.option:
                     test["options"] = args.option
