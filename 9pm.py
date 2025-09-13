@@ -773,10 +773,20 @@ def setup_env(args):
         os.environ["NINEPM_CONFIG"] = args.config
 
 def run_git_cmd(path, command):
-    gitdir = os.path.join(path, '.git')
+    git_path = os.path.join(path, '.git')
 
-    if not os.path.isdir(gitdir):
-        vcprint(pcolor.orange, f"warning, no .git dir in path ({path})")
+    if os.path.isfile(git_path):
+        with open(git_path, 'r') as f:
+            line = f.read().strip()
+            if line.startswith('gitdir: '):
+                gitdir = os.path.join(path, line[8:])
+            else:
+                vcprint(pcolor.orange, f"warning, invalid .git file format ({path})")
+                return ""
+    elif os.path.isdir(git_path):
+        gitdir = git_path
+    else:
+        vcprint(pcolor.orange, f"warning, no .git dir or file in path ({path})")
         return ""
 
     try:
