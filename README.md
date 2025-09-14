@@ -27,7 +27,12 @@
 2. Install dependencies:
    ```bash
    pip install pyyaml
+   gem install --user-install asciidoctor-pdf rouge
    ```
+
+> [!NOTE]
+> On Debian/Ubuntu systems you can use standard packages for the requirements:
+> `sudo apt install python3-yaml ruby-asciidoctor-pdf ruby-rouge`
 
 ---
 
