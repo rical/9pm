@@ -11,6 +11,7 @@ import shutil
 import re
 import atexit
 import hashlib
+import textwrap
 from datetime import datetime
 
 TEST_CNT=0
@@ -65,8 +66,17 @@ def execute(args, test, output_log):
     test_skip = False
     err = False
 
+    cmd = path = os.path.relpath(test['case'], ROOT_PATH)
     if args:
-        output_log.write(f"Starting with arguments: {args}\n\n")
+        cmd = f"{path} {' '.join(args)}"
+
+    prefix = "Starting: "
+    wrapped = textwrap.fill(f"{prefix}{cmd}", width=100,
+                            subsequent_indent=" " * (len(prefix) +
+                                                     len(path) + 1),
+                            break_long_words=False,
+                            break_on_hyphens=False)
+    output_log.write(f"{wrapped}\n\n")
 
     while True:
         line = proc.stdout.readline().decode('utf-8')
