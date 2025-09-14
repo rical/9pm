@@ -151,10 +151,12 @@ def run_test(args, test):
     if 'options' in test:
         opts.extend(test['options'])
 
-    print(pcolor.blue + "\nStarting test", test['name'] + pcolor.reset)
+    name = test['name']
+    path = os.path.relpath(test['case'], ROOT_PATH)
+    print(f"\n{pcolor.blue}Starting test {name} ({path}){pcolor.reset}")
 
     if test['result'] == "skip":
-        print("{}Skip test {} (suite skip){}" . format(pcolor.yellow, test['name'], pcolor.reset))
+        print(f"{pcolor.yellow}Skip test {name} (suite skip){pcolor.reset}")
         # Delete outfile as this test won't have any output
         if 'outfile' in test:
             del test['outfile']
