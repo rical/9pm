@@ -185,15 +185,28 @@ def run_test(args, test):
 
     return skip_suite, skip, err
 
+
+def slugify(text, lowercase=True):
+    """
+    Local good-enough slugify() replacement
+
+    Replace spaces, special chars, and non-ASCII chars with '-',
+    then squash any resulting repeated '-' for readability.
+    """
+    if lowercase:
+        text = text.lower()
+
+    s = re.sub(r'[^\w-]', '-', text, flags=re.ASCII)
+    return re.sub(r'-{2,}', '-', s)
+
+
 # In this function, we generate an unique name for each case and suite. Both
 # suites and cases can be passed an arbitrary amount of times and the same test
 # can reside in different suites. We need something unique to identify them by.
 def prefix_name(name):
     global TEST_CNT
     TEST_CNT += 1
-    # Normalize name for filesystem safety: replace spaces and remove/replace special chars
-    normalized = name.lower().replace(" ", "-").replace(".", "").replace("<", "").replace(">", "").replace("?", "")
-    return str(TEST_CNT).zfill(4) + "-" + normalized
+    return str(TEST_CNT).zfill(4) + "-" + slugify(name, lowercase=True)
 
 def gen_name(filepath):
     return os.path.basename(filepath)
