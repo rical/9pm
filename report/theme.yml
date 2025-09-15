@@ -21,6 +21,11 @@ code:
   background-color: #ffffff
   border-color: #ffffff
 
+codespan:
+  font-size: 9
+  background-color: #ffffff
+  font-color: #000000
+
 heading:
   font-size: 14
   font-style: bold
@@ -37,6 +42,9 @@ role:
   skip:
     font-color: #eab308
     font-style: bold
+
+table:
+  font-size: 9
 
 link:
   font-color: #2563eb
