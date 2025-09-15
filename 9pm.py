@@ -218,7 +218,7 @@ def slugify(text, lowercase=True):
 def prefix_name(name):
     global TEST_CNT
     TEST_CNT += 1
-    return str(TEST_CNT).zfill(4) + "-" + slugify(name, lowercase=True)
+    return str(TEST_CNT).zfill(4), slugify(name, lowercase=True)
 
 def gen_name(filepath):
     return os.path.basename(filepath)
@@ -275,10 +275,14 @@ def parse_suite(suite_path, parent_suite_path, options, settings, name=None):
     suite_dirname = os.path.dirname(suite_path)
 
     if name:
-        suite['unix_name'] = prefix_name(name)
+        uniq_id, uname = prefix_name(name)
+        suite['uniq_id'] = uniq_id
+        suite['unix_name'] = uniq_id + "-" + uname
         suite['name'] = name
     else:
-        suite['unix_name'] = gen_unix_name(suite_path)
+        uniq_id, uname = gen_unix_name(suite_path)
+        suite['uniq_id'] = uniq_id
+        suite['unix_name'] = uniq_id + "-" + uname
         suite['name'] = gen_name(suite_path)
 
     if not os.path.isfile(suite_path):
@@ -311,10 +315,14 @@ def parse_suite(suite_path, parent_suite_path, options, settings, name=None):
             case = {}
 
             if 'name' in entry:
-                case['unix_name'] = prefix_name(entry['name'])
+                uniq_id, uname = prefix_name(entry['name'])
+                case['uniq_id'] = uniq_id
+                case['unix_name'] = uniq_id + "-" + uname
                 case['name'] = entry['name']
             else:
-                case['unix_name'] = gen_unix_name(entry['case'])
+                uniq_id, uname = gen_unix_name(entry['case'])
+                case['uniq_id'] = uniq_id
+                case['unix_name'] = uniq_id + "-" + uname
                 case['name'] = gen_name(entry['case'])
 
             case['outfile'] = gen_outfile(case['unix_name'])
@@ -367,9 +375,9 @@ def write_report_result_tree(file, includes, data, depth):
         string += f"{stars}"
         string += f" {resultfmt(test)}"
         if 'outfile' in test:
-            string += f" <<output-{test['unix_name']},{test['name']}>>"
+            string += f" <<output-{test['unix_name']},{test['uniq_id']} {test['name']}>>"
         else:
-            string += f" {test['name']}"
+            string += f" {test['uniq_id']} {test['name']}"
 
         file.write(f"{string}\n")
 
@@ -525,7 +533,9 @@ def write_github_result_tree(file, data, depth):
     }
     for test in data['suite']:
         mark = icon_map.get(test['result'], "")
-        file.write("{}- {} : {}\n".format('  ' * depth, mark, test['name']))
+        file.write("{}- {} : {} {}\n".format('  ' * depth, mark,
+                                             test['uniq_id'],
+                                             test['name']))
 
         if 'suite' in test:
             write_github_result_tree(file, test, depth + 1)
@@ -537,7 +547,10 @@ def write_github_result(data):
 
 def write_md_result_tree(file, data, depth):
     for test in data['suite']:
-        file.write("{}- {} : {}\n".format('  ' * depth, test['result'].upper(), test['name']))
+        file.write("{}- {} : {} {}\n".format('  ' * depth,
+                                             test['result'].upper(),
+                                             test['uniq_id'],
+                                             test['name']))
 
         if 'suite' in test:
             write_md_result_tree(file, test, depth + 1)
@@ -578,7 +591,7 @@ def print_result_tree(data, base):
             sign = "?"
             color = pcolor.yellow
 
-        print("{}{}{}{} {}{}".format(base, prefix, color, sign, test['name'], pcolor.reset))
+        print("{}{}{}{} {} {}{}".format(base, prefix, color, sign, test['uniq_id'], test['name'], pcolor.reset))
 
         if 'suite' in test:
             print_result_tree(test, nextbase)
@@ -837,7 +850,9 @@ def create_base_suite(args):
             else:
                 test = {}
                 test['case'] = fpath
-                test['unix_name'] = gen_unix_name(filename)
+                uniq_id, uname = gen_unix_name(filename)
+                test['uniq_id'] = uniq_id
+                test['unix_name'] = uniq_id + "-" + uname
                 test['name'] = gen_name(filename)
                 test['outfile'] = gen_outfile(test['unix_name'])
 
