@@ -79,28 +79,28 @@ def execute(args, test, output_log):
         output_log.write(f"{stamp} {string}\n")
 
         if plan:
-            cprint(pcolor.purple, '{} {}'.format(stamp, string))
+            cprint(pcolor.purple, f'{stamp} {string}')
             test['plan'] = plan.group(2)
         elif skip:
-            cprint(pcolor.yellow, '{} {}'.format(stamp, string))
+            cprint(pcolor.yellow, f'{stamp} {string}')
             test['executed'] = skip.group(1)
             test_skip = True
         elif skip_suite:
-            cprint(pcolor.yellow, '{} {}'.format(stamp, string))
+            cprint(pcolor.yellow, f'{stamp} {string}')
             test['executed'] = skip.group(1)
             skip_suite = True
             test_skip = True
         elif ok:
-            cprint(pcolor.green, '{} {}'.format(stamp, string))
+            cprint(pcolor.green, f'{stamp} {string}')
             test['executed'] = ok.group(1)
         elif not_ok:
-            cprint(pcolor.red, '{} {}'.format(stamp, string))
+            cprint(pcolor.red, f'{stamp} {string}')
             err = True
             test['executed'] = not_ok.group(1)
         elif comment:
-            cprint(pcolor.faint, '{} {}'.format(stamp, string))
+            cprint(pcolor.faint, f'{stamp} {string}')
         else:
-            print("{} {}".format(stamp, string))
+            print(f"{stamp} {string}")
 
     out, error = proc.communicate()
     exitcode = proc.returncode
@@ -129,8 +129,7 @@ def run_onfail(args, test):
     onfail['unix_name'] = 'onfail'
     onfail['name'] = 'onfail'
 
-    print("\n{}Running onfail \"{}\" for test {}{}" . format(pcolor.cyan, test['onfail'],
-        test['name'], pcolor.reset))
+    print(f"\n{pcolor.cyan}Running onfail \"{test['onfail']}\" for test {test['name']}{pcolor.reset}")
 
     vcprint(pcolor.faint, f"Executing onfail {onfail['case']} for test {test['case']}")
 
@@ -175,7 +174,7 @@ def run_test(args, test):
         return False, False, True
 
     if test['plan'] != test['executed']:
-        print("test error, not conforming to plan ({}/{})".format(test['executed'], test['plan']))
+        print(f"test error, not conforming to plan ({test['executed']}/{test['plan']})")
         err = True
 
     return skip_suite, skip, err
@@ -269,8 +268,8 @@ def parse_suite(suite_path, parent_suite_path, options, settings, name=None):
         suite['name'] = gen_name(suite_path)
 
     if not os.path.isfile(suite_path):
-        print("error, test suite not found {}" . format(suite_path))
-        print("(referenced from {})" . format(parent_suite_path))
+        print(f"error, test suite not found {suite_path}")
+        print(f"(referenced from {parent_suite_path})")
         sys.exit(1)
 
     data = parse_yaml(suite_path)
@@ -335,17 +334,17 @@ def parse_suite(suite_path, parent_suite_path, options, settings, name=None):
                         vcprint(pcolor.faint, f"No test specification for {case['case']} ({test_spec_path})")
 
             if not os.path.isfile(case['case']):
-                print("error, test case not found {}" . format(case['case']))
-                print("(referenced from {})" . format(suite_path))
+                print(f"error, test case not found {case['case']}")
+                print(f"(referenced from {suite_path})")
                 sys.exit(1)
             if not os.access(case['case'], os.X_OK):
-                print("error, test case not executable {}".format(case['case']))
+                print(f"error, test case not executable {case['case']}")
                 sys.exit(1)
             suite['suite'].append(case)
         elif 'settings' in entry:
             pass # Handled by preparser
         else:
-            print("error, missing suite/case/settings in suite {}".format(suite['name']))
+            print(f"error, missing suite/case/settings in suite {suite['name']}")
             sys.exit(1)
     return suite
 
@@ -392,7 +391,7 @@ def write_report_output(file, data, depth, is_first=True):
 
             # Skip headnig from test spec.
             if 'test-spec' in test:
-                file.write("include::{}[lines=2..-1]\n" . format(test['test-spec']))
+                file.write(f"include::{test['test-spec']}[lines=2..-1]\n")
 
             # Add test information table
             file.write("\n==== Test Information\n")
@@ -537,9 +536,7 @@ def write_github_result_tree(file, data, depth):
     }
     for test in data['suite']:
         mark = icon_map.get(test['result'], "")
-        file.write("{}- {} : {} {}\n".format('  ' * depth, mark,
-                                             test['uniq_id'],
-                                             test['name']))
+        file.write(f"{'  ' * depth}- {mark} : {test['uniq_id']} {test['name']}\n")
 
         if 'suite' in test:
             write_github_result_tree(file, test, depth + 1)
@@ -551,10 +548,7 @@ def write_github_result(data):
 
 def write_md_result_tree(file, data, depth):
     for test in data['suite']:
-        file.write("{}- {} : {} {}\n".format('  ' * depth,
-                                             test['result'].upper(),
-                                             test['uniq_id'],
-                                             test['name']))
+        file.write(f"{'  ' * depth}- {test['result'].upper()} : {test['uniq_id']} {test['name']}\n")
 
         if 'suite' in test:
             write_md_result_tree(file, test, depth + 1)
@@ -595,7 +589,7 @@ def print_result_tree(data, base):
             sign = "?"
             color = pcolor.yellow
 
-        print("{}{}{}{} {} {}{}".format(base, prefix, color, sign, test['uniq_id'], test['name'], pcolor.reset))
+        print(f"{base}{prefix}{color}{sign} {test['uniq_id']} {test['name']}{pcolor.reset}")
 
         if 'suite' in test:
             print_result_tree(test, nextbase)
@@ -632,10 +626,10 @@ def run_suite(args, data, skip_suite):
 
         elif 'case' in test:
             if not os.path.isfile(test['case']):
-                print("error, test case not found {}".format(test['case']))
+                print(f"error, test case not found {test['case']}")
                 sys.exit(1)
             if not os.access(test['case'], os.X_OK):
-                print("error, test case not executable {}".format(test['case']))
+                print(f"error, test case not executable {test['case']}")
                 sys.exit(1)
 
             if skip_suite:
@@ -644,7 +638,7 @@ def run_suite(args, data, skip_suite):
             skip_suite, subskip, suberr = run_test(args, test)
             if suberr:
                 if 'mask' in test and test['mask'] == "fail":
-                    print("{}Test failure is masked in suite{}" . format(pcolor.red, pcolor.reset))
+                    print(f"{pcolor.red}Test failure is masked in suite{pcolor.reset}")
                     test['result'] = "masked-fail"
                     err = False
                 else:
@@ -659,7 +653,7 @@ def run_suite(args, data, skip_suite):
                     break
             elif subskip:
                 if 'mask' in test and test['mask'] == "skip":
-                    print("{}Test skip is masked in suite{}" . format(pcolor.orange, pcolor.reset))
+                    print(f"{pcolor.orange}Test skip is masked in suite{pcolor.reset}")
                     test['result'] = "masked-skip"
                 else:
                     skip = True
@@ -876,7 +870,7 @@ def main():
     sha = ""
     if (sha := run_git_cmd(ROOT_PATH, ['rev-parse', 'HEAD'])):
         sha = f"({sha[:10]})"
-    cprint(pcolor.yellow, "9PM - Simplicity is the ultimate sophistication {}" . format(sha))
+    cprint(pcolor.yellow, f"9PM - Simplicity is the ultimate sophistication {sha}")
 
     args = parse_cmdline()
     VERBOSE = args.verbose
