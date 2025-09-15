@@ -24,7 +24,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install -y tcl tcllib expect ruby ruby-dev build-essential
+        sudo apt-get install -y ruby ruby-dev build-essential
         pip install pyyaml
         gem install --user-install asciidoctor-pdf
         gem install --user-install rouge

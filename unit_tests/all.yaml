@@ -1,0 +1,10 @@
+---
+- case: "hello-world.sh"
+- case: "hello-world.sh"
+  name: "Hello World!"
+
+- suite: "result/all.yaml"
+  name: "Basic Results"
+
+- suite: "report/all.yaml"
+  name: "Test Report Creation"

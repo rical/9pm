@@ -1,6 +1,0 @@
-machine:
-        hostname: "localhost"
-        # This needs to be fairly accurate. I.e. a prompt of simply "$" or
-        # "foobar" could easily match something that is not a real prompt.
-        # Try to make the matching as precise as possible.
-        prompt: "machine: *$"

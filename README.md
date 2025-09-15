@@ -73,7 +73,7 @@ Test suites are YAML files that organize individual test cases or reference nest
 ### Simple Test Suite Example
 ```yaml
 - case: "tests/smoke.sh"
-- case: "tests/hammer.tcl"
+- case: "tests/hammer.pl"
 - case: "tests/cleanup.py"
 ```
 

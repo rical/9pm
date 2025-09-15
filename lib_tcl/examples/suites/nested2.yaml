@@ -1,5 +1,0 @@
----
-- case: "test.sh"
-  name: "test-from-nested2"
-  opts:
-    - "test-opt-from-nested2-suite"

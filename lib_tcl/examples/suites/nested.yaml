@@ -1,9 +1,0 @@
----
-- case: "test.sh"
-  name: "test-from-nested-suite"
-  opts:
-    - "test-opt-from-nested-suite"
-- suite: "nested2.yaml"
-  name: "nested2-suite"
-  opts:
-    - "suite-opt-from-nested-suite"

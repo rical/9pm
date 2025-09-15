@@ -1,5 +1,0 @@
----
-- case: "onfail_fail.tcl"
-  onfail: "onfail_run.tcl"
-  mask: "fail"
-- case: "onfail_check.tcl"
