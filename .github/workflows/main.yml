@@ -36,10 +36,20 @@ jobs:
     - name: Run Unit Tests
       run: make test
 
-    - name: Publish Test Result
+    - name: Pretty Print JSON Results
+      run: |
+        echo "## Test Results JSON" >> $GITHUB_STEP_SUMMARY
+        echo '```json' >> $GITHUB_STEP_SUMMARY
+        python3 -m json.tool ~/.local/share/9pm/logs/last/result.json >> $GITHUB_STEP_SUMMARY
+        echo '```' >> $GITHUB_STEP_SUMMARY
+
+    - name: Generate Reports from JSON
+      run: python3 report.py ~/.local/share/9pm/logs/last/result.json all -o ~/.local/share/9pm/logs/last/
+
+    - name: Publish GitHub Test Result
       run: cat ~/.local/share/9pm/logs/last/result-gh.md >> $GITHUB_STEP_SUMMARY
 
-    - name: Generate Test Report
+    - name: Generate PDF Report
       run: make report
 
     - name: Upload Logs as Artifacts

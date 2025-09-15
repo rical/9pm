@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import json
 import os
 import yaml
 import subprocess
@@ -348,215 +349,112 @@ def parse_suite(suite_path, parent_suite_path, options, settings, name=None):
             sys.exit(1)
     return suite
 
-def write_report_result_tree(file, includes, data, depth):
-    for test in data['suite']:
-        indent = '  ' * depth
-        stars = '*' + '*' * depth
+def collect_test_logs(test_data, depth=0):
+    """Recursively collect all test logs and embed them in the data structure."""
+    if not test_data.get('suite'):
+        return
 
-        string = f"{indent}"
-        string += f"{stars}"
-        string += f" {resultfmt(test)}"
+    for test in test_data['suite']:
         if 'outfile' in test:
-            string += f" <<output-{test['unix_name']},{test['uniq_id']} {test['name']}>>"
-        else:
-            string += f" {test['uniq_id']} {test['name']}"
-
-        file.write(f"{string}\n")
+            log_path = os.path.join(LOGDIR, test['outfile'])
+            try:
+                with open(log_path, 'r') as f:
+                    test['logs'] = f.read()
+            except FileNotFoundError:
+                test['logs'] = f"Log file not found: {log_path}"
+            except Exception as e:
+                test['logs'] = f"Error reading log file {log_path}: {e}"
 
         if 'suite' in test:
-            write_report_result_tree(file, includes, test, depth + 1)
+            collect_test_logs(test, depth + 1)
 
-def resultfmt(test):
-    result = test.get('result', 'unknown')
-    if result == 'masked-fail':
-        return "[.fail line-through]#FAIL#"
-    elif result == 'masked-skip':
-        return "[.skip line-through]#SKIP#"
-    else:
-        return f"[.{result}]#{result.upper()}#"
+def calculate_test_summary(test_data):
+    """Calculate summary statistics for all tests."""
+    counts = {
+        'pass': 0,
+        'fail': 0,
+        'skip': 0,
+        'masked_fail': 0,
+        'masked_skip': 0,
+        'total': 0
+    }
 
-def write_report_output(file, data, depth, is_first=True):
-    """For each test in suite, write specification¹, result, and output"""
-    for test in data['suite']:
-        if 'outfile' in test:
-            # Add page break before each test, except first one
-            if is_first:
-                is_first = False
-            else:
-                file.write("\n<<<\n")
+    def count_tests(data):
+        if not data.get('suite'):
+            return
 
-            # Test heading is always from 'name:' in the suite file
-            file.write(f"\n[[output-{test['unix_name']}]]\n")
-            file.write(f"\n=== {resultfmt(test)} {test['name']}\n")
-
-            # Skip headnig from test spec.
-            if 'test-spec' in test:
-                file.write(f"include::{test['test-spec']}[lines=2..-1]\n")
-
-            # Add test information table
-            file.write("\n==== Test Information\n")
-            file.write('[cols="1h,3"]\n')
-            file.write("|===\n")
-            file.write(f"| ID   | `{test['uniq_id']}`\n")
-            file.write(f"| Name | `{test['name']}`\n")
-
-            # Add test file path (relative to project root)
-            if 'case' in test:
-                rel_path = os.path.relpath(test['case'], ROOT_PATH)
-                file.write(f"| File | `{rel_path}`\n")
-
-            # Add arguments if present
-            if 'options' in test and test['options']:
-                args_str = ', '.join(test['options'])
-                file.write(f"| Arguments | `{args_str}`\n")
-            else:
-                file.write("| Arguments | `None`\n")
-
-            file.write("|===\n")
-
-            file.write("\n==== Output\n")
-            file.write("----\n")
-            file.write(f"include::{test['outfile']}[]\n")
-            file.write("----\n")
-
-        if 'suite' in test:
-            is_first = write_report_output(file, test, depth + 1, is_first)
-
-    return is_first
-
-def write_report_project_info(file, config):
-    if 'PROJECT-NAME' not in config or 'PROJECT-ROOT' not in config:
-        return None
-
-    name = config['PROJECT-NAME']
-    root = config['PROJECT-ROOT']
-    version = run_git_cmd(root, ["describe", "--tags", "--always"])
-    sha = run_git_cmd(root, ['rev-parse', 'HEAD'])[:12]
-
-    file.write(f"\n=== {name} Info\n\n")
-
-    file.write('[cols="1h,2", width=30%]\n')
-    file.write("|===\n")
-    file.write(f"| Version | {version}\n")
-    file.write(f"| SHA     | {sha}\n")
-
-    file.write("|===\n")
-
-def write_report_test_info(file, data):
-    pass_count = 0
-    fail_count = 0
-    skip_count = 0
-    masked_fail_count = 0
-    masked_skip_count = 0
-
-    def count_tests(suite_data):
-        nonlocal pass_count, fail_count, skip_count, masked_fail_count, masked_skip_count
-        for test in suite_data['suite']:
+        for test in data['suite']:
             if 'suite' in test:
                 # This is a sub-suite, recurse but don't count it
                 count_tests(test)
             elif 'result' in test:
                 # This is a leaf test case, count it
-                if test['result'] == 'pass':
-                    pass_count += 1
-                elif test['result'] == 'fail':
-                    fail_count += 1
-                elif test['result'] == 'skip':
-                    skip_count += 1
-                elif test['result'] == 'masked-fail':
-                    masked_fail_count += 1
-                elif test['result'] == 'masked-skip':
-                    masked_skip_count += 1
+                result = test['result']
+                if result == 'pass':
+                    counts['pass'] += 1
+                elif result == 'fail':
+                    counts['fail'] += 1
+                elif result == 'skip':
+                    counts['skip'] += 1
+                elif result == 'masked-fail':
+                    counts['masked_fail'] += 1
+                elif result == 'masked-skip':
+                    counts['masked_skip'] += 1
+                counts['total'] += 1
 
-    count_tests(data)
+    count_tests(test_data)
+    return counts
 
-    file.write("\n=== Test Overview\n\n")
-    file.write('[cols="1h,2", width=30%]\n')
-    file.write("|===\n")
-    file.write(f"| {resultfmt({'result': 'pass'})} | {pass_count}\n")
-    file.write(f"| {resultfmt({'result': 'fail'})} | {fail_count}\n")
-    file.write(f"| {resultfmt({'result': 'skip'})} | {skip_count}\n")
-    file.write(f"| {resultfmt({'result': 'masked-fail'})} | {masked_fail_count}\n")
-    file.write(f"| {resultfmt({'result': 'masked-skip'})} | {masked_skip_count}\n")
+def write_json_result(data, config):
+    """Write comprehensive JSON result file with embedded logs."""
+    # Collect all test logs and embed them in the data structure
+    collect_test_logs(data)
 
-    total_count = pass_count + fail_count + skip_count + masked_fail_count + masked_skip_count
-    file.write(f"| *TOTAL* | *{total_count}*\n")
-    file.write("|===\n")
+    # Calculate summary statistics
+    summary = calculate_test_summary(data)
 
-    includes = []
-    write_report_result_tree(file, includes, data, 0)
+    # Prepare metadata
+    current_time = datetime.now()
+    project_info = {}
+    if config:
+        if 'PROJECT-NAME' in config:
+            project_info['name'] = config['PROJECT-NAME']
+        if 'PROJECT-ROOT' in config:
+            project_info['root'] = config['PROJECT-ROOT']
+            # Get git info
+            version = run_git_cmd(config['PROJECT-ROOT'], ["describe", "--tags", "--always"])
+            sha = run_git_cmd(config['PROJECT-ROOT'], ['rev-parse', 'HEAD'])
+            project_info['version'] = version
+            project_info['sha'] = sha
+        if 'PROJECT-TOPDOC' in config:
+            project_info['topdoc'] = config['PROJECT-TOPDOC']
 
-def write_report(data, config):
-    with open(os.path.join(LOGDIR, 'report.adoc'), 'a') as file:
-        current_date = datetime.now().strftime("%Y-%m-%d")
-        name = config['PROJECT-NAME'] if 'PROJECT-NAME' in config else "9pm"
-        root = config['PROJECT-ROOT']
-        topdoc = config['PROJECT-TOPDOC'] + "/" if 'PROJECT-TOPDOC' in config else ""
-        version = run_git_cmd(root, ["describe", "--tags", "--always"])
+    # Get 9pm version info
+    ninepm_sha = run_git_cmd(ROOT_PATH, ['rev-parse', 'HEAD'])
 
-        file.write(":title-page:\n")
-        file.write(f":topdoc: {topdoc}\n")
-        file.write("ifdef::logo[]\n")  # Optional -a logo=PATH from asciidoctor-pdf
-        file.write(":title-logo-image: {logo}\n")
-        file.write("endif::[]\n")
-        file.write(":toc:\n")
-        file.write(":toclevels: 2\n")
-        file.write(":sectnums:\n")
-        file.write(":sectnumlevels: 2\n")
-        file.write(":pdfmark:\n")
-        file.write(":pdf-page-size: A4\n")
-        file.write(":pdf-page-layout: portrait\n")
-        file.write(":pdf-page-margin: [1in, 0.5in]\n")
-        file.write(f":keywords: regression, test, testing, 9pm, {name}\n")
-        file.write(":subject: Regression testing\n")
-        file.write(":autofit-option:\n")
-        file.write("\n")
-
-        file.write(f"= Test Report\n")
-        file.write(f"{name} {version}\n")
-        file.write(f"{current_date}\n")
-
-        file.write("\n<<<\n")
-        file.write("\n== Test Summary\n\n")
-        write_report_project_info(file, config)
-        write_report_test_info(file, data)
-
-        file.write("\n<<<\n")
-        file.write("\n== Test Result\n\n")
-        write_report_output(file, data, 0)
-
-
-def write_github_result_tree(file, data, depth):
-    icon_map = {
-        "pass": ":white_check_mark:",
-        "fail": ":red_circle:",
-        "skip": ":large_orange_diamond:",
-        "masked-fail": ":o:",
-        "masked-skip": ":small_orange_diamond:",
+    # Build complete JSON structure
+    json_data = {
+        'metadata': {
+            'timestamp': current_time.isoformat(),
+            'date': current_time.strftime("%Y-%m-%d"),
+            'project': project_info,
+            'environment': {
+                '9pm_version': ninepm_sha[:10] if ninepm_sha else 'unknown',
+                'log_dir': LOGDIR,
+                'scratch_dir': SCRATCHDIR,
+                'root_path': ROOT_PATH
+            }
+        },
+        'summary': summary,
+        'suite': data
     }
-    for test in data['suite']:
-        mark = icon_map.get(test['result'], "")
-        file.write(f"{'  ' * depth}- {mark} : {test['uniq_id']} {test['name']}\n")
 
-        if 'suite' in test:
-            write_github_result_tree(file, test, depth + 1)
+    # Write JSON file
+    json_path = os.path.join(LOGDIR, 'result.json')
+    with open(json_path, 'w') as f:
+        json.dump(json_data, f, indent=2, ensure_ascii=False)
 
-def write_github_result(data):
-    with open(os.path.join(LOGDIR, 'result-gh.md'), 'a') as file:
-        file.write("# Test Result\n")
-        write_github_result_tree(file, data, 0)
-
-def write_md_result_tree(file, data, depth):
-    for test in data['suite']:
-        file.write(f"{'  ' * depth}- {test['result'].upper()} : {test['uniq_id']} {test['name']}\n")
-
-        if 'suite' in test:
-            write_md_result_tree(file, test, depth + 1)
-
-def write_md_result(data):
-    with open(os.path.join(LOGDIR, 'result.md'), 'a') as file:
-        file.write("# Test Result\n")
-        write_md_result_tree(file, data, 0)
+    return json_path
 
 def print_result_tree(data, base):
     i = 1
@@ -911,9 +809,10 @@ def main():
         cprint(pcolor.green, "\no Execution")
 
     print_result_tree(suite, "")
-    write_md_result(suite)
-    write_github_result(suite)
-    write_report(suite, proj)
+
+    # Export comprehensive JSON result
+    json_path = write_json_result(suite, proj)
+    vcprint(pcolor.faint, f"JSON results written to: {json_path}")
 
     db.close()
     sys.exit(err)
