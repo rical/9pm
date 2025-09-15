@@ -11,7 +11,6 @@ import shutil
 import re
 import atexit
 import hashlib
-import textwrap
 from datetime import datetime
 
 TEST_CNT=0
@@ -66,17 +65,7 @@ def execute(args, test, output_log):
     test_skip = False
     err = False
 
-    cmd = path = os.path.relpath(test['case'], ROOT_PATH)
-    if args:
-        cmd = f"{path} {' '.join(args)}"
-
-    prefix = "Starting: "
-    wrapped = textwrap.fill(f"{prefix}{cmd}", width=100,
-                            subsequent_indent=" " * (len(prefix) +
-                                                     len(path) + 1),
-                            break_long_words=False,
-                            break_on_hyphens=False)
-    output_log.write(f"{wrapped}\n\n")
+    # Test metadata is now handled in the report generation, not in the log
 
     while True:
         line = proc.stdout.readline().decode('utf-8')
@@ -410,6 +399,27 @@ def write_report_output(file, data, depth, is_first=True):
             # Skip headnig from test spec.
             if 'test-spec' in test:
                 file.write("include::{}[lines=2..-1]\n" . format(test['test-spec']))
+
+            # Add test information table
+            file.write("\n==== Test Information\n")
+            file.write('[cols="1h,3"]\n')
+            file.write("|===\n")
+            file.write(f"| ID   | `{test['uniq_id']}`\n")
+            file.write(f"| Name | `{test['name']}`\n")
+
+            # Add test file path (relative to project root)
+            if 'case' in test:
+                rel_path = os.path.relpath(test['case'], ROOT_PATH)
+                file.write(f"| File | `{rel_path}`\n")
+
+            # Add arguments if present
+            if 'options' in test and test['options']:
+                args_str = ', '.join(test['options'])
+                file.write(f"| Arguments | `{args_str}`\n")
+            else:
+                file.write("| Arguments | `None`\n")
+
+            file.write("|===\n")
 
             file.write("\n==== Output\n")
             file.write("----\n")
