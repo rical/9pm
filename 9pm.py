@@ -163,7 +163,7 @@ def run_test(args, test):
 
     name = test['name']
     path = os.path.relpath(test['case'], ROOT_PATH)
-    print(f"\n{pcolor.blue}Starting test {name} ({path}){pcolor.reset}")
+    print(f"\n{pcolor.blue}Starting test {test['uniq_id']} {name} ({path}){pcolor.reset}")
 
     if test['result'] == "skip":
         print(f"{pcolor.yellow}Skip test {name} (suite skip){pcolor.reset}")
@@ -614,7 +614,7 @@ def run_suite(args, data, skip_suite):
     err = False
 
     if data['name'] != "command-line":
-        print(pcolor.blue + f"\nRunning suite {data['name']}" + pcolor.reset)
+        print(pcolor.blue + f"\nRunning suite {data['uniq_id']} {data['name']}" + pcolor.reset)
 
     for test in data['suite']:
         if 'suite' in test:
