@@ -12,7 +12,7 @@
 - **Color-Coded Terminal Output**: Easily identify test statuses with intuitive colors.
 - **"On-Fail" Logic**: Define custom actions for failed tests to improve debugging.
 - **Masked Failures**: Optionally ignore specific test failures or skips without halting the suite.
-- **Rich Reporting**: Generate markdown summaries for easy sharing and tracking.
+- **JSON Export**: Export comprehensive test results in JSON format for further processing.
 - **Isolated Environment**: Use temporary directories and files for scratch area. Ensuring nothing is left after test execution, even if the test itself crashes.
 
 ---
@@ -24,15 +24,13 @@
    git clone <repository-url>
    cd 9pm
    ```
-2. Install dependencies:
+2. Install core dependencies:
    ```bash
    pip install pyyaml
-   gem install --user-install asciidoctor-pdf rouge
    ```
 
 > [!NOTE]
-> On Debian/Ubuntu systems you can use standard packages for the requirements:
-> `sudo apt install python3-yaml ruby-asciidoctor-pdf ruby-rouge`
+> This is all you need to run tests and export JSON results. For report generation, see the [Report Generation](#report-generation) section below.
 
 ---
 
@@ -111,12 +109,51 @@ o Execution
 `-- o 0002-upload-os.sh
 ```
 
-## Test Results
+## Report Generation
 
-9pm generates detailed reports:
+9pm exports test results as JSON by default. Additional report formats can be generated using the `report.py` tool.
 
-1. **Human-Readable Markdown**: `result.md`
-2. **GitHub-Compatible Markdown**: `result-gh.md`
+### JSON Export (Always Available)
+
+Every test run generates a comprehensive `result.json` file containing:
+- Test metadata and timestamps
+- Complete hierarchical test structure
+- Embedded test output logs
+- Summary statistics
+
+### Optional Report Formats
+
+Install additional dependencies for report generation:
+
+```bash
+# For PDF reports
+gem install --user-install asciidoctor-pdf rouge
+
+# On Debian/Ubuntu
+sudo apt install ruby-asciidoctor-pdf ruby-rouge
+```
+
+Generate reports from JSON:
+
+```bash
+# Generate specific format
+python3 report.py result.json github     # -> result-gh.md
+python3 report.py result.json markdown   # -> result.md
+python3 report.py result.json asciidoc   # -> report.adoc
+
+# Generate all formats
+python3 report.py result.json all
+
+# Generate PDF from AsciiDoc
+make report  # Generates report.pdf
+```
+
+### Report Formats
+
+1. **GitHub Markdown** (`result-gh.md`): GitHub-compatible with emoji status indicators
+2. **Plain Markdown** (`result.md`): Simple markdown format
+3. **AsciiDoc** (`report.adoc`): Comprehensive report with embedded test logs
+4. **PDF** (`report.pdf`): Professional report generated from AsciiDoc
 
 ### GitHub Emoji Legend
 

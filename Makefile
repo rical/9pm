@@ -16,7 +16,7 @@ help:
 	@echo "Available targets:"
 	@echo "  check   - Run self-tests to verify 9pm functionality"
 	@echo "  test    - Run unit tests with cmdl-supplied option"
-	@echo "  report  - Generate PDF report from last test results"
+	@echo "  report  - Generate all reports (markdown, asciidoc, PDF) from JSON"
 	@echo "  help    - Show this help message"
 	@echo
 	@echo "Variables:"
