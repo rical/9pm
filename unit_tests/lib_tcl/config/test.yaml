@@ -1,6 +1,0 @@
----
-- case: "config.tcl"
-  opts:
-        - "-c"
-        - "<base>/config.yaml"
-

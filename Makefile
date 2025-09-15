@@ -34,7 +34,7 @@ check:
 test:
 	python3 9pm.py --proj $(9PMPROJ)	\
 	  --option cmdl-supplied 		\
-	  unit_tests/auto.yaml
+	  unit_tests/all.yaml
 
 # Generate report from unit test results
 report:

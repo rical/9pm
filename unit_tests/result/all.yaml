@@ -1,0 +1,32 @@
+---
+- case: "pass.sh"
+- case: "skip.sh"
+- case: "fail.sh"
+  mask: "fail"
+
+- case: "pass.sh"
+  name: "I always pass"
+
+- case: "skip.sh"
+  name: "I always skip"
+
+- case: "skip.sh"
+  name: "I always skip (masked)"
+  mask: "skip"
+
+- case: "fail.sh"
+  name: "I always fail (masked)"
+  mask: "fail"
+
+- case: "any.sh"
+  name: "I can pass"
+  opts: ["-r", "pass"]
+
+- case: "any.sh"
+  name: "I can skip"
+  opts: ["-r", "skip"]
+
+- case: "any.sh"
+  name: "I can fail (masked)"
+  opts: ["-r", "fail"]
+  mask: "fail"

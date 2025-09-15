@@ -15,18 +15,12 @@ from datetime import datetime
 
 TEST_CNT=0
 ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
-LIB_TCL_PATH = ROOT_PATH + "/lib_tcl/"
 # TODO: proper argument strucutre
 DATABASE = ""
 SCRATCHDIR = ""
 LOGDIR = None
 VERBOSE = False
 NOEXEC = False
-
-if "TCLLIBPATH" in os.environ:
-    os.environ["TCLLIBPATH"] = os.environ["TCLLIBPATH"] + " " + LIB_TCL_PATH
-else:
-    os.environ["TCLLIBPATH"] = LIB_TCL_PATH
 
 class pcolor:
     purple = '\033[95m'
