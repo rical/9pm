@@ -36,8 +36,9 @@ test:
 	  --option cmdl-supplied 		\
 	  unit_tests/all.yaml
 
-# Generate report from unit test results
+# Generate reports from JSON results
 report:
+	python3 report.py $(TESTPATH)/result.json all -o $(TESTPATH)
 	asciidoctor-pdf --theme "$(THEME)"	\
 	  -a pdf-fontsdir=report/fonts	\
 	  -a logo="image:$(LOGO)"		\
