@@ -4,6 +4,7 @@ import json
 import argparse
 import sys
 import os
+import subprocess
 from datetime import datetime
 from abc import ABC, abstractmethod
 
@@ -23,6 +24,32 @@ class BaseReporter(ABC):
         """Generate the report content."""
         pass
 
+    @abstractmethod
+    def get_filename(self):
+        """Get the output filename for this report type."""
+        pass
+
+    def _get_output_filename(self, json_file_path, output_filename):
+        """Get the final output filename."""
+        if output_filename:
+            return output_filename
+        json_dir = os.path.dirname(os.path.abspath(json_file_path))
+        return os.path.join(json_dir, self.get_filename())
+
+    def write(self, json_file_path, output_filename=None):
+        """Generate content and write to file."""
+        content = self.generate()
+        filename = self._get_output_filename(json_file_path, output_filename)
+
+        try:
+            with open(filename, 'w') as f:
+                f.write(content)
+            print(f"Generated {filename}")
+            return filename
+        except IOError as e:
+            print(f"Error writing {filename}: {e}", file=sys.stderr)
+            sys.exit(1)
+
     def get_result_counts(self):
         """Get summary statistics for results."""
         return {
@@ -37,6 +64,10 @@ class BaseReporter(ABC):
 
 class AsciiDocReporter(BaseReporter):
     """Generates AsciiDoc format reports."""
+
+    def get_filename(self):
+        """Get the output filename for this report type."""
+        return 'report.adoc'
 
     def generate(self) -> str:
         """Generate AsciiDoc report."""
@@ -220,6 +251,10 @@ class AsciiDocReporter(BaseReporter):
 class GitHubMarkdownReporter(BaseReporter):
     """Generates GitHub-flavored Markdown with emoji icons."""
 
+    def get_filename(self):
+        """Get the output filename for this report type."""
+        return 'result-gh.md'
+
     def generate(self) -> str:
         """Generate GitHub Markdown report."""
         content = ["# Test Result", ""]
@@ -254,6 +289,10 @@ class GitHubMarkdownReporter(BaseReporter):
 class PlainMarkdownReporter(BaseReporter):
     """Generates plain Markdown format."""
 
+    def get_filename(self):
+        """Get the output filename for this report type."""
+        return 'result.md'
+
     def generate(self) -> str:
         """Generate plain Markdown report."""
         content = ["# Test Result", ""]
@@ -277,6 +316,54 @@ class PlainMarkdownReporter(BaseReporter):
         return content
 
 
+class PDFReporter(BaseReporter):
+    """Generates PDF reports via AsciiDoc conversion."""
+
+    def get_filename(self):
+        """Get the output filename for this report type."""
+        return 'report.pdf'
+
+    def generate(self) -> str:
+        """Generate AsciiDoc content (same as AsciiDocReporter)."""
+        return AsciiDocReporter(self.data).generate()
+
+    def write(self, json_file_path, output_filename=None):
+        """Generate AsciiDoc content and convert to PDF using temp file."""
+        import tempfile
+
+        content = self.generate()
+        pdf_filename = self._get_output_filename(json_file_path, output_filename)
+
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.adoc', delete=False) as temp_adoc:
+            temp_adoc.write(content)
+            temp_adoc_path = temp_adoc.name
+
+        try:
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            cmd = ['asciidoctor-pdf',
+                   '--theme', os.path.join(script_dir, 'report', 'theme.yml'),
+                   '-a', f'pdf-fontsdir={os.path.join(script_dir, "report", "fonts")}',
+                   '-a', f'logo=image:{os.path.join(script_dir, "logo.png")}[top=40%, align=right, pdfwidth=8cm]',
+                   '-o', pdf_filename, temp_adoc_path]
+
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            if result.returncode == 0:
+                print(f"Generated {pdf_filename}")
+                return pdf_filename
+            else:
+                print(f"Error generating PDF: {result.stderr}", file=sys.stderr)
+                sys.exit(1)
+
+        except FileNotFoundError:
+            print("Error: asciidoctor-pdf not found. Install with: gem install asciidoctor-pdf", file=sys.stderr)
+            sys.exit(1)
+        except Exception as e:
+            print(f"Error running asciidoctor-pdf: {e}", file=sys.stderr)
+            sys.exit(1)
+        finally:
+            os.unlink(temp_adoc_path)
+
+
 def load_json_data(json_file):
     """Load and parse the JSON result file."""
     try:
@@ -293,45 +380,33 @@ def load_json_data(json_file):
 def main():
     """Main CLI interface."""
     parser = argparse.ArgumentParser(description='Generate test reports from JSON data')
-    parser.add_argument('json_file', help='Path to the JSON result file')
-    parser.add_argument('format', choices=['github', 'markdown', 'asciidoc', 'all'],
+    parser.add_argument('format', choices=['github', 'markdown', 'asciidoc', 'pdf'],
                         help='Report format to generate')
-    parser.add_argument('-o', '--output-dir', default='.',
-                        help='Output directory for generated reports (default: current directory)')
+    parser.add_argument('json_file', nargs='?', help='Path to the JSON result file (auto-find if omitted)')
+    parser.add_argument('-o', '--output', help='Output filename (auto-generate if omitted)')
 
     args = parser.parse_args()
+
+    # Auto-find JSON file if not provided
+    if args.json_file is None:
+        args.json_file = os.path.expanduser('~/.local/share/9pm/logs/last/result.json')
 
     # Load JSON data
     json_data = load_json_data(args.json_file)
 
-    # Generate reports based on format
-    if args.format == 'all':
-        formats = ['github', 'markdown', 'asciidoc']
-    else:
-        formats = [args.format]
-
-    for fmt in formats:
-        if fmt == 'github':
-            reporter = GitHubMarkdownReporter(json_data)
-            content = reporter.generate()
-            filename = os.path.join(args.output_dir, 'result-gh.md')
-        elif fmt == 'markdown':
-            reporter = PlainMarkdownReporter(json_data)
-            content = reporter.generate()
-            filename = os.path.join(args.output_dir, 'result.md')
-        elif fmt == 'asciidoc':
-            reporter = AsciiDocReporter(json_data)
-            content = reporter.generate()
-            filename = os.path.join(args.output_dir, 'report.adoc')
-
-        # Write output file
-        try:
-            with open(filename, 'w') as f:
-                f.write(content)
-            print(f"Generated {filename}")
-        except IOError as e:
-            print(f"Error writing {filename}: {e}", file=sys.stderr)
-            sys.exit(1)
+    # Generate report based on format
+    try:
+        if args.format == 'github':
+            GitHubMarkdownReporter(json_data).write(args.json_file, args.output)
+        elif args.format == 'markdown':
+            PlainMarkdownReporter(json_data).write(args.json_file, args.output)
+        elif args.format == 'asciidoc':
+            AsciiDocReporter(json_data).write(args.json_file, args.output)
+        elif args.format == 'pdf':
+            PDFReporter(json_data).write(args.json_file, args.output)
+    except Exception as e:
+        print(f"Error generating report: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == '__main__':
