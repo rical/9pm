@@ -14,10 +14,14 @@ help:
 	@echo "9pm Makefile - For developers of 9pm itself"
 	@echo
 	@echo "Available targets:"
-	@echo "  check   - Run self-tests to verify 9pm functionality"
-	@echo "  test    - Run unit tests with cmdl-supplied option"
-	@echo "  report  - Generate all reports (markdown, asciidoc, PDF) from JSON"
-	@echo "  help    - Show this help message"
+	@echo "  check           - Run self-tests to verify 9pm functionality"
+	@echo "  test            - Run unit tests with cmdl-supplied option"
+	@echo "  report-github   - Generate GitHub markdown report from last test results"
+	@echo "  report-markdown - Generate plain markdown report from last test results"
+	@echo "  report-asciidoc - Generate AsciiDoc report from last test results"
+	@echo "  report-pdf      - Generate PDF report from last test results"
+	@echo "  report          - Alias for report-pdf (legacy)"
+	@echo "  help            - Show this help message"
 	@echo
 	@echo "Variables:"
 	@echo "  TEST=$(TEST)    - Specify test results to use for report (default: last)"
@@ -36,13 +40,18 @@ test:
 	  --option cmdl-supplied 		\
 	  unit_tests/all.yaml
 
-# Generate reports from JSON results
-report:
-	python3 report.py $(TESTPATH)/result.json all -o $(TESTPATH)
-	asciidoctor-pdf --theme "$(THEME)"	\
-	  -a pdf-fontsdir=report/fonts	\
-	  -a logo="image:$(LOGO)"		\
-	  -o $(TESTPATH)/report.pdf		\
-	  $(TESTPATH)/report.adoc
+report-github:
+	./report.py github
 
-.PHONY: all check test report help
+report-markdown:
+	./report.py markdown
+
+report-asciidoc:
+	./report.py asciidoc
+
+report-pdf:
+	./report.py pdf
+
+report: report-pdf
+
+.PHONY: all check test report report-github report-markdown report-asciidoc report-pdf help

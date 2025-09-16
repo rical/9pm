@@ -43,14 +43,14 @@ jobs:
         python3 -m json.tool ~/.local/share/9pm/logs/last/result.json >> $GITHUB_STEP_SUMMARY
         echo '```' >> $GITHUB_STEP_SUMMARY
 
-    - name: Generate Reports from JSON
-      run: python3 report.py ~/.local/share/9pm/logs/last/result.json all -o ~/.local/share/9pm/logs/last/
+    - name: Generate GitHub Test Result
+      run: make report-github
 
-    - name: Publish GitHub Test Result
+    - name: Publish GitHub Report
       run: cat ~/.local/share/9pm/logs/last/result-gh.md >> $GITHUB_STEP_SUMMARY
 
-    - name: Generate PDF Report
-      run: make report
+    - name: Generate PDF Test Report
+      run: make report-pdf
 
     - name: Upload Logs as Artifacts
       uses: actions/upload-artifact@v4
