@@ -1,19 +1,26 @@
 
 <img align="left" src="logo.png" alt="9pm Logo" width=400>
 
-9pm is a flexible and efficient framework for running test cases or suites defined in YAML files or specified via command-line arguments. It supports nested suites, detailed logging, and robust error handling, making it ideal for simply managing complex test setups.
+**9pm runs tests in any language without the bloat.** No frameworks to learn, **no exotic dependencies** - just **reliable test execution** and **clear results**.
 
 ---
 
-## Features
+## Why 9pm
 
-- **Arbitrary Test Execution**: Run individual tests or entire suites from the command line.
-- **YAML-Defined Suites**: Organize tests in structured, nested YAML files for reusability.
-- **Color-Coded Terminal Output**: Easily identify test statuses with intuitive colors.
-- **"On-Fail" Logic**: Define custom actions for failed tests to improve debugging.
-- **Masked Failures**: Optionally ignore specific test failures or skips without halting the suite.
-- **JSON Export**: Export comprehensive test results in JSON format for further processing.
-- **Isolated Environment**: Use temporary directories and files for scratch area. Ensuring nothing is left after test execution, even if the test itself crashes.
+- **Universal**: Runs any executable - shell scripts, Python, Perl, compiled binaries
+- **TAP Protocol**: Handles results from anything that outputs Test Anything Protocol
+- **Crash Detection**: Detects and handles tests that crash mid-execution
+- **Flexible Execution**: Run individual tests from command line or organized test suites
+- **Nested Structure**: Supports complex hierarchical suites with custom options and names
+- **Ready Environment**: Provides temporary directories, logging paths, and clean isolation
+
+*Make complex test setups easy while keeping simple tests simple.*
+
+---
+
+## Overview
+
+<img src="doc/overview3.png" alt="9pm Overview" width="1000">
 
 ---
 
@@ -26,7 +33,11 @@
    ```
 2. Install core dependencies:
    ```bash
-   pip install pyyaml
+   # Debian/Ubuntu
+   sudo apt install python3-yaml
+
+   # RHEL/Fedora/CentOS
+   sudo dnf install python3-pyyaml
    ```
 
 > [!NOTE]
