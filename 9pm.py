@@ -701,6 +701,9 @@ def run_git_cmd(path, command):
             line = f.read().strip()
             if line.startswith('gitdir: '):
                 gitdir = os.path.join(path, line[8:])
+                # Sanity check the path is actually reachable, we may run in a container
+                if not os.path.exists(gitdir):
+                    return ""
             else:
                 vcprint(pcolor.orange, f"warning, invalid .git file format ({path})")
                 return ""
