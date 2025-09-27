@@ -808,20 +808,21 @@ def run_git_cmd(path, command):
         with open(git_path, 'r') as f:
             line = f.read().strip()
             if line.startswith('gitdir: '):
-                gitdir = os.path.join(path, line[8:])
+                git_path = os.path.join(path, line[8:])
+                if not os.path.exists(git_path):
+                    return ""
             else:
                 vcprint(pcolor.orange, f"warning, invalid .git file format ({path})")
                 return ""
-    elif os.path.isdir(git_path):
-        gitdir = git_path
-    else:
+
+    if not os.path.isdir(git_path):
         vcprint(pcolor.orange, f"warning, no .git dir or file in path ({path})")
         return ""
 
     try:
-        vcprint(pcolor.faint, f"Running: git --git-dir {gitdir} {command}")
+        vcprint(pcolor.faint, f"Running: git --git-dir {git_path} {command}")
         result = subprocess.check_output(
-            ['git', '--git-dir', gitdir] + command,
+            ['git', '--git-dir', git_path] + command,
             stderr=subprocess.STDOUT
         ).decode('utf-8').strip()
     except Exception as e:
