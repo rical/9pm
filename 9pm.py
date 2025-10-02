@@ -329,8 +329,8 @@ def parse_suite(suite_path, parent_suite_path, options, settings, name=None):
                 test_spec_path = get_test_spec_path(case['case'], settings['test-spec'])
                 if os.path.exists(test_spec_path):
                     vcprint(pcolor.faint, f"Found test specification: {test_spec_path} for {case['case']}")
-                    case['test-spec'] = test_spec_path
-                    case['test-spec-sha'] = calculate_sha1sum(test_spec_path)
+                    case['test_spec'] = test_spec_path
+                    case['test_spec_sha'] = calculate_sha1sum(test_spec_path)
                 else:
                         vcprint(pcolor.faint, f"No test specification for {case['case']} ({test_spec_path})")
 
