@@ -328,6 +328,55 @@ class Test9pm:
             }
         )
 
+    def test_spec_json_format(self):
+        """Verify test_spec and test_spec_sha keys in JSON output"""
+
+        self.env = os.environ.copy()
+        self.env["NINEPM_TEST_DIR"] = self.create_unique_subdir()
+
+        result = subprocess.run(
+            ["python3", self.ninepm, "suites/test-spec.yaml"],
+            cwd=self.script_dir,
+            text=True,
+            env=self.env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+        if VERBOSE:
+            print(result.stdout)
+            print(result.stderr, file=sys.stderr)
+
+        assert result.returncode == 0, f"Failed with return code {result.returncode}"
+
+        json_path = os.path.join(os.path.expanduser('~/.local/share/9pm/logs/last'), 'result.json')
+        assert os.path.exists(json_path), f"Could not find {json_path}"
+
+        with open(json_path, 'r') as f:
+            data = json.load(f)
+
+        def find_test_spec(obj):
+            if isinstance(obj, dict):
+                if 'test_spec' in obj:
+                    return obj
+                for value in obj.values():
+                    result = find_test_spec(value)
+                    if result:
+                        return result
+            elif isinstance(obj, list):
+                for item in obj:
+                    result = find_test_spec(item)
+                    if result:
+                        return result
+            return None
+
+        case = find_test_spec(data['suite'])
+        assert case is not None, "Could not find test_spec in JSON"
+        assert 'test_spec' in case, "Missing test_spec key"
+        assert 'test_spec_sha' in case, "Missing test_spec_sha key"
+
+        print_green(f"[PASS] Test spec JSON output")
+
     def cleanup(self):
         """Cleanup temp directory after tests"""
         self.temp_dir_base.cleanup()
@@ -357,6 +406,7 @@ if __name__ == "__main__":
         tester.test_abort_flag()
         tester.test_repeat_flag()
         tester.test_proj_config()
+        tester.test_spec_json_format()
         print_green("All tests passed.")
     finally:
         tester.cleanup()

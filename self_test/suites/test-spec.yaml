@@ -1,0 +1,5 @@
+---
+- settings:
+    test-spec: <case>.adoc
+
+- case: "../cases/worker.py"
