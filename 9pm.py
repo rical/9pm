@@ -651,7 +651,7 @@ def parse_cmdline():
     parser.add_argument('-d', '--debug', action='store_true',
             help='(TEST) Enable test case debug')
     parser.add_argument('-o', '--option', action='append', default=[],
-            help='(TEST) Option(s) passed to all test cases (can be repeated)')
+            help='(TEST) Option(s) passed to all test cases (can be repeated). Use -o="-flag" for options starting with hyphens, like: -o="-ls" /bin/ls')
     parser.add_argument('-r', '--repeat', type=int, default=1,
             help='(TEST) Number of times to repeat the test (default: 1)')
     parser.add_argument('suites', nargs='+', metavar='TEST|SUITE',
