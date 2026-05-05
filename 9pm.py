@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
 import argparse
+import errno
 import json
 import os
+import pty
 import yaml
 import subprocess
 import sys
@@ -53,21 +55,43 @@ def rootify_path(path):
     path = os.path.normpath(path)
     return path
 
+def pty_read_lines(fd):
+    # PTY line discipline turns '\n' into '\r\n' on the way out, so trailing
+    # '\r' is stripped from each yielded line.
+    buf = b""
+    while True:
+        try:
+            chunk = os.read(fd, 4096)
+        except OSError as e:
+            if e.errno != errno.EIO:
+                raise
+            chunk = b""
+        if not chunk:
+            if buf:
+                yield buf.rstrip(b'\r')
+            return
+        buf += chunk
+        while b'\n' in buf:
+            line, buf = buf.split(b'\n', 1)
+            yield line.rstrip(b'\r')
+
 def execute(args, test, output_log):
     os.environ["NINEPM_TEST_NAME"] = test['unix_name']
-    proc = subprocess.Popen([test['case']] + args, stdout=subprocess.PIPE)
+
+    # Run the test with stdout connected to a pty so its stdio sees a TTY and
+    # line-buffers, instead of block-buffering through a pipe until exit.
+    master_fd, slave_fd = pty.openpty()
+    proc = subprocess.Popen([test['case']] + args, stdout=slave_fd)
+    os.close(slave_fd)
+
     skip_suite = False
     test_skip = False
     err = False
 
     # Test metadata is now handled in the report generation, not in the log
 
-    while True:
-        line = proc.stdout.readline().decode('utf-8')
-        if line == '':
-            break
-
-        string = line.rstrip()
+    for raw in pty_read_lines(master_fd):
+        string = raw.decode('utf-8', errors='replace').rstrip()
         stamp = time.strftime("%Y-%m-%d %H:%M:%S")
 
         plan = re.search(r'^(\d+)..(\d+)$', string)
@@ -103,7 +127,8 @@ def execute(args, test, output_log):
         else:
             print(f"{stamp} {string}")
 
-    out, error = proc.communicate()
+    os.close(master_fd)
+    proc.wait()
     exitcode = proc.returncode
 
     if exitcode != 0:
@@ -765,6 +790,10 @@ def main():
     global LOGDIR
     global VERBOSE
     global NOEXEC
+
+    # Line-buffer our own stdout so output streams when 9pm itself is piped to
+    # another program (CI, tee, wrappers) instead of buffering until exit.
+    sys.stdout.reconfigure(line_buffering=True)
 
     sha = ""
     if (sha := run_git_cmd(ROOT_PATH, ['rev-parse', 'HEAD'])):

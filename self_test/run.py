@@ -3,10 +3,12 @@
 import subprocess
 import os
 import json
+import re
 import sys
 import tempfile
 import argparse
 import uuid
+from datetime import datetime
 
 
 VERBOSE = False
@@ -377,6 +379,31 @@ class Test9pm:
 
         print_green(f"[PASS] Test spec JSON output")
 
+    def test_line_buffering(self):
+        """Verify TAP lines stream as emitted, not buffered until test exit"""
+
+        result = subprocess.run(
+            ["python3", self.ninepm, "cases/line-buffering.sh"],
+            cwd=self.script_dir,
+            text=True,
+            env=self.env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+        assert result.returncode == 0, f"Failed with return code {result.returncode}. stderr: {result.stderr}"
+
+        stamps = re.findall(r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}) ok \d', result.stdout)
+        assert len(stamps) >= 2, f"Expected 2 stamped ok lines, got: {result.stdout}"
+
+        t1 = datetime.strptime(stamps[0], "%Y-%m-%d %H:%M:%S")
+        t2 = datetime.strptime(stamps[1], "%Y-%m-%d %H:%M:%S")
+        delta = (t2 - t1).total_seconds()
+
+        assert delta >= 1, f"TAP output appears buffered (stamps {stamps[0]!r} and {stamps[1]!r}, delta={delta}s)"
+
+        print_green(f"[PASS] TAP output is line-buffered")
+
     def cleanup(self):
         """Cleanup temp directory after tests"""
         self.temp_dir_base.cleanup()
@@ -407,6 +434,7 @@ if __name__ == "__main__":
         tester.test_repeat_flag()
         tester.test_proj_config()
         tester.test_spec_json_format()
+        tester.test_line_buffering()
         print_green("All tests passed.")
     finally:
         tester.cleanup()
