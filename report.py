@@ -175,10 +175,11 @@ class AsciiDocReporter(BaseReporter):
             stars = '*' + '*' * depth
 
             line = f"{indent}{stars} {self._resultfmt(test.get('result', 'unknown'))}"
+            uid = test.get('uniq_id')
             if 'outfile' in test:
-                line += f" <<output-{test.get('unix_name')},{test.get('uniq_id')} {test.get('name')}>>"
-            elif test.get('uniq_id'):
-                line += f" {test.get('uniq_id')} {test.get('name')}"
+                line += f" <<output-{test.get('unix_name')},{uid:04d} {test.get('name')}>>"
+            elif uid is not None:
+                line += f" {uid:04d} {test.get('name')}"
             else:
                 line += f" {test.get('name')}"
 
@@ -217,7 +218,7 @@ class AsciiDocReporter(BaseReporter):
                     "\n==== Test Information",
                     '[cols="1h,3"]',
                     "|===",
-                    f"| ID   | `{test.get('uniq_id')}`",
+                    f"| ID   | `{test.get('uniq_id'):04d}`",
                     f"| Name | `{test.get('name')}`"
                 ])
 
@@ -280,7 +281,7 @@ class GitHubMarkdownReporter(BaseReporter):
         for test in data['suite']:
             mark = icon_map.get(test.get('result', ''), "")
             uid = test.get('uniq_id')
-            uid_str = f" {uid}" if uid else ""
+            uid_str = f" {uid:04d}" if uid is not None else ""
             line = f"{'  ' * depth}- {mark} :{uid_str} {test.get('name')}"
             content.append(line)
 
@@ -312,7 +313,7 @@ class PlainMarkdownReporter(BaseReporter):
         for test in data['suite']:
             result = test.get('result', 'UNKNOWN').upper()
             uid = test.get('uniq_id')
-            uid_str = f" {uid}" if uid else ""
+            uid_str = f" {uid:04d}" if uid is not None else ""
             line = f"{'  ' * depth}- {result} :{uid_str} {test.get('name')}"
             content.append(line)
 
