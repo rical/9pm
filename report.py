@@ -177,8 +177,10 @@ class AsciiDocReporter(BaseReporter):
             line = f"{indent}{stars} {self._resultfmt(test.get('result', 'unknown'))}"
             if 'outfile' in test:
                 line += f" <<output-{test.get('unix_name')},{test.get('uniq_id')} {test.get('name')}>>"
-            else:
+            elif test.get('uniq_id'):
                 line += f" {test.get('uniq_id')} {test.get('name')}"
+            else:
+                line += f" {test.get('name')}"
 
             content.append(line)
 
@@ -277,7 +279,9 @@ class GitHubMarkdownReporter(BaseReporter):
 
         for test in data['suite']:
             mark = icon_map.get(test.get('result', ''), "")
-            line = f"{'  ' * depth}- {mark} : {test.get('uniq_id')} {test.get('name')}"
+            uid = test.get('uniq_id')
+            uid_str = f" {uid}" if uid else ""
+            line = f"{'  ' * depth}- {mark} :{uid_str} {test.get('name')}"
             content.append(line)
 
             if 'suite' in test:
@@ -307,7 +311,9 @@ class PlainMarkdownReporter(BaseReporter):
 
         for test in data['suite']:
             result = test.get('result', 'UNKNOWN').upper()
-            line = f"{'  ' * depth}- {result} : {test.get('uniq_id')} {test.get('name')}"
+            uid = test.get('uniq_id')
+            uid_str = f" {uid}" if uid else ""
+            line = f"{'  ' * depth}- {result} :{uid_str} {test.get('name')}"
             content.append(line)
 
             if 'suite' in test:

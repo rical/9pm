@@ -16,7 +16,8 @@ import atexit
 import hashlib
 from datetime import datetime
 
-TEST_CNT=0
+TEST_CNT = 0
+SUITE_CNT = 0
 ROOT_PATH = os.path.dirname(os.path.realpath(__file__))
 # TODO: proper argument strucutre
 DATABASE = ""
@@ -39,9 +40,10 @@ class pcolor:
     faint = '\033[2m'
 
 def cprint(color, *args, **kwargs):
+    end = kwargs.pop('end', '\n')
     sys.stdout.write(color)
-    print(*args, **kwargs)
-    sys.stdout.write(pcolor.reset)
+    print(*args, **kwargs, end='')
+    sys.stdout.write(pcolor.reset + end)
 
 def vcprint(color, *args, **kwargs):
     global VERBOSE
@@ -171,7 +173,7 @@ def run_test(args, test):
 
     name = test['name']
     path = os.path.relpath(test['case'], ROOT_PATH)
-    print(f"\n{pcolor.blue}Starting test {test['uniq_id']} {name} ({path}){pcolor.reset}")
+    print(f"\n{pcolor.blue}Starting test: \"{test['uniq_id']} {name}\" ({path}){pcolor.reset}")
 
     if test['result'] == "skip":
         print(f"{pcolor.yellow}Skip test {name} (suite skip){pcolor.reset}")
@@ -228,6 +230,11 @@ def prefix_name(name):
     TEST_CNT += 1
     return str(TEST_CNT).zfill(4), slugify(name, lowercase=True)
 
+def next_suite_num():
+    global SUITE_CNT
+    SUITE_CNT += 1
+    return SUITE_CNT
+
 def gen_name(filepath):
     return os.path.basename(filepath)
 
@@ -282,16 +289,8 @@ def parse_suite(suite_path, parent_suite_path, options, settings, name=None):
     suite['result'] = "pending"
     suite_dirname = os.path.dirname(suite_path)
 
-    if name:
-        uniq_id, uname = prefix_name(name)
-        suite['uniq_id'] = uniq_id
-        suite['unix_name'] = uniq_id + "-" + uname
-        suite['name'] = name
-    else:
-        uniq_id, uname = gen_unix_name(suite_path)
-        suite['uniq_id'] = uniq_id
-        suite['unix_name'] = uniq_id + "-" + uname
-        suite['name'] = gen_name(suite_path)
+    suite['name'] = name if name else gen_name(suite_path)
+    suite['suite_num'] = next_suite_num()
 
     if not os.path.isfile(suite_path):
         print(f"error, test suite not found {suite_path}")
@@ -512,7 +511,10 @@ def print_result_tree(data, base):
             sign = "?"
             color = pcolor.yellow
 
-        print(f"{base}{prefix}{color}{sign} {test['uniq_id']} {test['name']}{pcolor.reset}")
+        if 'case' in test:
+            print(f"{base}{prefix}{color}{sign} {test['uniq_id']} {test['name']}{pcolor.reset}")
+        else:
+            print(f"{base}{prefix}{color}{sign} {test['name']}{pcolor.reset}")
 
         if 'suite' in test:
             print_result_tree(test, nextbase)
@@ -530,12 +532,25 @@ def probe_suite(data):
 
     data['result'] = "noexec"
 
+def count_suite_tree(data):
+    suites = 0
+    tests = 0
+    for node in data['suite']:
+        if 'suite' in node:
+            suites += 1
+            s, t = count_suite_tree(node)
+            suites += s
+            tests += t
+        elif 'case' in node:
+            tests += 1
+    return suites, tests
+
 def run_suite(args, data, skip_suite):
     skip = False
     err = False
 
     if data['name'] != "command-line":
-        print(pcolor.blue + f"\nRunning suite {data['uniq_id']} {data['name']}" + pcolor.reset)
+        print(pcolor.blue + f"\nRunning suite {data['suite_num']}: {data['name']}" + pcolor.reset)
 
     for test in data['suite']:
         if 'suite' in test:
@@ -827,6 +842,9 @@ def main():
 
     suite = create_base_suite(args)
     probe_suite(suite)
+
+    n_suites, n_tests = count_suite_tree(suite)
+    print(f"\nStarting: {n_suites} suites with {n_tests} tests")
 
     setup_env(args)
 
