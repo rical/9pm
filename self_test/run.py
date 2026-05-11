@@ -119,9 +119,9 @@ class Test9pm:
                 "args": [],
                 "tests": ["suites/suite.yaml"],
                 "expected": [
+                    {"name": "0001-worker", "args": []},
                     {"name": "0002-worker", "args": []},
-                    {"name": "0003-worker", "args": []},
-                    {"name": "0004-worker1", "args": []},
+                    {"name": "0003-worker1", "args": []},
                 ],
             }
         )
@@ -132,9 +132,9 @@ class Test9pm:
                 "args": [],
                 "tests": ["suites/names.yaml"],
                 "expected": [
-                    {"name": "0002-my-worker", "args": []},
-                    {"name": "0003-worker", "args": []},
-                    {"name": "0004-my-worker1", "args": []},
+                    {"name": "0001-my-worker", "args": []},
+                    {"name": "0002-worker", "args": []},
+                    {"name": "0003-my-worker1", "args": []},
                 ],
             }
         )
@@ -144,9 +144,9 @@ class Test9pm:
                 "args": ["-o", "cmdline"],
                 "tests": ["suites/options.yaml"],
                 "expected": [
-                    {"name": "0002-worker", "args": ["cmdline"]},
-                    {"name": "0003-worker", "args": ["opt1", "opt2", "cmdline"]},
-                    {"name": "0004-worker", "args": [
+                    {"name": "0001-worker", "args": ["cmdline"]},
+                    {"name": "0002-worker", "args": ["opt1", "opt2", "cmdline"]},
+                    {"name": "0003-worker", "args": [
                         f"{os.path.join(self.script_dir, 'suites/foo')}", "cmdline"]
                     },
                 ],
@@ -159,10 +159,10 @@ class Test9pm:
                 "args": ["-o", "cmdline"],
                 "tests": ["suites/top-options.yaml"],
                 "expected": [
-                    {"name": "0002-worker", "args": ["top1", "cmdline"]},
-                    {"name": "0004-worker", "args": ["top2", "cmdline"]},
+                    {"name": "0001-worker", "args": ["top1", "cmdline"]},
+                    {"name": "0002-worker", "args": ["top2", "cmdline"]},
                     {
-                        "name": "0005-worker",
+                        "name": "0003-worker",
                         "args": ["opt1", "opt2", "top2", "cmdline"],
                     },
                 ],
@@ -175,13 +175,13 @@ class Test9pm:
                 "args": [],
                 "tests": ["suites/top-suite.yaml"],
                 "expected": [
+                    {"name": "0001-worker", "args": []},
                     {"name": "0002-worker", "args": []},
+                    {"name": "0003-worker", "args": []},
                     {"name": "0004-worker", "args": []},
-                    {"name": "0006-worker", "args": []},
-                    {"name": "0007-worker", "args": []},
-                    {"name": "0008-worker1", "args": []},
-                    {"name": "0009-worker1", "args": []},
-                    {"name": "0010-worker1", "args": []},
+                    {"name": "0005-worker1", "args": []},
+                    {"name": "0006-worker1", "args": []},
+                    {"name": "0007-worker1", "args": []},
                 ],
             }
         )
@@ -319,13 +319,14 @@ class Test9pm:
                 "args": ["-r", "2"],
                 "tests": ["suites/suite.yaml", "cases/worker1.py"],
                 "expected": [
+                    {"name": "0001-worker", "args": []},
                     {"name": "0002-worker", "args": []},
-                    {"name": "0003-worker", "args": []},
+                    {"name": "0003-worker1", "args": []},
                     {"name": "0004-worker1", "args": []},
-                    {"name": "0007-worker", "args": []},
-                    {"name": "0008-worker", "args": []},
-                    {"name": "0009-worker1", "args": []},
-                    {"name": "0010-worker1", "args": []}
+                    {"name": "0005-worker", "args": []},
+                    {"name": "0006-worker", "args": []},
+                    {"name": "0007-worker1", "args": []},
+                    {"name": "0008-worker1", "args": []}
                 ],
             }
         )
