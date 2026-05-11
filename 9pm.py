@@ -173,7 +173,7 @@ def run_test(args, test):
 
     name = test['name']
     path = os.path.relpath(test['case'], ROOT_PATH)
-    print(f"\n{pcolor.blue}Starting test: \"{test['uniq_id']} {name}\" ({path}){pcolor.reset}")
+    print(f"\n{pcolor.blue}Starting test {test['uniq_id']}: \"{test['uniq_id']:04d} {name}\" ({path}){pcolor.reset}")
 
     if test['result'] == "skip":
         print(f"{pcolor.yellow}Skip test {name} (suite skip){pcolor.reset}")
@@ -228,7 +228,7 @@ def slugify(text, lowercase=True):
 def prefix_name(name):
     global TEST_CNT
     TEST_CNT += 1
-    return str(TEST_CNT).zfill(4), slugify(name, lowercase=True)
+    return TEST_CNT, slugify(name, lowercase=True)
 
 def next_suite_num():
     global SUITE_CNT
@@ -324,12 +324,12 @@ def parse_suite(suite_path, parent_suite_path, options, settings, name=None):
             if 'name' in entry:
                 uniq_id, uname = prefix_name(entry['name'])
                 case['uniq_id'] = uniq_id
-                case['unix_name'] = uniq_id + "-" + uname
+                case['unix_name'] = f"{uniq_id:04d}-{uname}"
                 case['name'] = entry['name']
             else:
                 uniq_id, uname = gen_unix_name(entry['case'])
                 case['uniq_id'] = uniq_id
-                case['unix_name'] = uniq_id + "-" + uname
+                case['unix_name'] = f"{uniq_id:04d}-{uname}"
                 case['name'] = gen_name(entry['case'])
 
             case['outfile'] = gen_outfile(case['unix_name'])
@@ -512,7 +512,7 @@ def print_result_tree(data, base):
             color = pcolor.yellow
 
         if 'case' in test:
-            print(f"{base}{prefix}{color}{sign} {test['uniq_id']} {test['name']}{pcolor.reset}")
+            print(f"{base}{prefix}{color}{sign} {test['uniq_id']:04d} {test['name']}{pcolor.reset}")
         else:
             print(f"{base}{prefix}{color}{sign} {test['name']}{pcolor.reset}")
 
@@ -789,7 +789,7 @@ def create_base_suite(args):
                 test['case'] = fpath
                 uniq_id, uname = gen_unix_name(filename)
                 test['uniq_id'] = uniq_id
-                test['unix_name'] = uniq_id + "-" + uname
+                test['unix_name'] = f"{uniq_id:04d}-{uname}"
                 test['name'] = gen_name(filename)
                 test['outfile'] = gen_outfile(test['unix_name'])
 
