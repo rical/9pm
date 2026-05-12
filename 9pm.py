@@ -844,7 +844,7 @@ def main():
     probe_suite(suite)
 
     n_suites, n_tests = count_suite_tree(suite)
-    print(f"\nStarting: {n_suites} suites with {n_tests} tests")
+    print(f"\nStarting: {n_suites} suites, {n_tests} tests")
 
     setup_env(args)
 
