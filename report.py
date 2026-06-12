@@ -326,6 +326,20 @@ class PlainMarkdownReporter(BaseReporter):
 class PDFReporter(BaseReporter):
     """Generates PDF reports via AsciiDoc conversion."""
 
+    def __init__(self, json_data, theme=None, fontsdir=None, logo=None):
+        """Initialize with optional asciidoctor-pdf theme/fonts/logo overrides.
+
+        When an override is None the bundled 9pm default is used.  Callers
+        (e.g. a downstream project's Makefile) can supply their own theme,
+        fonts directory and title-page logo to brand the report.
+        """
+        super().__init__(json_data)
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        self.theme = theme or os.path.join(script_dir, 'report', 'theme.yml')
+        self.fontsdir = fontsdir or os.path.join(script_dir, 'report', 'fonts')
+        self.logo = logo or (
+            f'{os.path.join(script_dir, "logo.png")}[top=40%, align=right, pdfwidth=8cm]')
+
     def get_filename(self):
         """Get the output filename for this report type."""
         return 'report.pdf'
@@ -346,11 +360,10 @@ class PDFReporter(BaseReporter):
             temp_adoc_path = temp_adoc.name
 
         try:
-            script_dir = os.path.dirname(os.path.abspath(__file__))
             cmd = ['asciidoctor-pdf',
-                   '--theme', os.path.join(script_dir, 'report', 'theme.yml'),
-                   '-a', f'pdf-fontsdir={os.path.join(script_dir, "report", "fonts")}',
-                   '-a', f'logo=image:{os.path.join(script_dir, "logo.png")}[top=40%, align=right, pdfwidth=8cm]',
+                   '--theme', self.theme,
+                   '-a', f'pdf-fontsdir={self.fontsdir}',
+                   '-a', f'logo=image:{self.logo}',
                    '-o', pdf_filename, temp_adoc_path]
 
             result = subprocess.run(cmd, capture_output=True, text=True)
@@ -391,6 +404,13 @@ def main():
                         help='Report format to generate')
     parser.add_argument('json_file', nargs='?', help='Path to the JSON result file (auto-find if omitted)')
     parser.add_argument('-o', '--output', help='Output filename (auto-generate if omitted)')
+    parser.add_argument('--theme', help='asciidoctor-pdf theme file (pdf format only)')
+    parser.add_argument('--fontsdir', help='asciidoctor-pdf fonts directory (pdf format only)')
+    parser.add_argument('--logo',
+                        help='Title-page logo, asciidoctor image spec without the '
+                             'leading "image:", e.g. '
+                             '"/path/logo.png[top=40%%, align=right, pdfwidth=8cm]" '
+                             '(pdf format only)')
 
     args = parser.parse_args()
 
@@ -410,7 +430,8 @@ def main():
         elif args.format == 'asciidoc':
             AsciiDocReporter(json_data).write(args.json_file, args.output)
         elif args.format == 'pdf':
-            PDFReporter(json_data).write(args.json_file, args.output)
+            PDFReporter(json_data, theme=args.theme, fontsdir=args.fontsdir,
+                        logo=args.logo).write(args.json_file, args.output)
     except Exception as e:
         print(f"Error generating report: {e}", file=sys.stderr)
         sys.exit(1)
