@@ -1,0 +1,4 @@
+---
+- case: "../cases/fail.sh"
+- case: "../cases/worker.py"
+  name: "after-plain-fail"

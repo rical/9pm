@@ -1,0 +1,5 @@
+---
+- case: "../cases/fail.sh"
+  abort: true
+- case: "../cases/worker.py"
+  name: "after-fatal-case"

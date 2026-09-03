@@ -1,0 +1,5 @@
+---
+- suite: "abort-suite-inner.yaml"
+  abort: true
+- case: "../cases/worker.py"
+  name: "after-fatal-suite"
