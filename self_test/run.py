@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import subprocess
+import glob
 import os
 import json
 import re
@@ -75,6 +76,13 @@ class Test9pm:
         if grep:
             output = result.stdout + result.stderr  # Combine both streams for searching
             assert grep in output, f"Expected text '{grep}' not found in output!"
+
+        return result
+
+    def executed(self, name):
+        """Check if a named test case ran, by the log the worker writes"""
+        pattern = os.path.join(self.env["NINEPM_TEST_DIR"], f"*-{name}.log")
+        return bool(glob.glob(pattern))
 
     def check(self, expected, descr):
         """Check if the worker script wrote the expected JSON result and print colored results."""
@@ -282,6 +290,25 @@ class Test9pm:
         self.run(["cases/fail.sh", "cases/pass.sh"], ["--abort"], 1, "Aborting execution")
         print_green(f"[PASS] Abort flag works (-a --abort)")
 
+    def test_abort_key(self):
+        """Verify that the abort key works on cases and suites"""
+
+        self.env["NINEPM_TEST_DIR"] = self.create_unique_subdir()
+
+        self.run(["suites/abort-case.yaml"], [], 1, "Aborting execution")
+        assert not self.executed("after-fatal-case"), "Ran case after fatal case"
+
+        self.run(["suites/abort-suite.yaml"], [], 1, "Aborting execution")
+        assert not self.executed("in-deep-suite"), "Ran rest of deepest suite"
+        assert not self.executed("in-inner-suite"), "Ran rest of nested suite"
+        assert not self.executed("after-fatal-suite"), "Ran case after fatal suite"
+
+        result = self.run(["suites/abort-none.yaml"], [], 1)
+        assert "Aborting execution" not in result.stdout, "Aborted without abort key"
+        assert self.executed("after-plain-fail"), "Did not run case after failure"
+
+        print_green(f"[PASS] Abort key works (abort: true)")
+
     def test_proj_config(self):
         """Verify that that 9pm project config works (--proj)"""
 
@@ -432,6 +459,7 @@ if __name__ == "__main__":
         tester.test_config_file()
         tester.test_verbose_flag()
         tester.test_abort_flag()
+        tester.test_abort_key()
         tester.test_repeat_flag()
         tester.test_proj_config()
         tester.test_spec_json_format()

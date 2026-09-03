@@ -1,0 +1,4 @@
+---
+- suite: "abort-suite-deep.yaml"
+- case: "../cases/worker.py"
+  name: "in-inner-suite"
