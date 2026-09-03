@@ -313,10 +313,10 @@ def parse_suite(suite_path, parent_suite_path, options, settings, name=None):
                 opts = lmerge(opts, options)
             else:
                 opts = options.copy()
-            if 'name' in entry:
-                suite['suite'].append(parse_suite(next_suite_path, suite_path, opts, settings, entry['name']))
-            else:
-                suite['suite'].append(parse_suite(next_suite_path, suite_path, opts, settings))
+            sub = parse_suite(next_suite_path, suite_path, opts, settings, entry.get('name'))
+            if 'abort' in entry:
+                sub['abort'] = entry['abort']
+            suite['suite'].append(sub)
 
         elif 'case' in entry:
             case = {}
@@ -346,6 +346,9 @@ def parse_suite(suite_path, parent_suite_path, options, settings, name=None):
 
             if 'mask' in entry:
                 case['mask'] = entry['mask']
+
+            if 'abort' in entry:
+                case['abort'] = entry['abort']
 
             case['case'] = os.path.join(suite_dirname, entry['case'])
 
@@ -545,22 +548,25 @@ def count_suite_tree(data):
             tests += 1
     return suites, tests
 
-def run_suite(args, data, skip_suite):
+def run_suite(args, data, skip_suite, fatal):
     skip = False
     err = False
+    abort = False
 
     if data['name'] != "command-line":
         print(pcolor.blue + f"\nRunning suite {data['suite_num']}: {data['name']}" + pcolor.reset)
 
     for test in data['suite']:
         if 'suite' in test:
-            subskip, suberr = run_suite(args, test, skip_suite)
+            subskip, suberr, subabort = run_suite(args, test, skip_suite,
+                                                  fatal or test.get('abort'))
             if subskip:
                 skip = True
             if suberr:
                 err = True
-            if err and args.abort:
-                break;
+            if subabort:
+                abort = True
+                break
 
         elif 'case' in test:
             if not os.path.isfile(test['case']):
@@ -586,8 +592,9 @@ def run_suite(args, data, skip_suite):
                 if 'onfail' in test:
                     run_onfail(args, test)
 
-                if err and args.abort:
+                if err and (fatal or test.get('abort')):
                     print("Aborting execution")
+                    abort = True
                     break
             elif subskip:
                 if 'mask' in test and test['mask'] == "skip":
@@ -606,7 +613,7 @@ def run_suite(args, data, skip_suite):
     else:
         data['result'] = "pass"
 
-    return skip, err
+    return skip, err, abort
 
 def get_first_existing_file(list, name):
     for f in list:
@@ -848,7 +855,7 @@ def main():
 
     setup_env(args)
 
-    skip, err = run_suite(args, suite, False)
+    skip, err, _ = run_suite(args, suite, False, args.abort)
     if err:
         cprint(pcolor.red, "\nx Execution")
     elif skip:
