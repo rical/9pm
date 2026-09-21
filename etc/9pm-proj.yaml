@@ -1,6 +1,7 @@
 # This is the default project config for 9pm.
 # The top level "9pm" contains data aimed for the 9pm.py test executor.
 # This file is passed down to test cases as the env variable NINEPM_PROJ_CONFIG.
+# AGENT-HINTS: optional text added to the agent prompt after a failed run.
 ---
 9pm:
   PROJECT-NAME: "9pm"

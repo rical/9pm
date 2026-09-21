@@ -13,6 +13,7 @@
 - **Flexible Execution**: Run individual tests from command line or organized test suites
 - **Nested Structure**: Supports complex hierarchical suites with custom options and names
 - **Ready Environment**: Provides temporary directories, logging paths, and clean isolation
+- **AI Ready**: Prints a ready-to-paste prompt for your AI agent when tests fail
 
 *Make complex test setups easy while keeping simple tests simple.*
 

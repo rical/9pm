@@ -324,6 +324,33 @@ class Test9pm:
 
         print_green(f"[PASS] Project Config works")
 
+    def test_agent_prompt(self):
+        """Verify the agent prompt printed after failed runs"""
+
+        result = self.run(["suites/abort-suite.yaml"], ["-o", "opt1"], 1, "AGENT INITIAL INVESTIGATION PROMPT")
+        prose = result.stdout.replace("\n", " ")
+        for expected in [
+            '1 test failed running "self_test/suites/abort-suite.yaml" in project 9pm (git ',
+            '"fail.sh" at "self_test/cases/fail.sh" called with arguments \'opt1\' failed with:',
+            "  not ok 1 - Dummy test fail",
+            "The run was aborted at the first fatal failure.",
+            "Please help me investigate this.",
+        ]:
+            assert expected in prose, f"Expected '{expected}' in agent prompt"
+
+        prompt_path = os.path.expanduser('~/.local/share/9pm/logs/last/agent-prompt.txt')
+        assert os.path.exists(prompt_path), f"Could not find {prompt_path}"
+
+        result = self.run(["cases/pass.sh"], [], 0)
+        assert "INVESTIGATION PROMPT" not in result.stdout, "Agent prompt printed for passing run"
+
+        result = self.run(["cases/crash.sh"], [], 1)
+        assert "INVESTIGATION PROMPT" not in result.stdout, "Agent prompt printed for crashed test"
+
+        self.run(["cases/fail.sh"], ["--proj", "configs/proj-test1.yaml"], 1,
+                 "Hint from Self Test 1 project config")
+        print_green("[PASS] Agent prompt")
+
     def test_repeat_flag(self):
         """Verify that -r (--repeat) works"""
 
@@ -461,6 +488,7 @@ if __name__ == "__main__":
         tester.test_abort_flag()
         tester.test_abort_key()
         tester.test_repeat_flag()
+        tester.test_agent_prompt()
         tester.test_proj_config()
         tester.test_spec_json_format()
         tester.test_line_buffering()
