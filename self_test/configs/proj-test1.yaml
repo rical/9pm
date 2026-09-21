@@ -1,3 +1,5 @@
 9pm:
   PROJECT-NAME: "Self Test 1"
   PROJECT-ROOT: "./"
+  AGENT-HINTS: |
+    Hint from Self Test 1 project config

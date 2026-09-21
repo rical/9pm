@@ -14,6 +14,9 @@ import shutil
 import re
 import atexit
 import hashlib
+import shlex
+import textwrap
+from collections import deque
 from datetime import datetime
 
 TEST_CNT = 0
@@ -25,6 +28,7 @@ SCRATCHDIR = ""
 LOGDIR = None
 VERBOSE = False
 NOEXEC = False
+PROJECT = {}
 
 class pcolor:
     purple = '\033[95m'
@@ -56,6 +60,12 @@ def rootify_path(path):
     path = os.path.expanduser(path)
     path = os.path.normpath(path)
     return path
+
+def proj_relpath(path):
+    """Path relative to the project root, or unchanged if outside it"""
+    root = os.path.realpath(PROJECT['PROJECT-ROOT'])
+    rel = os.path.relpath(os.path.realpath(path), root)
+    return os.path.normpath(path) if rel.startswith(os.pardir) else rel
 
 def pty_read_lines(fd):
     # PTY line discipline turns '\n' into '\r\n' on the way out, so trailing
@@ -89,6 +99,9 @@ def execute(args, test, output_log):
     skip_suite = False
     test_skip = False
     err = False
+    test['failures'] = []
+    context = deque(maxlen=10)  # output since the last TAP result line
+    failure = None              # lines of the failure being collected
 
     # Test metadata is now handled in the report generation, not in the log
 
@@ -104,6 +117,19 @@ def execute(args, test, output_log):
         comment = re.search(r'^\w*#', string)
 
         output_log.write(f"{stamp} {string}\n")
+
+        # Collect what the test said around a failure: the output leading up
+        # to the not ok line and what follows it, until the next TAP line.
+        if plan or ok or not_ok or skip:
+            failure = None
+            if not_ok:
+                failure = list(context) + [string]
+                test['failures'].append(failure)
+            context.clear()
+        else:
+            context.append(string)
+            if failure is not None and len(failure) < 40:
+                failure.append(string)
 
         if plan:
             cprint(pcolor.purple, f'{stamp} {string}')
@@ -172,7 +198,7 @@ def run_test(args, test):
         opts.extend(test['options'])
 
     name = test['name']
-    path = os.path.relpath(test['case'], ROOT_PATH)
+    path = proj_relpath(test['case'])
     print(f"\n{pcolor.blue}Starting test {test['uniq_id']}: \"{test['uniq_id']:04d} {name}\" ({path}){pcolor.reset}")
 
     if test['result'] == "skip":
@@ -291,6 +317,7 @@ def parse_suite(suite_path, parent_suite_path, options, settings, name=None):
 
     suite['name'] = name if name else gen_name(suite_path)
     suite['suite_num'] = next_suite_num()
+    suite['suite_path'] = suite_path
 
     if not os.path.isfile(suite_path):
         print(f"error, test suite not found {suite_path}")
@@ -432,7 +459,7 @@ def calculate_test_summary(test_data):
     count_tests(test_data)
     return counts
 
-def write_json_result(data, config):
+def write_json_result(data, agent_prompt=None):
     """Write comprehensive JSON result file with embedded logs."""
     # Collect all test logs and embed them in the data structure
     collect_test_logs(data)
@@ -442,19 +469,15 @@ def write_json_result(data, config):
 
     # Prepare metadata
     current_time = datetime.now()
-    project_info = {}
-    if config:
-        if 'PROJECT-NAME' in config:
-            project_info['name'] = config['PROJECT-NAME']
-        if 'PROJECT-ROOT' in config:
-            project_info['root'] = config['PROJECT-ROOT']
-            # Get git info
-            version = run_git_cmd(config['PROJECT-ROOT'], ["describe", "--tags", "--always"])
-            sha = run_git_cmd(config['PROJECT-ROOT'], ['rev-parse', 'HEAD'])
-            project_info['version'] = version
-            project_info['sha'] = sha
-        if 'PROJECT-TOPDOC' in config:
-            project_info['topdoc'] = config['PROJECT-TOPDOC']
+    project_info = {
+        'root': PROJECT['PROJECT-ROOT'],
+        'version': PROJECT['PROJECT-VERSION'],
+        'sha': PROJECT['PROJECT-SHA'],
+    }
+    if 'PROJECT-NAME' in PROJECT:
+        project_info['name'] = PROJECT['PROJECT-NAME']
+    if 'PROJECT-TOPDOC' in PROJECT:
+        project_info['topdoc'] = PROJECT['PROJECT-TOPDOC']
 
     # Get 9pm version info
     ninepm_sha = run_git_cmd(ROOT_PATH, ['rev-parse', 'HEAD'])
@@ -473,6 +496,7 @@ def write_json_result(data, config):
             }
         },
         'summary': summary,
+        'agent_prompt': agent_prompt,
         'suite': data
     }
 
@@ -522,6 +546,56 @@ def print_result_tree(data, base):
         if 'suite' in test:
             print_result_tree(test, nextbase)
         i += 1
+
+def collect_failures(data):
+    failed = []
+    for node in data['suite']:
+        if 'suite' in node:
+            failed.extend(collect_failures(node))
+        elif node.get('result') == "fail" and node.get('failures'):
+            failed.append(node)
+    return failed
+
+def project_label():
+    name = PROJECT.get('PROJECT-NAME') or os.path.basename(PROJECT['PROJECT-ROOT'])
+    sha = PROJECT['PROJECT-SHA']
+    return f"{name} (git {sha[:12]})" if sha else name
+
+def wrap(text):
+    return textwrap.fill(text, 80, break_long_words=False, break_on_hyphens=False)
+
+def agent_prompt(data, aborted):
+    failed = collect_failures(data)
+    if not failed:
+        return None
+
+    paths = [proj_relpath(n['suite_path'] if 'suite' in n else n['case']) for n in data['suite']]
+    ran = ", ".join(f'"{p}"' for p in dict.fromkeys(paths))
+
+    intro = (f"{len(failed)} test{'s' if len(failed) > 1 else ''} failed running {ran} "
+             f"in project {project_label()} on host \"{os.uname().nodename}\", "
+             f"log id {os.path.basename(LOGDIR)}.")
+    if aborted:
+        intro += " The run was aborted at the first fatal failure."
+    lines = [wrap(intro), ""]
+
+    for test in failed:
+        if test.get('options'):
+            called = f"called with arguments '{shlex.join(test['options'])}'"
+        else:
+            called = "called without arguments"
+        lines.append(wrap(f"\"{test['name']}\" at \"{proj_relpath(test['case'])}\" "
+                          f"{called} failed with:"))
+        for failure in test['failures']:
+            lines.extend(f"  {line}" for line in failure)
+            if len(failure) >= 40:
+                lines.append("  (more in the log)")
+        lines.append("")
+
+    lines.append("Please help me investigate this.")
+    if PROJECT.get('AGENT-HINTS'):
+        lines += ["", PROJECT['AGENT-HINTS'].strip()]
+    return "\n".join(lines)
 
 def probe_suite(data):
     for test in data['suite']:
@@ -648,7 +722,7 @@ def parse_proj_config(root_path, args):
         sys.exit(1)
 
     if not '9pm' in data:
-        return []
+        return {}
 
     if 'PROJECT-ROOT' in data['9pm']:
         data['9pm']['PROJECT-ROOT'] = rootify_path(data['9pm']['PROJECT-ROOT'])
@@ -770,20 +844,6 @@ def run_git_cmd(path, command):
 
     return result
 
-def pr_proj_info(proj):
-    str = f"\nTesting"
-
-    if 'PROJECT-NAME' in proj:
-        str += f" {proj['PROJECT-NAME']}"
-
-    if 'PROJECT-ROOT' in proj:
-        git_sha = run_git_cmd(proj['PROJECT-ROOT'], ['rev-parse', 'HEAD'])[:12]
-
-    if git_sha:
-        str += f" ({git_sha})"
-
-    cprint(pcolor.yellow, str)
-
 def create_base_suite(args):
     suite = {'name': 'command-line', 'suite': []}
     for _ in range(args.repeat):
@@ -812,6 +872,7 @@ def main():
     global LOGDIR
     global VERBOSE
     global NOEXEC
+    global PROJECT
 
     # Line-buffer our own stdout so output streams when 9pm itself is piped to
     # another program (CI, tee, wrappers) instead of buffering until exit.
@@ -834,7 +895,10 @@ def main():
 
     vcprint(pcolor.faint, f"Logging to: {LOGDIR}")
 
-    proj = parse_proj_config(ROOT_PATH, args)
+    PROJECT = parse_proj_config(ROOT_PATH, args)
+    PROJECT.setdefault('PROJECT-ROOT', os.path.dirname(ROOT_PATH))
+    PROJECT['PROJECT-SHA'] = run_git_cmd(PROJECT['PROJECT-ROOT'], ['rev-parse', 'HEAD'])
+    PROJECT['PROJECT-VERSION'] = run_git_cmd(PROJECT['PROJECT-ROOT'], ['describe', '--tags', '--always'])
 
     scratch = tempfile.mkdtemp(suffix='', prefix='9pm_', dir='/tmp')
     vcprint(pcolor.faint, f"Created scratch dir: {scratch}")
@@ -845,7 +909,7 @@ def main():
     vcprint(pcolor.faint, f"Created databasefile: {db.name}")
     DATABASE = db.name
 
-    pr_proj_info(proj)
+    cprint(pcolor.yellow, f"\nTesting {project_label()}")
 
     suite = create_base_suite(args)
     probe_suite(suite)
@@ -855,7 +919,7 @@ def main():
 
     setup_env(args)
 
-    skip, err, _ = run_suite(args, suite, False, args.abort)
+    skip, err, aborted = run_suite(args, suite, False, args.abort)
     if err:
         cprint(pcolor.red, "\nx Execution")
     elif skip:
@@ -865,8 +929,15 @@ def main():
 
     print_result_tree(suite, "")
 
+    prompt = agent_prompt(suite, aborted)
+    if prompt:
+        cprint(pcolor.yellow, "\nAGENT INITIAL INVESTIGATION PROMPT")
+        print(prompt)
+        with open(os.path.join(LOGDIR, 'agent-prompt.txt'), 'w') as f:
+            f.write(prompt + "\n")
+
     # Export comprehensive JSON result
-    json_path = write_json_result(suite, proj)
+    json_path = write_json_result(suite, prompt)
     vcprint(pcolor.faint, f"JSON results written to: {json_path}")
 
     db.close()
