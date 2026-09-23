@@ -586,11 +586,12 @@ def agent_prompt(data, aborted):
             called = "called without arguments"
         lines.append(wrap(f"\"{test['name']}\" at \"{proj_relpath(test['case'])}\" "
                           f"{called} failed with:"))
+        lines.append("```")
         for failure in test['failures']:
-            lines.extend(f"  {line}" for line in failure)
+            lines.extend(failure)
             if len(failure) >= 40:
-                lines.append("  (more in the log)")
-        lines.append("")
+                lines.append("(more in the log)")
+        lines += ["```", ""]
 
     lines.append("Please help me investigate this.")
     if PROJECT.get('AGENT-HINTS'):

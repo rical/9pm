@@ -332,7 +332,7 @@ class Test9pm:
         for expected in [
             '1 test failed running "self_test/suites/abort-suite.yaml" in project 9pm (git ',
             '"fail.sh" at "self_test/cases/fail.sh" called with arguments \'opt1\' failed with:',
-            "  not ok 1 - Dummy test fail",
+            "failed with: ``` not ok 1 - Dummy test fail ```",
             "The run was aborted at the first fatal failure.",
             "Please help me investigate this.",
         ]:
