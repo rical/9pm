@@ -129,6 +129,7 @@ o Execution
 
 Every test run generates a comprehensive `result.json` file containing:
 - Test metadata and timestamps
+- Environment variables the project lists under `RECORD-ENV` in `9pm-proj.yaml`
 - Complete hierarchical test structure
 - Embedded test output logs
 - Summary statistics

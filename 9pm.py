@@ -492,7 +492,8 @@ def write_json_result(data, agent_prompt=None):
                 '9pm_version': ninepm_sha[:10] if ninepm_sha else 'unknown',
                 'log_dir': LOGDIR,
                 'scratch_dir': SCRATCHDIR,
-                'root_path': ROOT_PATH
+                'root_path': ROOT_PATH,
+                'variables': run_variables()
             }
         },
         'summary': summary,
@@ -506,6 +507,11 @@ def write_json_result(data, agent_prompt=None):
         json.dump(json_data, f, indent=2, ensure_ascii=False)
 
     return json_path
+
+def run_variables():
+    """Environment variables the project lists under RECORD-ENV"""
+    names = PROJECT.get('RECORD-ENV', [])
+    return {name: os.environ[name] for name in names if name in os.environ}
 
 def print_result_tree(data, base):
     i = 1
